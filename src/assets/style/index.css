@@ -1,0 +1,73 @@
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    font-size: clamp(16px, 0.5vw, 24px);
+}
+
+.multi-line-ellipsis-1 {
+  white-space: nowrap;
+  display: -webkit-box;          /* 旧版 Flex 布局（必要） */
+  -webkit-line-clamp: 1;         /* 限制显示行数 */
+  -webkit-box-orient: vertical;  /* 垂直排列内容 */
+  overflow: hidden;              /* 隐藏溢出内容 */
+  text-overflow: ellipsis;       /* 显示省略号 */
+}
+
+.multi-line-ellipsis-2 {
+  display: -webkit-box;          /* 旧版 Flex 布局（必要） */
+  -webkit-line-clamp: 2;         /* 限制显示行数 */
+  -webkit-box-orient: vertical;  /* 垂直排列内容 */
+  overflow: hidden;              /* 隐藏溢出内容 */
+  text-overflow: ellipsis;       /* 显示省略号 */
+}
+
+.multi-line-ellipsis-3 {
+  display: -webkit-box;          /* 旧版 Flex 布局（必要） */
+  -webkit-line-clamp: 3;         /* 限制显示行数 */
+  -webkit-box-orient: vertical;  /* 垂直排列内容 */
+  overflow: hidden;              /* 隐藏溢出内容 */
+  text-overflow: ellipsis;       /* 显示省略号 */
+}
+
+.flex-center {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+/* 文字颜色 */
+.font-5CC300 {
+    color: #5CC300;
+}
+
+.font-5D5D5D {
+    color: #5D5D5D;
+}
+
+.font-E8E8E8 {
+    color: #E8E8E8;
+}
+.font-FF4A2B {
+    color: #FF4A2B;
+}
+
+/* 色盘 */
+.color-5CC300 {
+    background-color: #5CC300;
+}
+
+.color-94C9FF {
+    background-color: #94C9FF;
+}
+
+/* 按钮 */
+.custom-button {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: clamp(12px, 20%, 24px);
+    font-weight: 600;
+    border-radius: 5px;
+    background-image: linear-gradient(to right, #9FFFD7, #BAFF75);
+}
