@@ -41,3 +41,20 @@ export function useGetUserInfoByToken() {
         url: '/system/client/getInfo',
     });
 }
+
+//客户退出登录
+export function useLogout() {
+    return service({
+        method: 'Delete',
+        url: '/auth/phoneLogout',
+    });
+}
+
+//热门设备列表
+export function useGetHotList(params) {
+    return service({
+        method: 'get',
+        url: '/equipment/equipmentInfo/hotItemList',
+        params: params,
+    });
+}

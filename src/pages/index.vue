@@ -2,10 +2,15 @@
 import { ref } from 'vue';
 import { useRouter } from 'vue-router'
 import { getUserInfo } from '@/utils/auth';
+import { ElMessageBox, ElMessage } from 'element-plus';
+import { useUserStore } from '@/stores/user';
 
 const router = useRouter()
+const user_store = useUserStore()
+
 const menu_switch = ref('')
 const user_info = ref(JSON.parse(getUserInfo()))
+const menu_timer = ref(null)
 
 const tab_list_all = ref([
   { label: '首页', index: 0, active: true},
@@ -32,6 +37,23 @@ const tab_list_all = ref([
 
 const tab_list = ref(tab_list_all.value.slice(0, 14))
 
+// 用户面板
+function changeMenuSwitch(value) {
+  if(value == 'show') {
+    if(menu_timer.value) {
+      clearTimeout(menu_timer.value)
+      menu_timer.value = null
+    }
+    menu_switch.value = value
+  } else {
+    menu_timer.value = setTimeout(() => {
+      menu_switch.value = value
+      clearTimeout(menu_timer.value)
+      menu_timer.value = null
+    }, 500);
+  }
+}
+
 //tabbar翻页
 function changeMenuList(num) {
   const index_start = tab_list_all.value.findIndex(item => item.index == tab_list.value[0].index) + num
@@ -44,6 +66,21 @@ function changeMenuList(num) {
 function clickTabbar(data) {
   tab_list_all.value.forEach(item => {
     item.active = item.index == data.index
+  })
+}
+
+//退出登录
+function logout() {
+  ElMessageBox.confirm('是否确认退出登录？', '温馨提示',
+    {
+      confirmButtonText: '确认',
+      cancelButtonText: '取消',
+      type: 'warning',
+    }
+  ).then(async () => {
+    await user_store.logout()
+    router.push('/')
+    window.location.reload()
   })
 }
 
@@ -70,8 +107,8 @@ function clickTabbar(data) {
         </div>
         <div class="slider"></div>
         <div class="user-box">
-          <div class="user-box-main" v-if="user_info.clientId" @mouseenter="menu_switch = 'show'" @mouseleave="menu_switch = 'hide'">
-            <img class="avatar" v-if="user_info.avatar" :src="user_info.avatar" alt="">
+          <div class="user-box-main" v-if="user_info" @mouseenter="changeMenuSwitch('show')" @mouseleave="changeMenuSwitch('hide')">
+            <img class="avatar" v-if="user_info.avatar" :src="user_info.avatar_path" alt="">
             <img class="avatar" v-else src="@/assets/img/default_avatar.png" alt="">
             <div class="user-name multi-line-ellipsis-1">{{ user_info.clientName }}</div>
           </div>
@@ -80,14 +117,14 @@ function clickTabbar(data) {
             <div class="user-name multi-line-ellipsis-1" @click="router.push('/login')">登录/注册</div>
           </div>
           <img class="pre_active" src="@/assets/img/pre_active.png" alt="">
-          <ul class="user-menu" :class="{'user-menu-show': menu_switch == 'show', 'user-menu-hide': menu_switch == 'hide'}">
+          <ul class="user-menu" :class="{'user-menu-show': menu_switch == 'show', 'user-menu-hide': menu_switch == 'hide'}" @mouseenter="changeMenuSwitch('show')" @mouseleave="changeMenuSwitch('hide')">
             <li class="menu-li">个人资料</li>
             <li class="menu-li">我的资产</li>
             <li class="menu-li">我的订单</li>
             <li class="menu-li">我的团队</li>
             <li class="menu-li">邀请好友</li>
             <li class="menu-li">我的发票</li>
-            <li class="menu-li">退出登录</li>
+            <li class="menu-li" @click="logout">退出登录</li>
           </ul>
         </div>
       </div>
@@ -99,6 +136,39 @@ function clickTabbar(data) {
     </div>
 
     <router-view />
+
+    <div class="page-footer">
+      <div class="info-box">
+        <div class="box-left flex-center">
+          <div class="left-item">400-168-0661</div>
+          <div class="left-item">工作时间: 8:30-23:00</div>
+          <div class="left-item">Email: hnnavi@navi-sci.cn</div>
+          <div class="left-item">
+            <span>云现场</span>
+            <div class="slider"></div>
+            <span>材料检测</span>
+            <div class="slider"></div>
+            <span>材料加工</span>
+            <div class="slider"></div>
+            <span>合作入驻</span>
+            <div class="slider"></div>
+            <span>关于我们</span>
+          </div>
+        </div>
+        <div class="box-center flex-center">
+          <div class="center-item">
+            <img src="@/assets/img/gzh.png" alt="">
+            <div>企业二维码</div>
+          </div>
+          <div class="center-item">
+            <img src="@/assets/img/xcx.png" alt="">
+            <div>小程序二维码</div>
+          </div>
+        </div>
+        <div class="box-right flex-center">总部地址：湖南省长沙市岳麓区岳麓街道科技创意园8栋负一楼</div>
+      </div>
+      <div class="code-box flex-center">ICP备案号：湘ICP备20210169</div>
+    </div>
   </div>
 </template>
 
@@ -109,13 +179,13 @@ function clickTabbar(data) {
   width: 100vw;
   min-width: 1440px;
   height: 100vh;
-  background: url('@/assets/img/home_bg.png') no-repeat;
-  background-size: cover;
 }
 
 .app-head {
+  z-index: 999;
+  position: sticky;
+  top: 0;
   flex-direction: column;
-  width: 100vw;
   min-width: 1440px;
   height: 150px;
   background-color: #FFFFFF;
@@ -193,7 +263,7 @@ function clickTabbar(data) {
         width: calc(100% - 105px);
         .avatar {
           width: 50px;
-          padding: 5px;
+          height: 50px;
           border: 1px solid #cccccc;
           border-radius: 50%;
         }
@@ -229,6 +299,7 @@ function clickTabbar(data) {
         }
       }
       .user-menu {
+        z-index: 999;
         overflow: hidden;
         list-style: none;
         position: absolute;
@@ -280,7 +351,6 @@ function clickTabbar(data) {
     .tabbar {
       cursor: default;
       flex: 1;
-      width: 140px;
       height: 50px;
     }
     .tabbar-active {
@@ -288,6 +358,66 @@ function clickTabbar(data) {
       border-top: 5px solid #94C9FF;
       box-shadow: 0px -2px 10px 1px #94C9FF;
     }
+  }
+}
+
+.page-footer {
+  overflow: hidden;
+  min-width: 1440px;
+  height: 350px;
+  margin: 20px auto 0;
+  color: #FFFFFF;
+  background-color: #272A29;
+  .info-box {
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    min-width: 1440px;
+    height: 280px;
+    .box-left {
+      width: 20vw;
+      min-width: 360px;
+      flex-direction: column;
+      row-gap: 15px;
+      .left-item {
+        width: 20vw;
+        min-width: 360px;
+        .slider {
+          transform: scale(0.6);
+          border-left: 2px solid #FFFFFF;
+        }
+      }
+      .left-item:last-child {
+        display: flex;
+        column-gap: 5px;
+      } 
+    }
+    .box-center {
+      display: flex;
+      justify-content: space-between;
+      width: 15vw;
+      min-width: 288px;
+      .center-item {
+        display: flex;
+        flex-direction: column;
+        row-gap: 15px;
+        align-items: center;
+        img {
+          width: 6vw;
+          min-width: 86px;
+        }
+      }
+    }
+    .box-right {
+      width: 20vw;
+      min-width: 288px;
+    }
+  }
+  .code-box {
+    width: 100vw;
+    min-width: 1440px;
+    height: 70px;
+    border-top: 1px solid #FFFFFF;
   }
 }
 </style>

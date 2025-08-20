@@ -83,6 +83,7 @@ async function login() {
                 </div>
             </div>
             <el-button type="primary" class="login-button" :loading="login_loading" @click="login">登录/注册</el-button>
+            <span class="tips" @click="router.push('/home_page')">前往首页</span>
         </div>
     </div>
 </template>
@@ -151,6 +152,15 @@ input:focus {
         .login-button {
             width: 80%;
             height: 50px;
+        }
+        .tips {
+            cursor: pointer;
+            margin-top: 15px;
+            text-decoration: underline;
+            color: #5D5D5D;
+        }
+        .tips:hover {
+            color: #94C9FF;
         }
     }
 }
