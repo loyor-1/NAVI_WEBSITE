@@ -119,6 +119,11 @@ getHotList()
             </div>
         </div>
     </div>
+
+    <div>
+        <div class="font-large">服务流程</div>
+        <div class="font-middle">一对一定制，专业化检测，可视化报告</div>
+    </div>
 </template>
 
 <style lang="scss" scoped>

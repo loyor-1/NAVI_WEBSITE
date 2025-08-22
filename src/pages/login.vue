@@ -13,6 +13,7 @@ const login_SMS = ref({
 })
 const login_password = ref({
     loginAccount: '',
+    phoneNumber: '',
     password: '',
 })
 
@@ -24,6 +25,7 @@ function resetData() {
     login_SMS.value.phoneNumber = ''
     login_SMS.value.smsCode = ''
     login_password.value.loginAccount = ''
+    login_password.value.phoneNumber = ''
     login_password.value.password = ''
 }
 
@@ -35,20 +37,17 @@ async function login() {
             data = login_SMS.value
             break
         case 3:
+            login_password.value.phoneNumber = login_password.value.loginAccount
             data = login_password.value
             break
     }
-    try {
-        await userStore.login(data)
-        login_loading.value = false
+    const res =  await userStore.login(data)
+    if(res) {
         resetData()
         router.push('/')
     }
-    catch {
-        login_loading.value = false
-    }
+    login_loading.value = false
 }
-
 </script>
 
 <template>
@@ -66,7 +65,7 @@ async function login() {
                     <input class="input-long" type="text" v-model="login_SMS.phoneNumber">
                 </div>
                 <div class="input-box flex-center">
-                    <img class="icon" src="@/assets/svg/lock.svg" alt="">
+                    <img class="icon" src="@/assets/svg/SMS.svg" alt="">
                     <input class="input-short" type="text" v-model="login_SMS.smsCode">
                     <el-button class="input-button">获取短信验证码</el-button>
                 </div>
@@ -74,12 +73,11 @@ async function login() {
             <div class="box-main flex-center" v-if="login_type == 3">
                 <div class="input-box flex-center">
                     <img class="icon" src="@/assets/svg/phone.svg" alt="">
-                    <input class="input-long" type="text" v-model="login_password.phoneNumber">
+                    <input class="input-long" type="text" v-model="login_password.loginAccount">
                 </div>
                 <div class="input-box flex-center">
                     <img class="icon" src="@/assets/svg/lock.svg" alt="">
-                    <input class="input-short" type="text" v-model="login_password.smsCode">
-                    <el-button class="input-button">获取短信验证码</el-button>
+                    <input class="input-long" type="text" v-model="login_password.password">
                 </div>
             </div>
             <el-button type="primary" class="login-button" :loading="login_loading" @click="login">登录/注册</el-button>
@@ -106,8 +104,6 @@ input:focus {
     min-width: 1440px;
     height: 100vh;
     padding-bottom: 30vh;
-    background: url('@/assets/img/home_bg.png') no-repeat;
-    background-size: cover;
     .login-box {
         flex-direction: column;
         width: 30vw;

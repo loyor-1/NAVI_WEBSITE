@@ -4,7 +4,7 @@
 
 <template>
   <div class="app-page">
-    <img class="app-bg" src="@/assets/img/home_bg.png" alt="">
+    <img class="app-bg" src="@/assets/img/app_bg.png" alt="">
     <router-view/>
   </div>
 </template>

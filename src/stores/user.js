@@ -15,9 +15,11 @@ export const useUserStore = defineStore('user', () => {
       res_user_info.user.avatar_path = import.meta.env.VITE_FILE_API + res_user_info.user.avatar
       setUserInfo(JSON.stringify(res_user_info.user))
       ElMessage.success('登录成功！')
+      return true
     }
     catch(err) {
       console.log(err)
+      return false
     }
   }
 
