@@ -12,7 +12,7 @@ export const useUserStore = defineStore('user', () => {
       setToken(res_token.data.access_token)
       // 存储用户信息
       const res_user_info = await useGetUserInfoByToken()
-      res_user_info.user.avatar_path = import.meta.env.VITE_FILE_API + res_user_info.user.avatar
+      res_user_info.user.avatar_path = res_user_info.user.avatar ? import.meta.env.VITE_FILE_API + res_user_info.user.avatar : ''
       setUserInfo(JSON.stringify(res_user_info.user))
       ElMessage.success('登录成功！')
       return true
@@ -31,7 +31,7 @@ export const useUserStore = defineStore('user', () => {
       setToken(res_token.token)
       // 存储用户信息
       const res_user_info = await useGetUserInfoByToken()
-      res_user_info.user.avatar_path = import.meta.env.VITE_FILE_API + res_user_info.user.avatar
+      res_user_info.user.avatar_path = res_user_info.user.avatar ? import.meta.env.VITE_FILE_API + res_user_info.user.avatar : ''
       setUserInfo(JSON.stringify(res_user_info.user))
       ElMessage.success('登录成功！')
       return true

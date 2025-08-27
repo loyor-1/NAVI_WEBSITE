@@ -13,8 +13,8 @@ const user_info = ref(JSON.parse(getUserInfo()))
 const menu_timer = ref(null)
 
 const tab_list_all = ref([
-  { label: '首页', index: 0, active: true},
-  { label: '云现场', index: 1, active: false},
+  { label: '首页', index: 0, active: true, page: '/'},
+  { label: '云现场', index: 1, active: false,},
   { label: '材料检测', index: 2, active: false},
   { label: '高端测试', index: 3, active: false},
   { label: '材料加工', index: 4, active: false},
@@ -67,6 +67,7 @@ function clickTabbar(data) {
   tab_list_all.value.forEach(item => {
     item.active = item.index == data.index
   })
+  router.push(data.page || '/')
 }
 
 //退出登录
