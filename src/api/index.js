@@ -18,11 +18,30 @@ export function useLogin(data) {
 }
 
 //获取登录二维码
-export function useGet(params) {
+export function useGetLoginQRCode(params) {
     return service({
         method: 'get',
         url: '/system/wx/getPPQRcode',
-        params: params
+        params,
+    });
+}
+
+//获取二维码扫码状态
+export function useGetLoginStatus(params) {
+    return service({
+        method: 'get',
+        url: '/system/wx/getLoginStatus',
+        params,
+        no_debounce: true,
+    });
+}
+
+//扫码登录后获取token
+export function useQRCodeLogin(params) {
+    return service({
+        method: 'get',
+        url: '/auth/getWebLoginInfo',
+        params,
     });
 }
 

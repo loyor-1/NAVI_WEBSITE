@@ -4,20 +4,16 @@
 
 <template>
   <div class="app-page">
-    <img class="app-bg" src="@/assets/img/app_bg.png" alt="">
     <router-view/>
   </div>
 </template>
 
 <style scoped lang="scss">
 .app-page {
-  width: 100vw;
+  min-width: 1440px;
   height: 100vh;
-  .app-bg {
-    z-index: -999;
-    position: fixed;
-    width: 100vw;
-    height: 100vh;
-  }
+  background-image: url('@/assets/img/app_bg.png');
+  background-repeat: no-repeat;
+  background-size: 100% 100vh;
 }
 </style>

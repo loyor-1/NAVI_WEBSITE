@@ -174,15 +174,15 @@ function logout() {
 
 <style scoped lang="scss">
 .page-main {
+  overflow: auto;
   flex-direction: column;
   row-gap: 50px;
-  width: 100vw;
   min-width: 1440px;
   height: 100vh;
 }
 
 .app-head {
-  z-index: 999;
+  z-index:999;
   position: sticky;
   top: 0;
   flex-direction: column;

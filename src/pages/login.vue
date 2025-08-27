@@ -2,11 +2,19 @@
 import { ref, watch } from 'vue';
 import { useUserStore } from '@/stores/user';
 import { useRouter } from 'vue-router';
+import { useGetLoginQRCode, useGetLoginStatus } from '@/api'
 
 const userStore = useUserStore()
 const router = useRouter()
 const login_type = ref(2)
 const login_loading = ref(false)
+const QRCode_timer = ref(null)//二维码扫码登录状态检查计时器
+const QRCode_data = ref({
+    scene: '',
+    status: 'loading',//二维码状态
+    url: '',//二维码地址
+    expire_seconds: '',//过期时间
+})
 const login_SMS = ref({
     phoneNumber: '',
     smsCode: '',
@@ -17,9 +25,79 @@ const login_password = ref({
     password: '',
 })
 
-watch(login_type, () => {
+watch(login_type, (newValue) => {
     resetData()
+    if(newValue == 1) {
+        getLoginQRCode()
+    } else {
+        resetQRCodeData()
+        clearInterval(QRCode_timer.value)
+        QRCode_timer.value = null
+    }
 })
+
+function resetQRCodeData() {
+    QRCode_data.value = {
+        scene: undefined,
+        status: 'loading',
+        url: undefined,
+        expire_seconds: undefined,
+        desc: ''
+    }
+}
+
+async function getLoginQRCode() {
+    resetQRCodeData()
+    try {
+        const res = await useGetLoginQRCode({width: 400})
+        QRCode_data.value = {
+            scene: res.data.scene,
+            status: 'finish',
+            url: 'https://mp.weixin.qq.com/cgi-bin/showqrcode?ticket=' + res.data.ticket,
+            expire_seconds: res.data.expire_seconds,
+        }
+        QRCode_timer.value = setInterval(async () => {
+            const res = await checkQRCodeLogin()
+            switch (res.status) {
+                case 'wait':
+                    break
+                case 'timeout':
+                    QRCode_data.value.status = 'expired'
+                    QRCode_data.value.desc = '二维码已失效，点击刷新'
+                    clearInterval(QRCode_timer.value)
+                    QRCode_timer.value = null
+                    break
+                case 'success':
+                    QRCode_data.value.status = 'success'
+                    QRCode_data.value.desc = '扫码成功'
+                    clearInterval(QRCode_timer.value)
+                    QRCode_timer.value = null
+                    const res_login = await userStore.QRCode_login({scene: QRCode_data.value.scene})
+                    if(res_login) {
+                        resetData()
+                        setTimeout(() => {
+                            router.push('/')
+                        }, 500)
+                    } else {
+                        QRCode_data.value.status = 'fail'
+                        QRCode_data.value.desc = '登录失败，请重试'
+                    }
+                    break
+            }
+        }, 2000);
+    }
+    catch {
+        resetQRCodeData()
+        QRCode_data.value.status = 'fail'
+        QRCode_data.value.desc = '二维码获取失败，请重试'
+    }
+}
+
+async function checkQRCodeLogin() {
+    const res = await useGetLoginStatus({scene: QRCode_data.value.scene})
+    const data = res.data
+    return data
+}
 
 function resetData() {
     login_SMS.value.phoneNumber = ''
@@ -41,7 +119,7 @@ async function login() {
             data = login_password.value
             break
     }
-    const res =  await userStore.login(data)
+    const res = await userStore.login(data)
     if(res) {
         resetData()
         router.push('/')
@@ -58,6 +136,19 @@ async function login() {
                 <div class="login-type flex-center" :class="{'login-type-active': login_type ==  1}" @click="login_type = 1">扫码登录</div>
                 <div class="login-type flex-center" :class="{'login-type-active': login_type ==  2}" @click="login_type = 2">短信登录</div>
                 <div class="login-type flex-center" :class="{'login-type-active': login_type ==  3}" @click="login_type = 3">密码登录</div>
+            </div>
+            <div class="box-main flex-center" v-if="login_type == 1">
+                <div class="QRCode-img" v-loading="QRCode_data.status == 'loading'">
+                    <img :src="QRCode_data.url" alt="" />
+                    <div class="QRCode-img-fial flex-center" v-if="QRCode_data.status == 'expired' || QRCode_data.status == 'fail'" @click="getLoginQRCode">
+                        <el-icon style="transform: scale(2);"><RefreshRight size="50"/></el-icon>
+                        <span class="font-mini">{{ QRCode_data.desc }}</span>
+                    </div>
+                    <div class="QRCode-img-fial flex-center" v-if="QRCode_data.status == 'success'">
+                        <el-icon style="transform: scale(2);"><CircleCheckFilled /></el-icon>
+                        <span class="font-mini">{{ QRCode_data.desc }}</span>
+                    </div>
+                </div>
             </div>
             <div class="box-main flex-center" v-if="login_type == 2">
                 <div class="input-box flex-center">
@@ -77,7 +168,7 @@ async function login() {
                 </div>
                 <div class="input-box flex-center">
                     <img class="icon" src="@/assets/svg/lock.svg" alt="">
-                    <input class="input-long" type="text" v-model="login_password.password">
+                    <input class="input-long" type="password" v-model="login_password.password">
                 </div>
             </div>
             <el-button type="primary" class="login-button" :loading="login_loading" @click="login">登录/注册</el-button>
@@ -142,6 +233,31 @@ input:focus {
                 .input-button {
                     width: 150px;
                     height: 100%;
+                }
+            }
+            .QRCode-img {
+                position: relative;
+                width: 10vw;
+                min-width: 200px;
+                height: 10vw;
+                min-height: 200px;
+                margin: 10px;
+                img {
+                    width: 100%;
+                    height: 100%;
+                }
+                .QRCode-img-fial {
+                    position: absolute;
+                    top: 0;
+                    left: 0;
+                    flex-direction: column;
+                    row-gap: 15px;
+                    width: 10vw;
+                    min-width: 200px;
+                    height: 10vw;
+                    min-height: 200px;
+                    color: #FFFFFF;
+                    background-color: #11111190;
                 }
             }
         }
