@@ -9,6 +9,7 @@ import ElementPlus from 'element-plus'
 import 'element-plus/dist/index.css'
 import * as ElementPlusIconsVue from '@element-plus/icons-vue'
 import intersectionDirective from '@/directives/intersection';
+import zhCn from 'element-plus/es/locale/lang/zh-cn'
 
 const app = createApp(App)
 
@@ -18,7 +19,9 @@ for (const [key, component] of Object.entries(ElementPlusIconsVue)) {
 
 app.use(createPinia())
 app.use(router)
-app.use(ElementPlus)
+app.use(ElementPlus, {
+  locale: zhCn,
+})
 
 // 注册全局指令
 app.directive('intersection', intersectionDirective);

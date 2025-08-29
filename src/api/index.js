@@ -74,6 +74,32 @@ export function useGetHotList(params) {
     return service({
         method: 'get',
         url: '/equipment/equipmentInfo/hotItemList',
-        params: params,
+        params,
     });
+}
+
+//个人/团队优惠券列表
+export function useGetCoupon(params) {
+    return service({
+        method: 'get',
+        url: '/coupon/couponClient/list',
+        params,
+    });
+}
+
+//我的资产相关金额
+export function useGetMyAssets(id) {
+    return service({
+        method: 'get',
+        url: '/system/client/myAssets/' + id,
+    });
+}
+
+//订单列表
+export function useGetOrderList(params) {
+    return service({
+        url: '/equipment/order/memberOrderList',
+        method: 'get',
+        params,
+    })
 }

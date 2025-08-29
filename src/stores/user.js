@@ -42,6 +42,9 @@ export const useUserStore = defineStore('user', () => {
     }
   }
 
+  // 更新个人信息
+  // async 
+
   //登出
   async function logout() {
     try {

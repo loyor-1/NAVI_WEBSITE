@@ -5,6 +5,14 @@ const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
   routes: [
     {
+      path: '/login',
+      name: 'login',
+      meta: {
+        require_token: false
+      },
+      component: () => import('@/pages/login.vue')
+    },
+    {
       path: '/',
       redirect: '/home_page',
       name: 'home',
@@ -24,12 +32,22 @@ const router = createRouter({
       ]
     },
     {
-      path: '/login',
-      name: 'login',
+      path: '/user',
+      name: 'user',
       meta: {
-        require_token: false
+        require_token: true
       },
-      component: () => import('@/pages/login.vue')
+      component: () => import('@/pages/user_space/index.vue'),
+      children: [
+        {
+          path: '/user_space',
+          name: 'user_space',
+          meta: {
+            require_token: false
+          },
+          component: () => import('@/pages/user_space/user_space.vue'),
+        }
+      ]
     },
   ],
 })

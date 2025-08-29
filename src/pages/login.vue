@@ -218,7 +218,7 @@ function login() {
 </template>
 
 <style lang="scss" scoped>
-::v-deep.el-form-item {
+:deep(.el-form-item) {
     margin-bottom: 0;
 }
 

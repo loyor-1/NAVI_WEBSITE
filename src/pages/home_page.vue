@@ -1,6 +1,6 @@
 <script setup>
 import * as echarts from 'echarts';
-import { onMounted, ref } from 'vue'
+import { nextTick, onMounted, ref } from 'vue'
 import { useGetCarouselList, useGetHotList } from '@/api'
 import { useRouter } from 'vue-router'
 import { left, right } from '@/utils/scroll_list.js'
@@ -365,7 +365,10 @@ function initChart() {
     });
 };
 onMounted(() => {
-    initChart()
+    const timer = setTimeout(() => {
+        initChart()
+        clearTimeout(timer)
+    }, 0);
 })
 
 </script>
@@ -379,15 +382,15 @@ onMounted(() => {
             </div>
         </div>
         <div class="carousel-pic">
-            <el-carousel ref="carousel" height="auto" :interval="2000" autoplay :pause-on-hover="false">
-                <el-carousel-item class="carousel-pic" v-if="!carousel_list.length">
-                    <div class="carousel-pic-default"></div>
-                </el-carousel-item>
-                <el-carousel-item class="carousel-pic" v-else v-for="item in carousel_list" :key="item.carouselId" @click="toPage(item)">
+            <el-carousel v-if="carousel_list.length" ref="carousel" height="auto" :interval="2000">
+                <el-carousel-item class="carousel-pic" v-for="item in carousel_list" :key="item.carouselId" @click="toPage(item)">
                     <div class="carousel-pic" :style="{'backgroundImage': `url(${item.picUrl})`}" v-if="item.picUrl"></div>
                     <div class="carousel-pic-default" v-else></div>
                 </el-carousel-item>
             </el-carousel>
+            <div class="carousel-pic" v-else>
+                <div class="carousel-pic-default"></div>
+            </div>
         </div>
     </div>
 

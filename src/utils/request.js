@@ -21,7 +21,6 @@ service.interceptors.request.use(
     const requestKey = `${config.url}_${config.method}_${JSON.stringify(config.params)}`;
     // 如果已经有相同的请求在debounce中，取消新请求--- 除非含有  no_debounce：true 字段
     if (debounceMap.has(requestKey) && !config.no_debounce) {
-      ElMessage.warning('数据正在提交，请勿重复上传！')
       return Promise.reject(new Error('数据正在提交，请勿重复上传！'));
     }
     // 设置debounce

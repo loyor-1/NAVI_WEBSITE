@@ -2,7 +2,7 @@
 import { ref } from 'vue';
 import { useRouter } from 'vue-router'
 import { getUserInfo } from '@/utils/auth';
-import { ElMessageBox, ElMessage } from 'element-plus';
+import { ElMessageBox } from 'element-plus';
 import { useUserStore } from '@/stores/user';
 
 const router = useRouter()
@@ -119,7 +119,7 @@ function logout() {
           </div>
           <img class="pre_active" src="@/assets/img/pre_active.png" alt="">
           <ul class="user-menu" :class="{'user-menu-show': menu_switch == 'show', 'user-menu-hide': menu_switch == 'hide'}" @mouseenter="changeMenuSwitch('show')" @mouseleave="changeMenuSwitch('hide')">
-            <li class="menu-li">个人资料</li>
+            <li class="menu-li" @click="router.push('/user_space')">个人资料</li>
             <li class="menu-li">我的资产</li>
             <li class="menu-li">我的订单</li>
             <li class="menu-li">我的团队</li>
