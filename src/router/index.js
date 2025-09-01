@@ -33,6 +33,7 @@ const router = createRouter({
     },
     {
       path: '/user',
+      redirect: '/user_space',
       name: 'user',
       meta: {
         require_token: true

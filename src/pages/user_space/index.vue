@@ -1,6 +1,5 @@
 <script setup>
 import { useRouter } from 'vue-router';
-import { reactive, ref } from 'vue';
 import { menu_list } from './menu_list';
 
 const router = useRouter()
@@ -18,9 +17,9 @@ const router = useRouter()
                             <el-icon>
                                 <component :is="item.icon" />
                             </el-icon>
-                            <span>账号管理</span>
+                            <span>{{ item.label }}</span>
                         </template>
-                        <el-menu-item :index="i.index" v-for="i in item.child" :key="i.index">{{ i.label }}</el-menu-item>
+                        <el-menu-item :index="i.index" v-for="i in item.child" :key="i.index" @click="router.push(i.path || '/')">{{ i.label }}</el-menu-item>
                     </el-sub-menu>
                 </el-menu>
             </div>

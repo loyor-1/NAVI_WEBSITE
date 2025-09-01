@@ -10,6 +10,7 @@ import 'element-plus/dist/index.css'
 import * as ElementPlusIconsVue from '@element-plus/icons-vue'
 import intersectionDirective from '@/directives/intersection';
 import zhCn from 'element-plus/es/locale/lang/zh-cn'
+import { getDictLabel } from "@/api/dict.js"
 
 const app = createApp(App)
 
@@ -25,5 +26,15 @@ app.use(ElementPlus, {
 
 // 注册全局指令
 app.directive('intersection', intersectionDirective);
+
+//挂在全局function
+// 批量挂载多个方法
+const global_methods = {
+  getDictLabel: getDictLabel,
+}
+// 批量添加到全局
+Object.keys(global_methods).forEach(key => {
+  app.config.globalProperties[key] = global_methods[key];
+});
 
 app.mount('#app')
