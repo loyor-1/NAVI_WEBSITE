@@ -52,7 +52,6 @@ const status_list = reactive([
 watch(
     params,
     () => {
-        console.log(111)
         getOrderList()
     },
     { 
@@ -216,7 +215,7 @@ function copyOrderCode(orderCode) {
                         <div class="img-box flex-center">
                             <el-image class="card-img" :src="item.equipment_pic">
                                 <template #error>
-                                    <img class="card-img" src="@/assets/img/default_equipment.png" />
+                                    <img class="card-img" src="@/assets/img/fail_pic.png" />
                                 </template>
                             </el-image>
                         </div>
@@ -311,6 +310,7 @@ function copyOrderCode(orderCode) {
     gap: 15px;
     width: calc((88vw - 30px) * 0.78 * 0.82);
     min-width: 791px;
+    min-height: calc(100vh - 350px);
     padding: 15px;
     .order-card {
         overflow: hidden;

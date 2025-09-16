@@ -8,6 +8,13 @@ export function useGetCarouselList(params) {
     })
 }
 
+//获取主页活动弹窗图片
+export function useGetActives(categoryId) {
+    return service({
+        url: `/coupon/activity/config/category/${categoryId}`
+    })
+}
+
 //客户登录
 export function useLogin(data) {
     return service({
@@ -99,6 +106,50 @@ export function useGetMyAssets(id) {
 export function useGetOrderList(params) {
     return service({
         url: '/equipment/order/memberOrderList',
+        method: 'get',
+        params,
+    })
+}
+
+// 设备详情
+export function useGetEquipmentInfo(id) {
+    return service({
+        method: 'get',
+        url: '/equipment/equipmentInfo/' + id,
+    });
+}
+
+//设备字段查询
+export function useGetFieIdList(params) {
+    return service({
+        method: 'get',
+        url: '/equipment/equipmentSubscribeFieId/listAll',
+        params,
+        no_debounce: true,
+    });
+}
+
+//查询字段组详情
+export function useGetFieldGroupList(id) {
+    return service({
+        url: '/equipment/fieldGroup/' + id,
+        method: 'get',
+        no_debounce: true,
+    })
+}
+
+//获取文件夹UUID
+export function useGetFileUUID() {
+    return service({
+        url: '/file/uuid',
+        method: 'get'
+    })
+}
+
+//文件合并
+export function useBlockUploadSuccess(params) {
+    return service({
+        url: '/file/blockUploadSuccess',
         method: 'get',
         params,
     })

@@ -2,7 +2,7 @@ import { createRouter, createWebHistory } from 'vue-router'
 import { getToken } from '@/utils/auth'
 
 const router = createRouter({
-  history: createWebHistory(import.meta.env.BASE_URL),
+  history: createWebHistory(),
   routes: [
     {
       path: '/login',
@@ -12,6 +12,7 @@ const router = createRouter({
       },
       component: () => import('@/pages/login.vue')
     },
+    // 首页板块
     {
       path: '/',
       redirect: '/home_page',
@@ -28,9 +29,20 @@ const router = createRouter({
             require_token: false
           },
           component: () => import('@/pages/home_page.vue'),
+        },
+        {
+          path: '/equipment_detail',
+          name: 'equipment_detail',
+          component: () => import('@/pages/order/equipment_detail.vue'),
+        },
+        {
+          path: '/appoint_order',
+          name: 'appoint_order',
+          component: () => import('@/pages/order/appoint_order.vue'),
         }
       ]
     },
+    // 用户板块
     {
       path: '/user',
       redirect: '/user_space',
@@ -55,6 +67,9 @@ const router = createRouter({
 
 // 全局前置守卫
 router.beforeEach((to, from, next) => {
+  const app = document.getElementById("app")
+  app.scrollTo({ top: 0 })
+  window.scrollTo(0, 0)
   const token = getToken()
   if(!token && to.meta.require_token) {
     next('/login')

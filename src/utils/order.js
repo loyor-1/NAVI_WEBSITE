@@ -63,3 +63,58 @@ export function orderStatus(data) {
 	}
 	return status_string
 }
+
+//初始化预约字段的显示与隐藏
+export function initFieIdList(list) {
+	const new_list = JSON.parse(JSON.stringify(list))
+	//有关联id的初始化需要被隐藏
+    new_list.forEach(item => {
+		item.show = item.isRelevance ? false : true
+		item.fieIdValue = ""
+		switch(item.fieIdType) {
+			case 5: 
+			    item.fieIdValue = item.richTextDefault
+				break
+			case 9:
+		        item.fieIdValue = 0
+				item.fieldValueRange = 0
+				break
+			case 10:
+				item.fieIdValue = item.needElement
+				break
+		}
+    })
+    return new_list
+}
+
+//动态改变字段的显示与隐藏
+export function changeRelevance(list, data, type) {
+	let new_list = JSON.parse(JSON.stringify(list))
+	const index = new_list.findIndex(item => item.isRelevance && item.relevanceField == data.fieIdId)
+	if(index >= 0) {
+		const relevance_list = new_list[index].relevanceOptionId ? new_list[index].relevanceOptionId.split(',') : []
+	    if(relevance_list.length && data.optionId) {
+	    	for(const item of data.optionId) {
+	    		if(relevance_list.includes(item.toString())) {
+	    			new_list[index].show = true
+	    			break
+	    		}
+	    		new_list[index].show = false
+	    	}
+	    }
+	}
+	new_list = reduceMoney(new_list, type)
+	return new_list
+}
+
+//计算 全局字段 or 字段组 的价格
+function reduceMoney(value, type) {
+	const list = JSON.parse(JSON.stringify(value))
+	console.log(type, list)
+	if(type == 'global') {
+
+	} else {
+		
+	}
+	return list
+}

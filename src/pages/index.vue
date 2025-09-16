@@ -4,38 +4,15 @@ import { useRouter } from 'vue-router'
 import { getUserInfo } from '@/utils/auth';
 import { ElMessageBox } from 'element-plus';
 import { useUserStore } from '@/stores/user';
+import { useTabStore } from '@/stores/tab';
 
 const router = useRouter()
 const user_store = useUserStore()
+const tab_store = useTabStore()
 
 const menu_switch = ref('')
 const user_info = ref(JSON.parse(getUserInfo()))
 const menu_timer = ref(null)
-
-const tab_list_all = ref([
-  { label: '首页', index: 0, active: true, page: '/'},
-  { label: '云现场', index: 1, active: false,},
-  { label: '材料检测', index: 2, active: false},
-  { label: '高端测试', index: 3, active: false},
-  { label: '材料加工', index: 4, active: false},
-  { label: '试剂耗材', index: 5, active: false},
-  { label: '环境检测', index: 6, active: false},
-  { label: '模拟计算', index: 7, active: false},
-  { label: '科研绘图', index: 8, active: false},
-  { label: '论文润色', index: 9, active: false},
-  { label: '数据分析', index: 10, active: false},
-  { label: '专利服务', index: 11, active: false},
-  { label: '合作入驻', index: 12, active: false},
-  { label: '关于我们', index: 13, active: false},
-  { label: '预留页面', index: 14, active: false},
-  { label: '预留页面', index: 15, active: false},
-  { label: '预留页面', index: 16, active: false},
-  { label: '预留页面', index: 17, active: false},
-  { label: '预留页面', index: 18, active: false},
-  { label: '预留页面', index: 19, active: false},
-])
-
-const tab_list = ref(tab_list_all.value.slice(0, 14))
 
 // 用户面板
 function changeMenuSwitch(value) {
@@ -52,22 +29,6 @@ function changeMenuSwitch(value) {
       menu_timer.value = null
     }, 500);
   }
-}
-
-//tabbar翻页
-function changeMenuList(num) {
-  const index_start = tab_list_all.value.findIndex(item => item.index == tab_list.value[0].index) + num
-  const index_end = tab_list_all.value.findIndex(item => item.index == tab_list.value[tab_list.value.length - 1].index) + 1 + num
-  if(index_start < 0 || index_end > tab_list_all.value.length - 1) return
-  tab_list.value = tab_list_all.value.slice(index_start, index_end)
-}
-
-//选中tabbar
-function clickTabbar(data) {
-  tab_list_all.value.forEach(item => {
-    item.active = item.index == data.index
-  })
-  router.push(data.page || '/')
 }
 
 //退出登录
@@ -130,9 +91,9 @@ function logout() {
         </div>
       </div>
       <div class="bottom-box">
-        <div class="tabbar-button flex-center" @click="changeMenuList(-1)"><el-icon><ArrowLeftBold /></el-icon></div>
-        <div class="tabbar flex-center" :class="{'tabbar-active': item.active}" v-for="item in tab_list" :key="item.index" @click="clickTabbar(item)">{{ item.label }}</div>
-        <div class="tabbar-button flex-center" @click="changeMenuList(1)"><el-icon><ArrowRightBold /></el-icon></div>
+        <div class="tabbar-button flex-center" @click="tab_store.changeMenuList(-1)"><el-icon><ArrowLeftBold /></el-icon></div>
+        <div class="tabbar flex-center" :class="{'tabbar-active': item.active}" v-for="item in tab_store.tab_list" :key="item.index" @click="tab_store.clickTabbar(item)">{{ item.label }}</div>
+        <div class="tabbar-button flex-center" @click="tab_store.changeMenuList(1)"><el-icon><ArrowRightBold /></el-icon></div>
       </div>
     </div>
 
@@ -175,11 +136,9 @@ function logout() {
 
 <style scoped lang="scss">
 .page-main {
-  overflow: auto;
   flex-direction: column;
   row-gap: 50px;
   min-width: 1440px;
-  height: 100vh;
 }
 
 .app-head {

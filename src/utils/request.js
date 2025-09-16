@@ -1,7 +1,7 @@
 import axios from 'axios';
 import errorCode from './errorCode'
 import { debounce } from 'lodash';
-import { getToken, removeToken } from '@/utils/auth'; // 假设有获取/删除Token的工具函数
+import { getToken, removeToken, removeUserInfo } from '@/utils/auth'; // 假设有获取/删除Token的工具函数
 import { ElMessage } from 'element-plus'; // UI提示库（可选）
 
 // 存储正在debounce的请求

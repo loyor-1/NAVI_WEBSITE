@@ -1,12 +1,15 @@
 <script setup>
 import * as echarts from 'echarts';
-import { nextTick, onMounted, ref } from 'vue'
+import { onMounted, ref } from 'vue'
 import { useGetCarouselList, useGetHotList } from '@/api'
 import { useRouter } from 'vue-router'
 import { left, right } from '@/utils/scroll_list.js'
 import chinaMap from '@/utils/china_map.json';
+import { useTabStore } from '@/stores/tab';
 
 const router = useRouter()
+const tab_store = useTabStore()
+
 const carousel_list = ref([])//轮播图列表
 const carousel = ref()//轮播图实例
 const hot_list = ref([])//热门设备列表
@@ -371,6 +374,11 @@ onMounted(() => {
     }, 0);
 })
 
+// 前往设备详情
+function toEquipmentDetail(equipment_id) {
+    router.push(`/equipment_detail?equipment_id=${equipment_id}`)
+}
+
 </script>
 
 <template>
@@ -400,7 +408,7 @@ onMounted(() => {
             <div class="head-item-right font-5D5D5D">自营设备品类丰富，高效快捷</div>
         </div>
         <div class="box-main" v-if="!hot_list.length">
-            <div class="card" v-for="item in 10" :key="item" v-loading="true">
+            <div class="card-default" v-for="item in 10" :key="item" v-loading="true">
                 <div class="img-box flex-center">
                     <div class="card-img"></div>
                 </div>
@@ -408,11 +416,11 @@ onMounted(() => {
             <div class="card-info"></div>
         </div>
         <div class="box-main" v-else>
-            <div class="card" v-for="item in hot_list" :key="item.equipmentUnitId">
+            <div class="card" v-for="item in hot_list" :key="item.id" @click="toEquipmentDetail(item.id)">
                 <div class="img-box flex-center">
                     <el-image class="card-img" :src="item.equipment_pic">
                         <template #error>
-                            <img class="card-img" src="@/assets/img/default_equipment.png" />
+                            <img class="card-img" src="@/assets/img/fail_pic.png" />
                         </template>
                     </el-image>
                 </div>
@@ -433,7 +441,7 @@ onMounted(() => {
                         </div>
                     </div>
                 </div>
-                <div class="custom-button">立即预约</div>
+                <div class="custom-button" @click.stop="router.push(`/appoint_order?equipment_id=${item.id}`)">立即预约</div>
             </div>
         </div>
     </div>
@@ -657,6 +665,12 @@ onMounted(() => {
         min-height: calc((80vw - 90px) / 5 * 1.3);
         padding: 15px;
         background-color: #FFFFFF;
+        .card-default {
+            width: calc((80vw - 90px) / 5);
+            min-width: 270px;
+            border-radius: 5%;
+            background-color: #fff;
+        }
         .card {
             animation: card 0.5s linear forwards;
             display: flex;
