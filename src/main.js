@@ -11,12 +11,15 @@ import * as ElementPlusIconsVue from '@element-plus/icons-vue'
 import intersectionDirective from '@/directives/intersection';
 import zhCn from 'element-plus/es/locale/lang/zh-cn'
 import { getDictLabel } from "@/api/dict.js"
+import { ElCollapseTransition } from 'element-plus'
+import 'element-plus/theme-chalk/base.css'
 
 const app = createApp(App)
 
 for (const [key, component] of Object.entries(ElementPlusIconsVue)) {
   app.component(key, component)
 }
+app.component(ElCollapseTransition.name, ElCollapseTransition)
 
 app.use(createPinia())
 app.use(router)

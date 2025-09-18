@@ -142,7 +142,7 @@ function logout() {
 }
 
 .app-head {
-  z-index:999;
+  z-index:999999;
   position: sticky;
   top: 0;
   flex-direction: column;
