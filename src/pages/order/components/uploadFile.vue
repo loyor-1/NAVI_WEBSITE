@@ -163,7 +163,7 @@ function updateValue() {
                 :http-request="upload"
                 with-credentials
                 :on-remove="handleRemove">
-                <el-button type="primary">上传附件</el-button>
+                <el-button type="primary" plain><el-icon><MostlyCloudy /></el-icon>上传附件</el-button>
             </el-upload>
             <el-progress :stroke-width="2" v-if="uploading" :percentage="percentage"></el-progress>
         </div>

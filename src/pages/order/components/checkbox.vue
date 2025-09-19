@@ -19,7 +19,7 @@ function changeCheckbox(data) {
     } else {
         value_data.value.optionId.push(data.optionId)
     }
-    if(index_fieIdValue > 0) {
+    if(index_fieIdValue >= 0) {
         fieIdValue_list.value.splice(index_fieIdValue, 1)
     } else {
         fieIdValue_list.value.push(data.optionName)

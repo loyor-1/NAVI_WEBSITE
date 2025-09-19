@@ -3,6 +3,7 @@ import { useRoute, useRouter } from 'vue-router';
 import { useGetEquipmentInfo, useGetActives, useGetFieIdList } from '@/api'
 import { reactive, ref, watch } from 'vue';
 import { initFieIdList, changeRelevance } from '@/utils/order';
+import { ElMessageBox } from 'element-plus'
 import radio from './components/radio.vue'
 import checkbox from './components/checkbox.vue';
 import singleLine from './components/single_line.vue';
@@ -51,6 +52,8 @@ const appoint_data = ref({
         }
     ],
     message: '',//实验留言
+    customRemark: '',//订单备注
+    fieIdList: [],//上传附件
 })
 
 watch(
@@ -135,7 +138,26 @@ function addGroup() {
 }
 //删除样品组
 function deleteGroup(group_index) {
-    appoint_data.value.groups.splice(group_index, 1)
+    ElMessageBox.alert('是否删除该样品组', '温馨提示', {
+        showCancelButton: true,
+        confirmButtonText: '确认',
+        cancelButtonText: '取消',
+    }).then(() => {
+        appoint_data.value.groups.splice(group_index, 1)
+    })
+}
+//复制样品组
+function copyGroup(data) {
+    const {show_groups, specimenNum, specimen_code_list, specimenCode, specimenIngredient, fieIdList} = data
+    appoint_data.value.groups.push({
+        show_groups,
+        sampleName: sample_name_list[appoint_data.value.groups.length],
+        specimenNum, //样品数量
+        specimen_code_list,
+        specimenCode, //样品编号
+        specimenIngredient, //样品成分
+        fieIdList, //配置字段列表,
+    })
 }
 //更改全局字段的值
 function updateGlobalValue(item, index, value) {
@@ -144,7 +166,7 @@ function updateGlobalValue(item, index, value) {
         ...value
     }
     appoint_data.value.globalFieldValues[0].fieIdList[index] = new_value
-    appoint_data.value.globalFieldValues[0].fieIdList = changeRelevance(appoint_data.value.globalFieldValues[0].fieIdList, new_value, 'global')
+    appoint_data.value.globalFieldValues[0].fieIdList = changeRelevance(appoint_data.value.globalFieldValues[0].fieIdList, new_value, true)
 }
 //更改字段组字段的值
 function updateGroupValue(fieId_item, group_index, fieId_index, value) {
@@ -153,7 +175,7 @@ function updateGroupValue(fieId_item, group_index, fieId_index, value) {
         ...value
     }
     appoint_data.value.groups[group_index].fieIdList[fieId_index] = new_value
-    appoint_data.value.groups[group_index].fieIdList = changeRelevance(appoint_data.value.groups[group_index].fieIdList, new_value, 'group')
+    appoint_data.value.groups[group_index].fieIdList = changeRelevance(appoint_data.value.groups[group_index].fieIdList, new_value, false)
 }
 // 更改样品数量
 function changeNum(newValue, oldValue, group_index) {
@@ -169,16 +191,17 @@ function changeNum(newValue, oldValue, group_index) {
         appoint_data.value.groups[group_index].specimen_code_list.splice(newValue, Math.abs(num))
     }
 }
-
+// 上传附件
+function uploadOrderFile(fieIdList) {
+    appoint_data.value.fieIdList = fieIdList
+}
 </script>
 
 <template>
     <div>
         <div>还剩</div>
-        <div>复制样品组</div>
         <div>订单价格</div>
         <div>订单价格明细</div>
-        <div>其他实验信息---上传附件</div>
     </div>
     <div class="euipment-box flex-center">
         <div class="img-box flex-center">
@@ -188,7 +211,7 @@ function changeNum(newValue, oldValue, group_index) {
                 </template>
             </el-image>
         </div>
-        <div class="info-box flex-center">
+        <div class="info-box flex-center" v-loading="loading">
             <div class="font-middle font-600 font-5CC300">预约：{{ equipment_info.equipmentName }}</div>
             <div class="info-item flex-center">
                 <span class="item-title">设备型号</span>
@@ -215,7 +238,7 @@ function changeNum(newValue, oldValue, group_index) {
                     <img class="fail-pic" src="@/assets/img/fail_pic.png" alt="">
                 </template>
              </el-image>
-            <div class="multi-line-ellipsis-1">与技术顾问{{ equipment_info.technicalAdvisorTextPrompts }}</div>
+            <div class="multi-line-ellipsis-1 font-mini">{{ equipment_info.technicalAdvisorTextPrompts }}</div>
         </div>
     </div>
     
@@ -231,8 +254,8 @@ function changeNum(newValue, oldValue, group_index) {
             </div>
         </div>
         <el-collapse-transition>
-            <div style="min-height: 100px;" v-loading="loading">
-                <div class="profile-content show_instructions" v-show="show_instructions" v-html="equipment_info.testingInstructions"></div>
+            <div v-loading="loading" v-show="show_instructions">
+                <div class="profile-content show_instructions" v-html="equipment_info.testingInstructions"></div>
             </div>
         </el-collapse-transition>
     </div>
@@ -289,8 +312,9 @@ function changeNum(newValue, oldValue, group_index) {
                     <div class="slider"></div>
                     <span class="font-middle font-600">{{ item.sampleName }}组样品</span>
                 </div>
-                <div>
+                <div class="flex-center">
                     <el-icon class="delete-icon" v-show="appoint_data.groups.length > 1" @click="deleteGroup(group_index)"><DeleteFilled /></el-icon>
+                    <span class="copy-icon flex-center" @click="copyGroup(item)"><el-icon><CopyDocument /></el-icon>复制</span>
                     <el-icon class="caret-icon" v-if="item.show_groups" @click="item.show_groups = !item.show_groups"><CaretTop /></el-icon>
                     <el-icon class="caret-icon" v-else @click="item.show_groups = !item.show_groups"><CaretBottom /></el-icon>
                 </div>
@@ -352,8 +376,13 @@ function changeNum(newValue, oldValue, group_index) {
 
     <div class="profile">
         <div class="profile-head flex-center">
-            <div class="slider"></div>
-            <span class="font-middle font-600">其他实验信息</span>
+            <div class="flex-center">
+                <div class="slider"></div>
+                <span class="font-middle font-600">其他实验信息</span>
+            </div>
+        </div>
+        <div class="upload-file">
+            <uploadFile :base_data="{fieIdName: '上传附件'}" @updateValue="uploadOrderFile"></uploadFile>
         </div>
         <div class="other-info-box">
             <div class="other-info">
@@ -372,7 +401,9 @@ function changeNum(newValue, oldValue, group_index) {
             </div>
             <div class="button-box">
                 <div class="flex-center price">
-                    <div>合计费用： <span class="font-FF4A2B font-middle">￥{{ 99999 }}</span></div>
+                    <span class="font-5D5D5D">合计费用： </span>
+                    <span class="font-FF4A2B font-middle">￥{{ 99999 }}</span>
+                    <img class="gold" src="@/assets/svg/money.svg" alt="">
                 </div>
                 <div class="default-button" @click="addGroup">添加样品</div>
                 <div class="custom-button">下一步</div>
@@ -474,6 +505,13 @@ function changeNum(newValue, oldValue, group_index) {
             margin-right: 15px;
             color: #FF4A2B;
         }
+        .copy-icon {
+            cursor: pointer;
+            margin-right: 15px;
+        }
+        .copy-icon:hover {
+            color: #5CC300;
+        }
         .caret-icon {
             cursor: pointer;
             transform: scale(2);
@@ -487,9 +525,12 @@ function changeNum(newValue, oldValue, group_index) {
         width: 80vw;
         min-width: 1440px;
         height: fit-content;
-        min-height: 100px;
         padding: 15px;
  
+    }
+    .upload-file {
+        padding: 15px;
+        padding-bottom: 0;
     }
     .other-info-box {
         display: flex;
@@ -514,7 +555,13 @@ function changeNum(newValue, oldValue, group_index) {
             height: 100%;
             .price {
                 height: 80px;
-                border: 1px solid #E8E8E8;
+                border: 1px solid #C8C9CC;
+                border-radius: 5px;
+                .gold {
+                    width: 50px;
+                    height: 50px;
+                    margin-left: 5px;
+                }
             }
             .default-button {
                 height: 60px;
