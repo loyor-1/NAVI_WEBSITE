@@ -5,14 +5,21 @@ import { reactive, ref } from 'vue';
 import { getUserInfo } from '@/utils/auth';
 import { useGetCoupon, useGetMyAssets } from '@/api'
 import orderList from './components/order_list.vue'
+import applyPrepayment from './components/apply_prepayment.vue';
 
 dayjs.extend(relativeTime);
 
 const coupon_loading = ref(true)
 const assets_loading = ref(true)
-const carousel_list = ref([])
-const user_info = reactive(JSON.parse(getUserInfo()))
+const carousel_list = ref([])//轮播图列表
+const user_info = reactive(JSON.parse(getUserInfo()))//用户信息
 const user_assets = ref({})//用户资产数据
+//个人中心显示的二级子界面列表
+const show_page = [
+    { label: '我的订单', component: orderList },
+    { label: '申请预存', component: applyPrepayment },
+]
+const show_page_index = ref(0)//二级子界面的索引
 //个人优惠券
 const user_coupon_data = ref({
     usable: [],//可用优惠券
@@ -141,6 +148,10 @@ async function getMyAssets() {
 }
 getMyAssets()
 
+//更改显示的二级子界面
+function changeShowPage(index) {
+    if(show_page_index.value != index) show_page_index.value = index
+}
 </script>
 
 <template>
@@ -226,7 +237,7 @@ getMyAssets()
                         <span class="font-5CC300 font-600">￥ {{ assets_loading ? '...' : ((user_assets.depositAdvance + user_assets.cashCouponBalance) || 0).toFixed(2) }} </span>
                     </div>
                     <div class="button-box flex-center">
-                        <div class="assets-button font-mini custom-button">申请预存</div>
+                        <div class="assets-button font-mini custom-button" @click="changeShowPage(1)">申请预存</div>
                         <div class="assets-button font-mini default-button">个人预存记录</div>
                     </div>
                 </div>
@@ -265,12 +276,15 @@ getMyAssets()
                 </div>
             </div>
         </el-scrollbar>
-            <div class="page-view">
-                <div class="view-title flex-center font-600">我的订单</div>
-                <div class="view-content">
-                    <order-list></order-list>
-                </div>
+        <div class="page-view">
+            <div class="view-title flex-center font-600">
+                <div class="view-back custom-button" v-if="show_page_index" @click="show_page_index = 0">返回</div>
+                <div>{{ show_page[show_page_index].label }}</div>
             </div>
+            <div class="view-content">
+                <component :is="show_page[show_page_index].component"></component>
+            </div>
+        </div>
     </div>
 </template>
 
@@ -417,12 +431,20 @@ getMyAssets()
         border-radius: 10px;
         background-color: #FFFFFF90;
         .view-title {
+            position: relative;
             top: 0;
             width: calc((88vw - 30px) * 0.78);
             min-width: 965px;
             height: 45px;
             background-color: #94C9FF80;
             border-radius: 10px 10px 0 0;
+            .view-back {
+                position: absolute;
+                left: 15px;
+                width: 60px;
+                height: 30px;
+                font-weight: normal;
+            }
         }
         .view-content {
             width: calc((88vw - 30px) * 0.78);

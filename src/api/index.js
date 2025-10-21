@@ -154,3 +154,39 @@ export function useBlockUploadSuccess(params) {
         params,
     })
 }
+
+//发票抬头列表---全部
+export function useGetInvoiceHeadList(query) {
+    return service({
+        url: '/equipment/invoiceHeadContrast/list',
+        method: 'get',
+        params: query
+    })
+}
+
+//查询抬头列表---个人
+export function useGetUserInvoiceHeadList(params) {
+    return service({
+        url: '/equipment/invoiceHead/list',
+        method: 'get',
+        params
+    })
+}
+
+//检测项目下拉
+export function useGetTestItemList(query) {
+    return service({
+        url: '/equipment/equipmentDetectionItem/listAll',
+        method: 'get',
+        params: query
+    })
+}
+
+//申请开票
+export function useApplyInvoice(data) {
+    return service({
+        url: '/equipment/invoiceInformation/applyInvoice',
+        method: 'post',
+        data
+    })
+}

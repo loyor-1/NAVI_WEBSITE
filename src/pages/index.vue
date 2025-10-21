@@ -27,7 +27,7 @@ function changeMenuSwitch(value) {
       menu_switch.value = value
       clearTimeout(menu_timer.value)
       menu_timer.value = null
-    }, 500);
+    }, 300);
   }
 }
 
@@ -81,7 +81,6 @@ function logout() {
           <img class="pre_active" src="@/assets/img/pre_active.png" alt="">
           <ul class="user-menu" :class="{'user-menu-show': menu_switch == 'show', 'user-menu-hide': menu_switch == 'hide'}" @mouseenter="changeMenuSwitch('show')" @mouseleave="changeMenuSwitch('hide')">
             <li class="menu-li" @click="router.push('/user_space')">个人资料</li>
-            <li class="menu-li">我的资产</li>
             <li class="menu-li">我的订单</li>
             <li class="menu-li">我的团队</li>
             <li class="menu-li">邀请好友</li>
@@ -245,13 +244,13 @@ function logout() {
         }
         100% {
           opacity: 1;
-          height: 280px;
+          height: 240px;
         }
       }
       @keyframes hide_menu {
         0% {
           opacity: 1;
-          height: 280px;
+          height: 240px;
         }
         100% {
           opacity: 0;

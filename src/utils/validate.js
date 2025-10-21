@@ -31,3 +31,18 @@ export function validPhone(phone) {
         message: ''
     };
 }
+
+//发票抬头
+export function validInvoiceTitle(value) {
+  return /\s/.test(value)
+}
+
+//企业税号
+export function validEnterpriseTax(value) {
+  return /^[0-9A-HJ-NPQRTUWXY]{2}\d{6}[0-9A-HJ-NPQRTUWXY]{10}$/.test(value)
+}
+
+//开户行账号
+export function validOpenBankAccount(value) {
+  return /^\d{12,25}$/.test(value)
+}

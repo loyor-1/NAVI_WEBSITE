@@ -202,7 +202,7 @@ function copyOrderCode(orderCode) {
             </div>
         </div>
         <el-scrollbar>
-            <div class="order-box" v-loading="loading">
+            <div class="order-box" v-loading="loading" v-if="order_list.length">
                 <div class="order-card" v-for="item in order_list" :key="item.orderId">
                     <div class="card-head flex-center">
                         <div class="order-code flex-center" @click.stop="copyOrderCode(item.orderCode)">
@@ -247,17 +247,20 @@ function copyOrderCode(orderCode) {
                         <div class="default-button" v-if="show_invoice(item)" @click.stop="">查看发票</div>
                         <!-- 弹出确认结果弹框 -->
                         <div class="custom-button" v-if="confirm_result(item)" @click.stop="">
-                            <span>下载实验数据</span>
+                            <span class="font-mini">下载实验数据</span>
                             <img class="new-icon" src="@/assets/svg/new.svg" alt="">
                         </div>
                         <!-- 直接下载结果 -->
                         <div class="custom-button" v-if="download_result(item)" @click.stop="">
-                            <span>下载实验数据</span>
+                            <span class="font-mini">下载实验数据</span>
                             <img class="new-icon" src="@/assets/svg/new.svg" alt="">
                         </div>
                         <div class="default-button" v-if="apply_service(item)" @click.stop="">申请售后</div>
                     </div>
                 </div>
+            </div>
+            <div class="order-box order-box-null flex-center font-middle font-5D5D5D" v-loading="loading" v-else>
+                暂无订单信息...
             </div>
         </el-scrollbar>
     </div>
@@ -308,6 +311,8 @@ function copyOrderCode(orderCode) {
     display: flex;
     flex-wrap: wrap;
     gap: 15px;
+    justify-content: flex-start;
+    align-content: flex-start;
     width: calc((88vw - 30px) * 0.78 * 0.82);
     min-width: 791px;
     min-height: calc(100vh - 350px);
@@ -364,8 +369,9 @@ function copyOrderCode(orderCode) {
             background-color: #FFFFFF;
             .custom-button {
                 position: relative;
-                width: 30%;
                 height: 40px;
+                padding: 0 15px;
+                font-size: clamp(10px, 0.6vw, 24px);
                 .new-icon {
                     position: absolute;
                     top: -50%;
@@ -374,11 +380,16 @@ function copyOrderCode(orderCode) {
                 }
             }
             .default-button {
-                width: 30%;
                 height: 40px;
+                padding: 0 15px;
+                font-size: clamp(10px, 0.6vw, 24px);
             }
         }
     }
+}
+.order-box-null {
+    justify-content: center;
+    align-content: center;
 }
 
 .pagination-box {
