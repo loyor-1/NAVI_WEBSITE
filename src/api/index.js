@@ -1,5 +1,14 @@
 import service from '@/utils/request';
 
+//获取七牛云下载链接
+export function useGetDownLoadUrl(query) {
+    return service({
+        url: '/equipment/uploadCenter/getDownLoadUrl',
+        method: 'get',
+        params: query
+    })
+}
+
 //首页轮播图
 export function useGetCarouselList(params) {
     return service({
@@ -108,6 +117,14 @@ export function useGetOrderList(params) {
         url: '/equipment/order/memberOrderList',
         method: 'get',
         params,
+    })
+}
+
+//订单详情
+export function useGetOrderInfo(id) {
+    return service({
+        url: '/equipment/order/' + id,
+        method: 'get'
     })
 }
 

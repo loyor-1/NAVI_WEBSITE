@@ -4,6 +4,8 @@ import { useGetOrderList } from '@/api'
 import { moneyKey, orderStatus } from '@/utils/order';
 import { ElMessage } from 'element-plus';
 
+const emit = defineEmits(['emitChangeShowPage'])
+
 const loading = ref(false)
 const total = ref(0)
 const status_value = ref(0)
@@ -178,10 +180,21 @@ function copyOrderCode(orderCode) {
     }
 }
 
+//前往订单详情
+function emitChangeShowPage(index, order_id) {
+    const data = {
+        component: 'orderDetail',
+        index,
+        order_id
+    }
+    emit('emitChangeShowPage', data)
+}
+
 </script>
 
 <template>
-    <div class="page-main flex-center">
+    <div>
+        <div class="page-main flex-center">
         <div class="utils-box">
             <div class="search-box flex-center">
                 <el-input v-model="order_code" placeholder="请输入订单号">
@@ -203,7 +216,7 @@ function copyOrderCode(orderCode) {
         </div>
         <el-scrollbar>
             <div class="order-box" v-loading="loading" v-if="order_list.length">
-                <div class="order-card" v-for="item in order_list" :key="item.orderId">
+                <div class="order-card" v-for="item in order_list" :key="item.orderId" @click="emitChangeShowPage(1, item.orderId)">
                     <div class="card-head flex-center">
                         <div class="order-code flex-center" @click.stop="copyOrderCode(item.orderCode)">
                             <span>{{ item.orderCode }}</span>
@@ -225,11 +238,11 @@ function copyOrderCode(orderCode) {
                                 <span>订单金额：</span>
                                 <span v-if="orderStatus(item) == '待议价'">订单未完成议价</span>
                                 <span class="font-FF4A2B font-600" v-else>￥{{ item[moneyKey(item)] }}</span>
-                                <span style="margin-left: 5px;" v-if="item.prepaidPayment">{{ getDictLabel('prepaidPayment', item.prepaidPayment) }}</span>
+                                <span style="margin-left: 5px;" v-if="item.prepaidPayment">{{ getDictLabel('prepaid_payment', item.prepaidPayment) }}</span>
                             </div>
                             <div class="invoice flex-center" v-if="orderStatus(item) == '已完成'">
                                 <span>发票状态：</span>
-                                <span>{{ getDictLabel('billStatus', item.billStatus) }}</span>
+                                <span>{{ getDictLabel('bill_status', item.billStatus) }}</span>
                                 <el-tooltip content="无需开票：预存支付的订单，包括团队预存和个人预存" placement="top">
                                     <el-icon style="margin-left: 5px; vertical-align: middle;"><QuestionFilled /></el-icon>
                                 </el-tooltip>
@@ -273,6 +286,7 @@ function copyOrderCode(orderCode) {
           layout="total, sizes, prev, pager, next"
           :total="total"
         />
+    </div>
     </div>
 </template>
 

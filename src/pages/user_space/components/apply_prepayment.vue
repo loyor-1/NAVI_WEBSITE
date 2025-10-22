@@ -10,7 +10,7 @@ import { useGetInvoiceHeadList, useGetUserInvoiceHeadList, useGetTestItemList, u
 const router = useRouter()
 
 const confirm_loading = ref(false)
-const apply_success_dialog = ref(false)//申请成功弹框
+const apply_success_dialog = ref(true)//申请成功弹框
 const user_info = ref(JSON.parse(getUserInfo()))
 const form = ref(null)//表单实例
 //申请预存数据表单
@@ -66,105 +66,105 @@ const rules = computed(() => {
             callback(new Error('业务员工号不能为空'))
         }
         callback()
-        const invoiceRules = (rule, value, callback) => {
-            let validate = true
-            let invoice_num = 0
-            let invoice_desc = ''
-            form_data.value.invoice.forEach((item, index) => {
-                if(validate) {
-                    if(!item.clientNeedInvoiceDate) {
+    }
+    const invoiceRules = (rule, value, callback) => {
+        let validate = true
+        let invoice_num = 0
+        let invoice_desc = ''
+        form_data.value.invoice.forEach((item, index) => {
+            if(validate) {
+                if(!item.clientNeedInvoiceDate) {
+                    validate = false
+                    invoice_num = index + 1
+                    invoice_desc = '开票日期'
+                    return
+                }
+                item.checkItems.forEach(i => {
+                    if(!i.detectionItemId || !i.detectionItemName) {
                         validate = false
                         invoice_num = index + 1
-                        invoice_desc = '开票日期'
+                        invoice_desc = '检测项目名称'
                         return
                     }
-                    item.checkItems.forEach(i => {
-                        if(!i.detectionItemId || !i.detectionItemName) {
-                            validate = false
-                            invoice_num = index + 1
-                            invoice_desc = '检测项目名称'
-                            return
-                        }
-                        if(!i.detectionMeteringUnit) {
-                            validate = false
-                            invoice_num = index + 1
-                            invoice_desc = '计量单位'
-                            return
-                        }
-                    })
-                }
-            })
-            if(validate) {
-                callback()
-            } else {
-                callback(new Error(`【发票${invoice_num}】——【${invoice_desc}】不能为空`))
-            }
-        }
-        const accountingInformationRules = (rule, value, callback) => {
-            if(accounting_information_list.value.includes('其他') && !form_data.value.otherInformation) {
-                callback(new Error('【其他】报账资料不能为空'))
-            } else{
-                callback()
-            }
-        }
-        const invoiceInformationRules = (rule, value, callback) => {
-            const dict = [
-                { label: '发票抬头', index: 0, key: 'invoiceTitle' },
-                { label: '企业税号', index: 1, key: 'enterpriseTaxNumber' },
-                { label: '收件邮箱', index: 2, key: 'receivingContact' },
-                { label: '开户银行', index: 3, key: 'openBankName' },
-                { label: '开户行账号', index: 4, key: 'openBankAccount' },
-                { label: '银行地址', index: 5, key: 'registeredAddress' },
-                { label: '注册电话', index: 6, key: 'registeredTelephone' },
-                { label: '收件人姓名', index: 7, key: 'addressee' },
-                { label: '收件地址', index: 8, key: 'deliveryAddress' },
-                { label: '收件邮箱', index: 9, key: 'receivingContact' },
-                { label: '收件联系方式', index: 10, key: 'receivingContactInformation' },
-            ]
-            let validate = true
-            let label = undefined
-            dict.forEach(item => {
-                if(validate) {
-                    if(item.index <= 1 && !form_data.value[item.key]) {
+                    if(!i.detectionMeteringUnit) {
                         validate = false
-                        label = item.label
+                        invoice_num = index + 1
+                        invoice_desc = '计量单位'
+                        return
                     }
-                    if(item.index > 1 && form_data.value.invoiceType == 2 && !form_data.value[item.key]) {
-                        validate = false
-                        label = item.label
-                    }
-                }
-            })
-            if(validate) {
-                if(validInvoiceTitle(form_data.value.invoiceTitle)) {
-                    callback(new Error('请输入正确的发票抬头（不能包含空格、换行等字符）'))
-                } else if(!validEnterpriseTax(form_data.value.enterpriseTaxNumber)) {
-                    callback(new Error('请输入正确的企业税号'))
-                } else {
-                    callback()
-                }
-            } else {
-                callback(new Error(`【${label}】不能为空`))
+                })
             }
+        })
+        if(validate) {
+            callback()
+        } else {
+            callback(new Error(`【发票${invoice_num}】——【${invoice_desc}】不能为空`))
         }
-        let obj = {}
-        switch(form_data.value.applyType) {
-            case 1:
-                obj = {
-                    invoiceInformationRules: [{ validator: invoiceInformationRules, trigger: 'blur' }],
-                }
-            break
-            case 2:
-                obj = {
-                    salesmanNameRules: [{ validator: salesmanNameRules, trigger: 'blur' }],
-                    invoiceRules: [{ validator: invoiceRules, trigger: 'blur' }],
-                    accountingInformationRules: [{ validator: accountingInformationRules, trigger: 'blur' }],
-                    invoiceInformationRules: [{ validator: invoiceInformationRules, trigger: 'blur' }],
-                }
-            break
-        }
-        return obj
     }
+    const accountingInformationRules = (rule, value, callback) => {
+        if(accounting_information_list.value.includes('其他') && !form_data.value.otherInformation) {
+            callback(new Error('【其他】报账资料不能为空'))
+        } else{
+            callback()
+        }
+    }
+    const invoiceInformationRules = (rule, value, callback) => {
+        const dict = [
+            { label: '发票抬头', index: 0, key: 'invoiceTitle' },
+            { label: '企业税号', index: 1, key: 'enterpriseTaxNumber' },
+            { label: '收件邮箱', index: 2, key: 'receivingContact' },
+            { label: '开户银行', index: 3, key: 'openBankName' },
+            { label: '开户行账号', index: 4, key: 'openBankAccount' },
+            { label: '银行地址', index: 5, key: 'registeredAddress' },
+            { label: '注册电话', index: 6, key: 'registeredTelephone' },
+            { label: '收件人姓名', index: 7, key: 'addressee' },
+            { label: '收件地址', index: 8, key: 'deliveryAddress' },
+            { label: '收件邮箱', index: 9, key: 'receivingContact' },
+            { label: '收件联系方式', index: 10, key: 'receivingContactInformation' },
+        ]
+        let validate = true
+        let label = undefined
+        dict.forEach(item => {
+            if(validate) {
+                if(item.index <= 1 && !form_data.value[item.key]) {
+                    validate = false
+                    label = item.label
+                }
+                if(item.index > 1 && form_data.value.invoiceType == 2 && !form_data.value[item.key]) {
+                    validate = false
+                    label = item.label
+                }
+            }
+        })
+        if(validate) {
+            if(validInvoiceTitle(form_data.value.invoiceTitle)) {
+                callback(new Error('请输入正确的发票抬头（不能包含空格、换行等字符）'))
+            } else if(!validEnterpriseTax(form_data.value.enterpriseTaxNumber)) {
+                callback(new Error('请输入正确的企业税号'))
+            } else {
+                callback()
+            }
+        } else {
+            callback(new Error(`【${label}】不能为空`))
+        }
+    }
+    let obj = {}
+    switch(form_data.value.applyType) {
+        case 1:
+            obj = {
+                invoiceInformationRules: [{ validator: invoiceInformationRules, trigger: 'blur' }],
+            }
+        break
+        case 2:
+            obj = {
+                salesmanNameRules: [{ validator: salesmanNameRules, trigger: 'blur' }],
+                invoiceRules: [{ validator: invoiceRules, trigger: 'blur' }],
+                accountingInformationRules: [{ validator: accountingInformationRules, trigger: 'blur' }],
+                invoiceInformationRules: [{ validator: invoiceInformationRules, trigger: 'blur' }],
+            }
+        break
+    }
+    return obj
 })
 
 watch(
@@ -175,7 +175,6 @@ watch(
         }
     },
     { deep: true },
-    { immediate: true },
 )
 
 watch(
@@ -205,7 +204,7 @@ watch(
                     {
                         confirmButtonText: '确定',
                         cancelButtonText: '取消',
-                        type: 'warnwarninging',
+                        type: 'warning',
                     }
                 ).then(() => {
                     router.push({path: '/'})
@@ -473,7 +472,7 @@ function validateFormDate() {
         if(valid) {
             confirmForm()
         } else {
-            confirm_loading = false
+            confirm_loading.value = false
         }
     })
 }
@@ -566,8 +565,8 @@ function openExample() {
                                 <el-date-picker value-format="YYYY/MM/DD" type="date" placeholder="选择日期" :disabled-date="disabledDate" v-model="invoiceItem.clientNeedInvoiceDate"></el-date-picker>
                             </div>
                             <div class="invoice-date">
-                                <i class="el-icon-delete-solid" v-if="form_data.invoice.length > 1" @click="deleteInvoice(invoiceIndex)"></i>
-                                <i class="el-icon-circle-plus" @click="addInvoice()"></i>
+                                <el-icon class="el-icon-delete-solid" v-if="form_data.invoice.length > 1" @click="deleteInvoice(invoiceIndex)"><DeleteFilled /></el-icon>
+                                <el-icon class="el-icon-circle-plus" @click="addInvoice()"><CirclePlusFilled /></el-icon>
                             </div>
                         </div>
                         <table>
@@ -747,6 +746,7 @@ function openExample() {
 
     <!-- 申请成功弹框 -->
     <el-dialog title="温馨提示" width="30%" center :show-close="false" :close-on-click-modal="false" v-model="apply_success_dialog">
+        <img src="" alt="">
         <el-result icon="success" title="申请成功">
             <template v-slot:extra>
                 <h3>正常开票大约需要<span style="color:#E6A23C">10～15分钟</span>，如果有疑问请联系客服</h3>
@@ -768,11 +768,13 @@ function openExample() {
 
 .el-icon-delete-solid {
     cursor: pointer; 
+    transform: scale(1.5);
     font-size: 30px; 
     color: #FF4A2B;
 }
 .el-icon-circle-plus {
     cursor: pointer; 
+    transform: scale(1.5);
     font-size: 30px; 
     color: #4d6fff;
 }

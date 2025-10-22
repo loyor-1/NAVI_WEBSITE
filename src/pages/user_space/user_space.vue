@@ -1,22 +1,29 @@
 <script setup>
 import dayjs from 'dayjs';
 import relativeTime from 'dayjs/plugin/relativeTime';// 引入相对时间插件（用于更友好的描述，如“1天前”）
-import { reactive, ref } from 'vue';
+import { ElMessageBox, ElMessage } from 'element-plus';
+import { reactive, ref, nextTick } from 'vue';
 import { getUserInfo } from '@/utils/auth';
-import { useGetCoupon, useGetMyAssets } from '@/api'
+import { useGetCoupon, useGetMyAssets, useGetDownLoadUrl } from '@/api'
 import orderList from './components/order_list.vue'
+import orderDetail from './components/order_detail.vue';
 import applyPrepayment from './components/apply_prepayment.vue';
 
 dayjs.extend(relativeTime);
 
 const coupon_loading = ref(true)
 const assets_loading = ref(true)
+const download_file_list_dialog = ref(false)
+const child_ref = ref(null)//动态改变的子组件的实例
 const carousel_list = ref([])//轮播图列表
 const user_info = reactive(JSON.parse(getUserInfo()))//用户信息
 const user_assets = ref({})//用户资产数据
+const download_file_list = ref([])//下载实验结果列表
+
 //个人中心显示的二级子界面列表
 const show_page = [
     { label: '我的订单', component: orderList },
+    { label: '订单详情', component: orderDetail },
     { label: '申请预存', component: applyPrepayment },
 ]
 const show_page_index = ref(0)//二级子界面的索引
@@ -148,10 +155,83 @@ async function getMyAssets() {
 }
 getMyAssets()
 
+
 //更改显示的二级子界面
+    // child_ref.value = data.component
+
+function emitChangeShowPage(data) {
+    changeShowPage(data.index)
+    if (!child_ref.value) return
+    nextTick(() => {
+console.log(child_ref.value)
+    switch(data.component) {
+      case 'orderDetail':
+        // 检查方法是否存在，避免报错
+        if (typeof child_ref.value.getOrderInfo === 'function') {
+          child_ref.value.getOrderInfo(data.order_id)
+        } else {
+          console.warn('orderDetail 组件未暴露 getOrderInfo 方法')
+        }
+        break
+    }
+    })
+    
+}
 function changeShowPage(index) {
     if(show_page_index.value != index) show_page_index.value = index
 }
+
+// 下载实验结果
+async function downloadResult(data) {
+    const get_file_list = data.experimentalDataList.map(item => {
+        const obj = {
+            key: item.url,
+            attname: item.name
+        }
+        return useGetDownLoadUrl(obj)
+    })
+    const promise_res = await Promise.all(get_file_list)
+    download_file_list.value = promise_res.map(item => {
+        return item.msg
+    })
+    if (download_file_list.value.length == 1) {
+        ElMessageBox.confirm(
+            '确认是否下载实验数据？',
+            '温馨提示',
+            {
+                confirmButtonText: '确定',
+                cancelButtonText: '取消',
+                type: 'warning',
+            }
+        ).then(() => {
+            window.open('_blank' ,download_file_list.value[0])
+        })
+    } else if (download_file_list.value.length > 1) {
+        download_file_list_dialog.value = true
+    } else {
+        ElMessage({
+            message: '暂无可下载实验数据！',
+            type: 'warning',
+        })
+    }  
+}
+
+//复制实验结果链接
+async function copyLink(url) {
+    try {
+        await navigator.clipboard.writeText(url);
+        ElMessage({
+            message: '复制成功！',
+            type: 'success',
+        })
+    } catch {
+        ElMessage({
+            message: '写入剪贴板失败！',
+            type: 'warning',
+        })
+    }
+}
+
 </script>
 
 <template>
@@ -237,7 +317,7 @@ function changeShowPage(index) {
                         <span class="font-5CC300 font-600">￥ {{ assets_loading ? '...' : ((user_assets.depositAdvance + user_assets.cashCouponBalance) || 0).toFixed(2) }} </span>
                     </div>
                     <div class="button-box flex-center">
-                        <div class="assets-button font-mini custom-button" @click="changeShowPage(1)">申请预存</div>
+                        <div class="assets-button font-mini custom-button" @click="changeShowPage(2)">申请预存</div>
                         <div class="assets-button font-mini default-button">个人预存记录</div>
                     </div>
                 </div>
@@ -282,10 +362,19 @@ function changeShowPage(index) {
                 <div>{{ show_page[show_page_index].label }}</div>
             </div>
             <div class="view-content">
-                <component :is="show_page[show_page_index].component"></component>
+                <component ref="child_ref" :is="show_page[show_page_index].component" @downloadResult="downloadResult" @emitChangeShowPage="emitChangeShowPage"></component>
             </div>
         </div>
     </div>
+
+    <!-- 复制实验结果链接弹框 -->
+    <el-dialog title="提示" v-model="download_file_list_dialog" width="40%">
+        <div>存在多个实验结果的订单，下载实验数据时，需手动<span style="color: #FF4A2B; font-weight: 600;">点击</span>复制相应数据链接，前往浏览器粘贴打开以下载！</div>
+        <div class="file-link" v-for="(item, index) in download_file_list" :key="index" @click="copyLink(item)">{{ item }}</div>
+        <div slot:footer class="dialog-footer">
+            <el-button @click="download_file_list_dialog = false">关  闭</el-button>
+        </div>
+    </el-dialog>
 </template>
 
 
@@ -453,5 +542,17 @@ function changeShowPage(index) {
             border-radius: 0 0 10px 10px;
         }
     }
+}
+
+.file-link {
+    cursor: pointer;
+    margin-top: 10px;
+    padding: 10px;
+    text-decoration: underline;
+    color: #5D5D5D;
+    border: 1px solid #E8E8E8;
+}
+.file-link:hover {
+    color: #5CC300;
 }
 </style>
