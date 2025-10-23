@@ -14,10 +14,10 @@ export default {
       responseType: 'blob',
       headers: { 'Authorization': 'Bearer ' + getToken() }
     }).then(async (res) => {
-      const isLogin = await blobValidate(res.data)
+      const isLogin = await this.blobValidate(res.data)
       if (isLogin) {
         const blob = new Blob([res.data])
-        saveAs(blob, decodeURI(name))
+        this.saveAs(blob, decodeURI(name))
       } else {
         ElMessage({
           message: '无效的会话，或者会话已过期，请重新登录。',
@@ -42,7 +42,7 @@ export default {
         Authorization: getToken(),
       },
     }).then(async (res) => {
-      const isLogin = await blobValidate(res.data)
+      const isLogin = await this.blobValidate(res.data)
       if (isLogin) {
         const fileNames = res.headers['content-disposition']
         if (fileNames) {
@@ -91,7 +91,7 @@ export default {
           Authorization: getToken(),
         },
       }).then(async (res) => {
-        const isLogin = await blobValidate(res.data)
+        const isLogin = await this.blobValidate(res.data)
         if (isLogin) {
           const fileNames = res.headers['content-disposition']
           if (fileNames) {

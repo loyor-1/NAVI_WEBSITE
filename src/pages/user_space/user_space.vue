@@ -157,25 +157,21 @@ getMyAssets()
 
 
 //更改显示的二级子界面
-    // child_ref.value = data.component
-
 function emitChangeShowPage(data) {
     changeShowPage(data.index)
     if (!child_ref.value) return
     nextTick(() => {
-console.log(child_ref.value)
-    switch(data.component) {
-      case 'orderDetail':
-        // 检查方法是否存在，避免报错
-        if (typeof child_ref.value.getOrderInfo === 'function') {
-          child_ref.value.getOrderInfo(data.order_id)
-        } else {
-          console.warn('orderDetail 组件未暴露 getOrderInfo 方法')
+        switch(data.component) {
+            case 'orderDetail':
+                // 检查方法是否存在，避免报错
+                if (typeof child_ref.value.getOrderInfo === 'function') {
+                  child_ref.value.getOrderInfo(data.order_id)
+                } else {
+                  console.warn('orderDetail 组件未暴露 getOrderInfo 方法')
+                }
+                break
         }
-        break
-    }
     })
-    
 }
 function changeShowPage(index) {
     if(show_page_index.value != index) show_page_index.value = index
@@ -241,7 +237,7 @@ async function copyLink(url) {
             <div class="info flex-center">
                 <div class="font-middle">{{ user_info.clientName }}</div>
                 <div>TEL：{{ user_info.phoneNumber }}</div>
-                <div class="tips flex-center">
+                <div class="tips flex-center" @click="changeShowPage(2)">
                     <div class="pre-icon flex-center">申请预存</div>
                     <span class="tips-text">申请预存，享测试费、积分等多重壕礼>>></span>
                 </div>

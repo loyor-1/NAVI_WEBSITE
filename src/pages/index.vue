@@ -213,7 +213,7 @@ function logout() {
       justify-content: space-between;
       align-items: center;
       width: calc(38% - 525px);
-      min-width: 200px;
+      min-width: 250px;
       .user-box-main {
         display: flex;
         column-gap: 5px;

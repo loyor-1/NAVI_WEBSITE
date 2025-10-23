@@ -1,19 +1,19 @@
 const dict = {
 	// 订单管理-订单状态 待支付/待分配/待确认/待实验/实验中/待结算/已完成
     order_status: [
-        { dictValue: 1, dictLabel: "待支付" },
-        { dictValue: 2, dictLabel: "待分配" },
-        { dictValue: 3, dictLabel: "待确认" },
-        { dictValue: 4, dictLabel: "待实验" },
-        { dictValue: 5, dictLabel: "实验中" },
-        { dictValue: 6, dictLabel: "待结算" },
-        { dictValue: 7, dictLabel: "已完成" },
-        { dictValue: 8, dictLabel: "已取消" },
-        { dictValue: 9, dictLabel: "申请开票" },
-        { dictValue: 10, dictLabel: "待审核" },
-        { dictValue: 11, dictLabel: "审核拒绝" },
-        { dictValue: 12, dictLabel: "待核对" },
-        { dictValue: 13, dictLabel: "沟通中" },
+        { label: "待支付", value: 1 },
+        { label: "待分配", value: 2 },
+        { label: "待确认", value: 3 },
+        { label: "待实验", value: 4 },
+        { label: "实验中", value: 5 },
+        { label: "待结算", value: 6 },
+        { label: "已完成", value: 7 },
+        { label: "已取消", value: 8 },
+        { label: "申请开票", value: 9 },
+        { label: "待审核", value: 10 },
+        { label: "审核拒绝", value: 11 },
+        { label: "待核对", value: 12 },
+        { label: "沟通中", value: 13 },
     ],
     // 支付方式
     prepaid_payment: [

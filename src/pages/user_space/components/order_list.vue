@@ -181,10 +181,10 @@ function copyOrderCode(orderCode) {
 }
 
 //前往订单详情
-function emitChangeShowPage(index, order_id) {
+function emitChangeShowPage(order_id) {
     const data = {
         component: 'orderDetail',
-        index,
+        index: 1,
         order_id
     }
     emit('emitChangeShowPage', data)
@@ -195,98 +195,98 @@ function emitChangeShowPage(index, order_id) {
 <template>
     <div>
         <div class="page-main flex-center">
-        <div class="utils-box">
-            <div class="search-box flex-center">
-                <el-input v-model="order_code" placeholder="请输入订单号">
-                    <template #append>
-                        <el-button @click="inputOrderCode">
-                            <el-icon><Search /></el-icon>
-                        </el-button>
-                    </template>
-                </el-input>
-                <el-select v-model="params.prepaidPayment" placeholder="选择支付方式">
-                    <el-option v-for="item in payment_list" :key="item.value" :label="item.label" :value="item.value"/>
-                </el-select>
-            </div>
-            <div class="menu-box">
-                <el-scrollbar>
-                    <div class="default-button" :class="{'default-button-active': status_value == item.value}" v-for="(item, index) in status_list" :key="index" @click="changeStatus(item.value)"> {{ item.label }} </div>
-                </el-scrollbar>
-            </div>
-        </div>
-        <el-scrollbar>
-            <div class="order-box" v-loading="loading" v-if="order_list.length">
-                <div class="order-card" v-for="item in order_list" :key="item.orderId" @click="emitChangeShowPage(1, item.orderId)">
-                    <div class="card-head flex-center">
-                        <div class="order-code flex-center" @click.stop="copyOrderCode(item.orderCode)">
-                            <span>{{ item.orderCode }}</span>
-                            <el-icon><DocumentCopy /></el-icon>
-                        </div>
-                        <div>{{ orderStatus(item) }}</div>
-                    </div>
-                    <div class="card-footer flex-center">
-                        <div class="img-box flex-center">
-                            <el-image class="card-img" :src="item.equipment_pic">
-                                <template #error>
-                                    <img class="card-img" src="@/assets/img/fail_pic.png" />
-                                </template>
-                            </el-image>
-                        </div>
-                        <div class="order-info">
-                            <div>检测项目：{{ item.equipmentName }}</div>
-                            <div>
-                                <span>订单金额：</span>
-                                <span v-if="orderStatus(item) == '待议价'">订单未完成议价</span>
-                                <span class="font-FF4A2B font-600" v-else>￥{{ item[moneyKey(item)] }}</span>
-                                <span style="margin-left: 5px;" v-if="item.prepaidPayment">{{ getDictLabel('prepaid_payment', item.prepaidPayment) }}</span>
-                            </div>
-                            <div class="invoice flex-center" v-if="orderStatus(item) == '已完成'">
-                                <span>发票状态：</span>
-                                <span>{{ getDictLabel('bill_status', item.billStatus) }}</span>
-                                <el-tooltip content="无需开票：预存支付的订单，包括团队预存和个人预存" placement="top">
-                                    <el-icon style="margin-left: 5px; vertical-align: middle;"><QuestionFilled /></el-icon>
-                                </el-tooltip>
-                            </div>
-                            <div v-if="item.clientManager">客户经理：{{ item.clientManager || '--' }}({{ item.clientManagerPhoneNumber || '--' }})</div>
-                            <div v-if="item.orderDate">下单时间：{{ item.orderDate || '--' }}</div>
-                        </div>
-                    </div>
-                    <div class="button-box flex-center">
-                        <div class="custom-button" v-if="pay_order(item)" @click.stop="">立即支付</div>
-                        <div class="default-button" v-if="upload_pack(item)" @click.stop="">上传包裹信息</div>
-                        <div class="default-button" v-if="cancel_order(item)" @click.stop="">取消订单</div>
-                        <div class="default-button" v-if="price_objection(item)" @click.stop="">价格疑异</div>
-                        <div class="custom-button" v-if="again_order(item)" @click.stop="">再来一单</div>
-                        <div class="default-button" v-if="show_invoice(item)" @click.stop="">查看发票</div>
-                        <!-- 弹出确认结果弹框 -->
-                        <div class="custom-button" v-if="confirm_result(item)" @click.stop="">
-                            <span class="font-mini">下载实验数据</span>
-                            <img class="new-icon" src="@/assets/svg/new.svg" alt="">
-                        </div>
-                        <!-- 直接下载结果 -->
-                        <div class="custom-button" v-if="download_result(item)" @click.stop="">
-                            <span class="font-mini">下载实验数据</span>
-                            <img class="new-icon" src="@/assets/svg/new.svg" alt="">
-                        </div>
-                        <div class="default-button" v-if="apply_service(item)" @click.stop="">申请售后</div>
-                    </div>
+            <div class="utils-box">
+                <div class="search-box flex-center">
+                    <el-input v-model="order_code" placeholder="请输入订单号">
+                        <template #append>
+                            <el-button @click="inputOrderCode">
+                                <el-icon><Search /></el-icon>
+                            </el-button>
+                        </template>
+                    </el-input>
+                    <el-select v-model="params.prepaidPayment" placeholder="选择支付方式">
+                        <el-option v-for="item in payment_list" :key="item.value" :label="item.label" :value="item.value"/>
+                    </el-select>
+                </div>
+                <div class="menu-box">
+                    <el-scrollbar>
+                        <div class="default-button" :class="{'default-button-active': status_value == item.value}" v-for="(item, index) in status_list" :key="index" @click="changeStatus(item.value)"> {{ item.label }} </div>
+                    </el-scrollbar>
                 </div>
             </div>
-            <div class="order-box order-box-null flex-center font-middle font-5D5D5D" v-loading="loading" v-else>
-                暂无订单信息...
-            </div>
-        </el-scrollbar>
-    </div>
-    <div class="pagination-box">
-        <el-pagination
-          v-model:current-page="params.pageNum"
-          v-model:page-size="params.pageSize"
-          :page-sizes="[10, 20, 30, 50]"
-          :background="true"
-          layout="total, sizes, prev, pager, next"
-          :total="total"
-        />
-    </div>
+            <el-scrollbar>
+                <div class="order-box" v-loading="loading" v-if="order_list.length">
+                    <div class="order-card" v-for="item in order_list" :key="item.orderId" @click="emitChangeShowPage(item.orderId)">
+                        <div class="card-head flex-center">
+                            <div class="order-code flex-center" @click.stop="copyOrderCode(item.orderCode)">
+                                <span>{{ item.orderCode }}</span>
+                                <el-icon><DocumentCopy /></el-icon>
+                            </div>
+                            <div>{{ orderStatus(item) }}</div>
+                        </div>
+                        <div class="card-footer flex-center">
+                            <div class="img-box flex-center">
+                                <el-image class="card-img" :src="item.equipment_pic">
+                                    <template #error>
+                                        <img class="card-img" src="@/assets/img/fail_pic.png" />
+                                    </template>
+                                </el-image>
+                            </div>
+                            <div class="order-info">
+                                <div>检测项目：{{ item.equipmentName }}</div>
+                                <div>
+                                    <span>订单金额：</span>
+                                    <span v-if="orderStatus(item) == '待议价'">订单未完成议价</span>
+                                    <span class="font-FF4A2B font-600" v-else>￥{{ item[moneyKey(item)] }}</span>
+                                    <span style="margin-left: 5px;" v-if="item.prepaidPayment">{{ getDictLabel('prepaid_payment', item.prepaidPayment) }}</span>
+                                </div>
+                                <div class="invoice flex-center" v-if="orderStatus(item) == '已完成'">
+                                    <span>发票状态：</span>
+                                    <span>{{ getDictLabel('bill_status', item.billStatus) }}</span>
+                                    <el-tooltip content="无需开票：预存支付的订单，包括团队预存和个人预存" placement="top">
+                                        <el-icon style="margin-left: 5px; vertical-align: middle;"><QuestionFilled /></el-icon>
+                                    </el-tooltip>
+                                </div>
+                                <div v-if="item.clientManager">客户经理：{{ item.clientManager || '--' }}({{ item.clientManagerPhoneNumber || '--' }})</div>
+                                <div v-if="item.orderDate">下单时间：{{ item.orderDate || '--' }}</div>
+                            </div>
+                        </div>
+                        <div class="button-box flex-center">
+                            <div class="custom-button" v-if="pay_order(item)" @click.stop="">立即支付</div>
+                            <div class="default-button" v-if="upload_pack(item)" @click.stop="">上传包裹信息</div>
+                            <div class="default-button" v-if="cancel_order(item)" @click.stop="">取消订单</div>
+                            <div class="default-button" v-if="price_objection(item)" @click.stop="">价格疑异</div>
+                            <div class="custom-button" v-if="again_order(item)" @click.stop="">再来一单</div>
+                            <div class="default-button" v-if="show_invoice(item)" @click.stop="">查看发票</div>
+                            <!-- 弹出确认结果弹框 -->
+                            <div class="custom-button" v-if="confirm_result(item)" @click.stop="">
+                                <span class="font-mini">下载实验数据</span>
+                                <img class="new-icon" src="@/assets/svg/new.svg" alt="">
+                            </div>
+                            <!-- 直接下载结果 -->
+                            <div class="custom-button" v-if="download_result(item)" @click.stop="">
+                                <span class="font-mini">下载实验数据</span>
+                                <img class="new-icon" src="@/assets/svg/new.svg" alt="">
+                            </div>
+                            <div class="default-button" v-if="apply_service(item)" @click.stop="">申请售后</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="order-box order-box-null flex-center font-middle font-5D5D5D" v-loading="loading" v-else>
+                    暂无订单信息...
+                </div>
+            </el-scrollbar>
+        </div>
+        <div class="pagination-box">
+            <el-pagination
+              v-model:current-page="params.pageNum"
+              v-model:page-size="params.pageSize"
+              :page-sizes="[10, 20, 30, 50]"
+              :background="true"
+              layout="total, sizes, prev, pager, next"
+              :total="total"
+            />
+        </div>
     </div>
 </template>
 

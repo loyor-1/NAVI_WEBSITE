@@ -645,6 +645,8 @@ function toEquipmentDetail(equipment_id) {
     margin: 40px auto 0;
     .box-head {
         position: relative;
+        width: 80vw;
+        min-width: 1440px;
         height: 120px;
         background-image: linear-gradient(to right, #9FFFD7, #BAFF75);
         .head-item-left {

@@ -48,6 +48,13 @@ html {
     align-items: center;
 }
 
+.flex-center-col {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+}
+
 /* 文字大小 */
 .font-mini {
     font-size: clamp(10px, 0.6vw, 24px);
@@ -138,6 +145,17 @@ html {
     color: #46A1FF;
     border-color: #46A1FF;
     background-color: #ECF5FF;
+}
+
+.button-disabled {
+    cursor: default;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-weight: 600;
+    border-radius: 5px;
+    border: 1px solid #C8C9CC;
+    background-color: #909399;
 }
 
 /* 显示错误的图片 */
