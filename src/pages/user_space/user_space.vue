@@ -8,6 +8,7 @@ import { useGetCoupon, useGetMyAssets, useGetDownLoadUrl } from '@/api'
 import orderList from './components/order_list.vue'
 import orderDetail from './components/order_detail.vue';
 import applyPrepayment from './components/apply_prepayment.vue';
+import prepaymentLog from './components/prepayment_log.vue';
 
 dayjs.extend(relativeTime);
 
@@ -25,6 +26,7 @@ const show_page = [
     { label: '我的订单', component: orderList },
     { label: '订单详情', component: orderDetail },
     { label: '申请预存', component: applyPrepayment },
+    { label: '个人预存记录', component: prepaymentLog },
 ]
 const show_page_index = ref(0)//二级子界面的索引
 //个人优惠券
@@ -314,7 +316,7 @@ async function copyLink(url) {
                     </div>
                     <div class="button-box flex-center">
                         <div class="assets-button font-mini custom-button" @click="changeShowPage(2)">申请预存</div>
-                        <div class="assets-button font-mini default-button">个人预存记录</div>
+                        <div class="assets-button font-mini default-button" @click="changeShowPage(3)">个人预存记录</div>
                     </div>
                 </div>
                 <div class="info-item">

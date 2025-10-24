@@ -10,7 +10,7 @@ import { useGetInvoiceHeadList, useGetUserInvoiceHeadList, useGetTestItemList, u
 const router = useRouter()
 const emit = defineEmits(['emitChangeShowPage'])
 
-const confirm_loading = ref(false)
+const loading = ref(false)
 const apply_success_dialog = ref(false)//申请成功弹框
 const user_info = ref(JSON.parse(getUserInfo()))
 const form = ref(null)//表单实例
@@ -464,13 +464,12 @@ function selectInvoiceTitle(data) {
 
 //校验表单必填项目
 function validateFormDate() {
-    if(confirm_loading.value) return
-    confirm_loading.value = true
+    loading.value = true
     form.value.validate(valid => {
         if(valid) {
             confirmForm()
         } else {
-            confirm_loading.value = false
+            loading.value = false
         }
     })
 }
@@ -500,7 +499,7 @@ async function confirmForm() {
         apply_success_dialog.value = true
     }
     catch {
-        confirm_loading.value = false
+        loading.value = false
     }
 }
 
@@ -526,7 +525,7 @@ function openExample() {
 </script>
 
 <template>
-    <div>
+    <div v-loading="loading">
         <!-- 申请预存/开票 -->
         <el-scrollbar>
             <div class="page-main">
@@ -741,7 +740,7 @@ function openExample() {
                         </div>
                     </el-form-item>
                 </el-form>
-                <div class="confirm-button" :class="[confirm_loading ? 'button-disabled' : 'custom-button']" @click="validateFormDate">提交</div>
+                <div class="confirm-button custom-button" @click="validateFormDate">提交</div>
             </div>
         </el-scrollbar>
         
@@ -897,8 +896,19 @@ tr:last-child:hover {
     height: 50px;
 }
 
+@keyframes showSuccessDialog {
+    0% {
+        opacity: 0.1;
+        transform: scale(0.5);
+    }
+    100% {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
 .success-dialog {
-    z-index: 999;
+    z-index: 9999;
+    animation: showSuccessDialog 0.2s linear forwards;
     position: fixed;
     top: 8%;
     left: 50%;

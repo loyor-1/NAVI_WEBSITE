@@ -207,3 +207,12 @@ export function useApplyInvoice(data) {
         data
     })
 }
+
+//个人预存记录
+export function useGetPrestoreRecord(params) {
+    return service({
+        url: '/equipment/prestoreRecord/personalList',
+        method: 'get',
+        params,
+    })
+}
