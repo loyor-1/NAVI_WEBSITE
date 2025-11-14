@@ -46,3 +46,137 @@ export function validEnterpriseTax(value) {
 export function validOpenBankAccount(value) {
   return /^\d{12,25}$/.test(value)
 }
+
+/**
+ * @param {string} path
+ * @returns {Boolean}
+ */
+export function isExternal(path) {
+    return /^(https?:|mailto:|tel:)/.test(path)
+  }
+  
+  /**
+   * @param {string} str
+   * @returns {Boolean}
+   */
+  export function validUsername(str) {
+    const valid_map = ['admin', 'editor']
+    return valid_map.indexOf(str.trim()) >= 0
+  }
+  
+  /**
+   * @param {string} url
+   * @returns {Boolean}
+   */
+  export function validURL(url) {
+    const reg = /^(https?|ftp):\/\/([a-zA-Z0-9.-]+(:[a-zA-Z0-9.&%$-]+)*@)*((25[0-5]|2[0-4][0-9]|1[0-9]{2}|[1-9][0-9]?)(\.(25[0-5]|2[0-4][0-9]|1[0-9]{2}|[1-9]?[0-9])){3}|([a-zA-Z0-9-]+\.)*[a-zA-Z0-9-]+\.(com|edu|gov|int|mil|net|org|biz|arpa|info|name|pro|aero|coop|museum|[a-zA-Z]{2}))(:[0-9]+)*(\/($|[a-zA-Z0-9.,?'\\+&%$#=~_-]+))*$/
+    return reg.test(url)
+  }
+  
+  /**
+   * @param {string} str
+   * @returns {Boolean}
+   */
+  export function validLowerCase(str) {
+    const reg = /^[a-z]+$/
+    return reg.test(str)
+  }
+  
+  /**
+   * @param {string} str
+   * @returns {Boolean}
+   */
+  export function validUpperCase(str) {
+    const reg = /^[A-Z]+$/
+    return reg.test(str)
+  }
+  
+  /**
+   * @param {string} str
+   * @returns {Boolean}
+   */
+  export function validAlphabets(str) {
+    const reg = /^[A-Za-z]+$/
+    return reg.test(str)
+  }
+  
+  /**
+   * @param {string} email
+   * @returns {Boolean}
+   */
+  export function validEmail(email) {
+    const reg = /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/
+    return reg.test(email)
+  }
+
+  /**
+   * @param {string} isIdentity
+   * @returns {Boolean}
+   */
+  export function isIdentity(isIdentity) {
+    const reg = /^[1-9]\d{5}(18|19|20)\d{2}((0[1-9])|(1[0-2]))(([0-2][1-9])|10|20|30|31)\d{3}[0-9Xx]$/
+    return reg.test(isIdentity)
+  }
+
+  /**
+   * @param {string} isIdentity_taiwan
+   * @returns {Boolean}
+   */
+    export function isIdentity_taiwan(value) {
+      const old_taiwan_regex = /^[A-Z][12]\d{8}$/
+      const new_taiwan_regex = /^[A-Z][89]\d{8}$/;
+      return old_taiwan_regex.test(value) || new_taiwan_regex.test(value)
+    }
+
+  /**
+   * 手机号码
+   * @param {*} s
+   */
+  export function isMobile (s) {
+    return /^1[3-9]\d{9}$/.test(s)
+  }
+
+  /**
+   * 座机号码
+   * @param {*} s
+   */
+    export function isLandline (s) {
+      return /^\d{3,4}-?\d{7,8}$/.test(s)
+    }
+  
+  /**
+   * 统一信用代码
+   * @param {*} s
+   */
+  export function isSCN (s) {
+    return /^[^_IOZSVa-z\W]{2}\d{6}[^_IOZSVa-z\W]{10}$/g.test(s)
+  }
+  
+  /**
+   * 电话号码
+   * @param {*} s
+   */
+  export function isPhone (s) {
+    return /^([0-9]{3,4}-)?[0-9]{7,8}$/.test(s)
+  }
+  /**
+   * @param {string} str
+   * @returns {Boolean}
+   */
+  export function isString(str) {
+    if (typeof str === 'string' || str instanceof String) {
+      return true
+    }
+    return false
+  }
+  
+  /**
+   * @param {Array} arg
+   * @returns {Boolean}
+   */
+  export function isArray(arg) {
+    if (typeof Array.isArray === 'undefined') {
+      return Object.prototype.toString.call(arg) === '[object Array]'
+    }
+    return Array.isArray(arg)
+  }

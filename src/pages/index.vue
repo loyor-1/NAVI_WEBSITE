@@ -5,6 +5,7 @@ import { getUserInfo } from '@/utils/auth';
 import { ElMessageBox } from 'element-plus';
 import { useUserStore } from '@/stores/user';
 import { useTabStore } from '@/stores/tab';
+import { menu_list } from './user/menu_list';
 
 const router = useRouter()
 const user_store = useUserStore()
@@ -46,6 +47,13 @@ function logout() {
   })
 }
 
+// 前往子页面
+function toPage(index) {
+  const page_data = menu_list[+index[0] - 1].child.find(item => item.index == index)
+  localStorage.setItem('active_index', index)
+  router.push(page_data.path || '/')
+}
+
 </script>
 
 <template>
@@ -80,7 +88,7 @@ function logout() {
           </div>
           <img class="pre_active" src="@/assets/img/pre_active.png" alt="">
           <ul class="user-menu" :class="{'user-menu-show': menu_switch == 'show', 'user-menu-hide': menu_switch == 'hide'}" @mouseenter="changeMenuSwitch('show')" @mouseleave="changeMenuSwitch('hide')">
-            <li class="menu-li" @click="router.push('/user_space')">个人资料</li>
+            <li class="menu-li" @click="toPage('1-1')">个人资料</li>
             <li class="menu-li">我的订单</li>
             <li class="menu-li">我的团队</li>
             <li class="menu-li">邀请好友</li>

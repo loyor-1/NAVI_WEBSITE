@@ -66,6 +66,7 @@ service.interceptors.response.use(
   },
   //失败
   error => {
+    if(!error) return
     // 对响应错误处理（HTTP状态码非2xx）
     let { message } = error;
     if (message == "Network Error") {

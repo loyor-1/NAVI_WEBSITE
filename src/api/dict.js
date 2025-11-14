@@ -24,12 +24,28 @@ const dict = {
         { label: '个人信用', value: 5 },
         { label: '团队信用', value: 6 },
     ],
+    // 开票状态
+    invoice_status: [
+		{ label: '开票中', value: 1 },
+		{ label: '已开票', value: 3 },
+		{ label: '已销毁/失败', value: '4,6' },
+    ],
 	//发票状态
 	bill_status: [
 		{ label: '未开票', value: 1 },
 		{ label: '已开票', value: 2 },
 		{ label: '无需开票', value: 3 },
-	]
+	],
+    //发票类型
+    invoice_type: [
+	  	{ label: '普通发票', value: 1 },
+	  	{ label: '专用发票', value: 2 },
+    ],
+    //回款状态
+    payment_status: [
+	  	{ label: '未回款', value: 1 },
+	  	{ label: '已回款', value: 3 },
+    ],
 }
 
 export function getDictLabel(dict_key, dict_value) {
@@ -37,7 +53,27 @@ export function getDictLabel(dict_key, dict_value) {
 		return '--'
 	} else {
 		const dict_data = dict[dict_key]
-		const value = dict_data.find(item => item.value == dict_value)
+        console.log(dict_data)
+		const value = dict_data.find(item => {
+            let result = false
+            switch(typeof item.value) {
+                case 'number':
+                    console.log('number')
+                    if(item.value == dict_value) {
+                        result = true
+                    }
+                    break
+                case 'string':
+                    console.log('string')
+                    const list = item.value.split(',')
+                    console.log('list', list)
+                    if(list.includes(dict_value.toString())) {
+                        result = true
+                    }
+                    break
+            }
+            return result
+        })
 		if(value) {
 			return value.label
 		} else {

@@ -216,3 +216,105 @@ export function useGetPrestoreRecord(params) {
         params,
     })
 }
+
+//查询用户个人抬头列表
+export function useGetInvoiceTitleList(params) {
+    return service({
+        url: '/equipment/invoiceHead/list',
+        method: 'get',
+        params
+    })
+}
+
+//设置默认抬头
+export function useSetDefault(data) {
+    return service({
+        url: '/equipment/invoiceHead/setDefault',
+        method: 'post',
+        data,
+    })
+}
+
+//删除抬头
+export function useDeleteInvoiceHead(id) {
+    return service({
+        url: '/equipment/invoiceHead/' + id,
+        method: 'delete'
+    })
+}
+
+//开票信息编辑---保存
+export function useSaveInvoiceHead(data) {
+    return service({
+        url: '/equipment/invoiceHead/saveInvoiceHead',
+        method: 'post',
+        data,
+    })
+}
+
+//发票抬头列表---后台全部发票抬头
+export function useGetInvoiceHeadContrastList(params) {
+    return service({
+        url: '/equipment/invoiceHeadContrast/list',
+        method: 'get',
+        params,
+    })
+}
+
+//我的发票
+export function useGetInvoiceList(params) {
+    return service({
+        url: '/equipment/invoiceInformation/list',
+        method: 'get',
+        params,
+    })
+}
+
+//查询发票的文件列表
+export function useGetInvoiceFile(id) {
+    return service({
+        url: '/equipment/invoiceInformation/getInvoiceFile/' + id,
+        method: 'get'
+    })
+}
+
+//删除发票
+export function useDeleteInvoice(id) {
+    return service({
+        url: '/equipment/invoiceInformation/' + id,
+        method: 'delete',
+    })
+}
+
+//上传打款凭证
+export function useUploadPaymentVoucher(data) {
+    return service({
+        url: '/equipment/invoiceInformation/uploadPaymentVoucher',
+        method: 'put',
+        data,
+    })
+}
+
+//发票详情
+export function useGetInvoiceInfo(id) {
+    return service({
+        url: '/equipment/invoiceInformation/' + id,
+        method: 'get'
+    })
+}
+
+//查询开票日志
+export function getInvoiceApplyLogList(id) {
+    return service({
+        url: '/equipment/invoiceApplyLog/list/' + id,
+        method: 'get'
+    })
+}
+
+//查询开票日志
+export function useGetInvoiceApplyLogList(id) {
+    return service({
+        url: '/equipment/invoiceApplyLog/list/' + id,
+        method: 'get'
+    })
+}

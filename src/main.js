@@ -32,7 +32,7 @@ app.use(ElementPlus, {
 // 注册全局指令
 app.directive('intersection', intersectionDirective);
 
-//挂在全局function
+//挂在全局function  访问全局函数（通过 instance.appContext.config.globalProperties）
 // 批量挂载多个方法
 const global_methods = {
   getDictLabel: getDictLabel,

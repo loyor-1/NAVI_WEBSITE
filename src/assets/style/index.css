@@ -57,15 +57,19 @@ html {
 
 /* 文字大小 */
 .font-mini {
-    font-size: clamp(10px, 0.6vw, 24px);
+    font-size: clamp(10px, 0.6vw, 14px) !important;
+}
+
+.font-normal {
+    font-size: clamp(14px, 0.7vw, 24px) !important;
 }
 
 .font-middle {
-    font-size: clamp(24px, 1vw, 36px);
+    font-size: clamp(24px, 1vw, 36px) !important;
 }
 
 .font-large {
-    font-size: clamp(36px, 1.5vw, 48px);
+    font-size: clamp(36px, 1.5vw, 48px) !important;
 }
 
 .font-600 {
@@ -113,6 +117,7 @@ html {
 /* 按钮 */
 .custom-button {
     cursor: default;
+    user-select: none;
     display: flex;
     justify-content: center;
     align-items: center;
@@ -127,6 +132,7 @@ html {
 
 .default-button {
     cursor: default;
+    user-select: none;
     display: flex;
     justify-content: center;
     align-items: center;
@@ -147,15 +153,34 @@ html {
     background-color: #ECF5FF;
 }
 
-.button-disabled {
+.delete-button {
     cursor: default;
+    user-select: none;
     display: flex;
     justify-content: center;
     align-items: center;
     font-weight: 600;
     border-radius: 5px;
     border: 1px solid #C8C9CC;
-    background-color: #909399;
+    background-color: #FF4A2B30;
+}
+.delete-button:hover {
+    color: #FF4A2B;
+    border-color: #FF4A2B;
+    background-color: #FF4A2B30;
+}
+
+.button-disabled {
+    cursor: default;
+    user-select: none;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-weight: 600;
+    color: #5D5D5D;
+    border-radius: 5px;
+    border: 1px solid #C8C9CC;
+    background-color: #DDE3E9;
 }
 
 /* 显示错误的图片 */
@@ -202,3 +227,20 @@ html {
     }
 }
 
+/* 可点击的字体文本 */
+.link-text {
+    cursor: pointer;
+    color: #94C9FF;
+}
+.link-text:hover {
+    text-decoration: underline;
+    color: #55A6FF;
+}
+.link-text-FF4A2B {
+    cursor: pointer;
+    color: #FF4A2B;
+}
+.link-text-FF4A2B:hover {
+    text-decoration: underline;
+    color: #FF5000;
+}

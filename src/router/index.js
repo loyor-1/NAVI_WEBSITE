@@ -45,21 +45,37 @@ const router = createRouter({
     // 用户板块
     {
       path: '/user',
-      redirect: '/user_space',
+      redirect: '/user/account_manage/user_space',
       name: 'user',
       meta: {
         require_token: true
       },
-      component: () => import('@/pages/user_space/index.vue'),
+      component: () => import('@/pages/user/index.vue'),
       children: [
         {
-          path: '/user_space',
+          path: 'account_manage/user_space',
           name: 'user_space',
           meta: {
-            require_token: false
+            require_token: true
           },
-          component: () => import('@/pages/user_space/user_space.vue'),
-        }
+          component: () => import('@/pages/user/account_manage/user_space.vue'),
+        },
+        {
+          path: 'invoice_manage/title_manage',
+          name: 'title_manage',
+          meta: {
+            require_token: true
+          },
+          component: () => import('@/pages/user/invoice_manage/title_manage.vue'),
+        },
+        {
+          path: 'invoice_manage/invoice_list',
+          name: 'invoice_list',
+          meta: {
+            require_token: true
+          },
+          component: () => import('@/pages/user/invoice_manage/invoice_list.vue'),
+        },
       ]
     },
   ],
