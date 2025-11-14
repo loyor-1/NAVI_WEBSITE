@@ -53,20 +53,16 @@ export function getDictLabel(dict_key, dict_value) {
 		return '--'
 	} else {
 		const dict_data = dict[dict_key]
-        console.log(dict_data)
 		const value = dict_data.find(item => {
             let result = false
             switch(typeof item.value) {
                 case 'number':
-                    console.log('number')
                     if(item.value == dict_value) {
                         result = true
                     }
                     break
                 case 'string':
-                    console.log('string')
                     const list = item.value.split(',')
-                    console.log('list', list)
                     if(list.includes(dict_value.toString())) {
                         result = true
                     }

@@ -1,18 +1,17 @@
 <script setup>
-import dayjs from 'dayjs';
-import relativeTime from 'dayjs/plugin/relativeTime';// 引入相对时间插件（用于更友好的描述，如“1天前”）
-import { ElMessageBox, ElMessage } from 'element-plus';
-import { reactive, ref, nextTick } from 'vue';
-import { getUserInfo } from '@/utils/auth';
+import dayjs from 'dayjs'
+import relativeTime from 'dayjs/plugin/relativeTime'// 引入相对时间插件（用于更友好的描述，如“1天前”）
+import { ElMessageBox, ElMessage } from 'element-plus'
+import { reactive, ref, nextTick } from 'vue'
+import { getUserInfo } from '@/utils/auth'
 import { useGetCoupon, useGetMyAssets, useGetDownLoadUrl } from '@/api'
 import orderList from '../components/order_list.vue'
-import orderDetail from '../components/order_detail.vue';
-import applyPrepayment from '../components/apply_prepayment.vue';
-import prepaymentLog from '../components/prepayment_log.vue';
-import { useRouter } from 'vue-router';
+import orderDetail from '../components/order_detail.vue'
+import applyPrepayment from '../components/apply_prepayment.vue'
+import prepaymentLog from '../components/prepayment_log.vue'
+import mitt_bus from '@/utils/mitt_bus'
 
 dayjs.extend(relativeTime);
-const router = useRouter()
 
 const coupon_loading = ref(true)
 const assets_loading = ref(true)
@@ -232,6 +231,11 @@ async function copyLink(url) {
     }
 }
 
+function gopage(index) {
+    // index对应的页面根据@/pages/user/menu_list.js查看
+    mitt_bus.emit('changeUserActiveIndex', index)
+}
+
 </script>
 
 <template>
@@ -330,7 +334,7 @@ async function copyLink(url) {
                         <span class="font-5CC300 font-600">￥ {{ assets_loading ? '...' : (user_assets.ownDebt || 0).toFixed(2) }} </span>
                     </div>
                     <div class="button-box flex-center">
-                        <div class="assets-button font-mini custom-button" @click="router.push('/user/invoice_manage/invoice_list')">上传凭证</div>
+                        <div class="assets-button font-mini custom-button" @click="gopage('3-2')">上传凭证</div>
                     </div>
                 </div>
                 <div class="info-item">

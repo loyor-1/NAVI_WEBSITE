@@ -1,11 +1,11 @@
 <script setup>
-import { ref } from 'vue';
+import { ref } from 'vue'
 import { useRouter } from 'vue-router'
-import { getUserInfo } from '@/utils/auth';
-import { ElMessageBox } from 'element-plus';
-import { useUserStore } from '@/stores/user';
-import { useTabStore } from '@/stores/tab';
-import { menu_list } from './user/menu_list';
+import { getUserInfo } from '@/utils/auth'
+import { ElMessageBox } from 'element-plus'
+import { useUserStore } from '@/stores/user'
+import { useTabStore } from '@/stores/tab'
+import mitt_bus from '@/utils/mitt_bus'
 
 const router = useRouter()
 const user_store = useUserStore()
@@ -28,7 +28,7 @@ function changeMenuSwitch(value) {
       menu_switch.value = value
       clearTimeout(menu_timer.value)
       menu_timer.value = null
-    }, 300);
+    }, 300)
   }
 }
 
@@ -49,9 +49,9 @@ function logout() {
 
 // 前往子页面
 function toPage(index) {
-  const page_data = menu_list[+index[0] - 1].child.find(item => item.index == index)
-  localStorage.setItem('active_index', index)
-  router.push(page_data.path || '/')
+  // index对应的页面根据@/pages/user/menu_list.js查看
+  router.push('/user')
+  mitt_bus.emit('changeUserActiveIndex', index)
 }
 
 </script>
@@ -88,11 +88,11 @@ function toPage(index) {
           </div>
           <img class="pre_active" src="@/assets/img/pre_active.png" alt="">
           <ul class="user-menu" :class="{'user-menu-show': menu_switch == 'show', 'user-menu-hide': menu_switch == 'hide'}" @mouseenter="changeMenuSwitch('show')" @mouseleave="changeMenuSwitch('hide')">
-            <li class="menu-li" @click="toPage('1-1')">个人资料</li>
+            <li class="menu-li" @click="toPage('1-1')">个人中心</li>
             <li class="menu-li">我的订单</li>
             <li class="menu-li">我的团队</li>
             <li class="menu-li">邀请好友</li>
-            <li class="menu-li">我的发票</li>
+            <li class="menu-li" @click="toPage('3-2')">我的发票</li>
             <li class="menu-li" @click="logout">退出登录</li>
           </ul>
         </div>

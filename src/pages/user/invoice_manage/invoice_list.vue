@@ -25,6 +25,7 @@ const params = ref({
     pageSize: 20,
     orderByColumn: 'addDate',
     isAsc: 'desc',
+    applyCode: '',
 })
 //发票状态筛选列表
 const status_list = reactive([
@@ -33,28 +34,12 @@ const status_list = reactive([
 	{ label: '已开票', value: 3 },
 	{ label: '已销毁/失败', value: -1},
 ])
-
-watch(
-    params,
-    () => {
-        getInvoiceList()
-    },
-    { 
-        deep: true,
-        immediate: true,
-    }
-)
-
-//刷新页面
-function refresh(msg, time) {
-    show_page_index.value = -1
-    ElMessage({
-        message: msg || '操作成功！',
-        type: 'success',
-        duration: time || 1000
-    })
-    getInvoiceList()
-}
+// 累计检测金额
+const total_cost = ref({
+    client: 0,
+    team: 0,
+    total: 0
+})
 
 //获取发票列表
 async function getInvoiceList() {
@@ -70,17 +55,31 @@ async function getInvoiceList() {
         loading.value = false
     }
 }
+getInvoiceList()
+
+//刷新页面
+function refresh(msg, time) {
+    show_page_index.value = -1
+    ElMessage({
+        message: msg || '操作成功！',
+        type: 'success',
+        duration: time || 1000
+    })
+    getInvoiceList()
+}
 
 //发票状态筛选
 function changeStatus(value) {
     show_page_index.value = -1
     status_value.value = value
-    const { pageNum, pageSize, orderByColumn, isAsc } = params.value
+    //用于重置params，使其初始化只存储基础字段，去除其他字段
+    const { pageNum, pageSize, orderByColumn, isAsc, applyCode } = params.value
     const new_params = {
         pageNum,
         pageSize,
         orderByColumn,
         isAsc,
+        applyCode,
     }
     if(value > 0) {
         new_params.invoiceStatus = value
@@ -92,6 +91,7 @@ function changeStatus(value) {
         }
     }
     params.value = new_params
+    getInvoiceList()
 }
 
 //发票状态码转换为字符
@@ -169,13 +169,22 @@ function changeShowPage(row, index) {
     </div>
     <div class="page-main flex-center">
         <div class="utils-box">
-            <div class="utils-button flex-center">
-                <div class="custom-button" @click="downloadFile">下载测试报告模板</div>
+            <div class="search-box flex-center">
+                <el-input v-model="params.applyCode" placeholder="请输入申请编号">
+                    <template #append>
+                        <el-button @click="getInvoiceList">
+                            <el-icon><Search /></el-icon>
+                        </el-button>
+                    </template>
+                </el-input>
             </div>
             <div class="menu-box">
                 <el-scrollbar>
                     <div class="default-button" :class="{'default-button-active': status_value == item.value}" v-for="(item, index) in status_list" :key="index" @click="changeStatus(item.value)"> {{ item.label }} </div>
                 </el-scrollbar>
+            </div>
+            <div class="utils-button flex-center">
+                <div class="custom-button" @click="downloadFile">下载测试报告模板</div>
             </div>
         </div>
         <el-scrollbar>
@@ -273,25 +282,32 @@ function changeShowPage(row, index) {
     min-width: 185px;
     height: calc(100vh - 150px);
     border-right: 1px solid #cccccc;
-    .utils-button {
+    .search-box {
         width: calc((88vw - 30px) * 0.15);
         min-width: 185px;
-        height: 80px;
+        height: 60px;
+        padding: 15px;
         border-bottom: 1px solid #cccccc;
-        .custom-button {
-            width: 80%;
-            height: 70%;
-        }
     }
     .menu-box {
         width: calc((88vw - 30px) * 0.15);
         min-width: 185px;
-        height: calc(100% - 80px);
+        height: calc(100% - 140px);
         padding: 15px 0;
         .default-button {
             width: calc(100% - 30px);
             height: 40px;
             margin: 0 auto 15px;
+        }
+    }
+    .utils-button {
+        width: calc((88vw - 30px) * 0.15);
+        min-width: 185px;
+        height: 80px;
+        border-top: 1px solid #cccccc;
+        .custom-button {
+            width: 80%;
+            height: 70%;
         }
     }
 }

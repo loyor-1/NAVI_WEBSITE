@@ -22,8 +22,9 @@ const params = ref({
 })
 //累计检测金额
 const total_cost = ref({
-    user: 0,
+    client: 0,
     team: 0,
+    total: 0,
 })
 //支付方式筛选条件
 const payment_list = reactive([
@@ -114,8 +115,9 @@ async function getOrderList() {
         })
         order_list.value = res.data.data.list
         total_cost.value = {
-            user: res.data.data.clientStat,
-            team: res.data.data.teamStat,
+            client: (+res.data.data.clientStat).toFixed(2),
+			team: (+res.data.data.teamStat).toFixed(2),
+			total: (+res.data.data.clientStat + +res.data.data.teamStat).toFixed(2),
         }
         total.value = res.data.data.total
         loading.value = false
@@ -279,6 +281,13 @@ function emitChangeShowPage(order_id) {
             </el-scrollbar>
         </div>
         <div class="pagination-box">
+            <div class="flex-center">
+                <el-tooltip effect="dark" :content="`个人累计检测金额： ￥${ total_cost.client } / 团队累计检测金额： ￥${ total_cost.team } `" placement="top">
+                    <el-icon><WarningFilled /></el-icon>
+                </el-tooltip>
+                <span style="margin-left: 5px;">累计检测金额： </span>
+                <span class="font-FF4A2B">￥{{ total_cost.total }} </span>
+            </div>
             <el-pagination
               v-model:current-page="params.pageNum"
               v-model:page-size="params.pageSize"
@@ -409,7 +418,7 @@ function emitChangeShowPage(order_id) {
 
 .pagination-box {
     display: flex;
-    justify-content: flex-end;
+    justify-content: space-between;
     align-items: center;
     width: calc((88vw - 30px) * 0.78);
     min-width: 965px;
