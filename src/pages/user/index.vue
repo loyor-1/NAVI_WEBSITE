@@ -20,11 +20,18 @@ function toPage(i) {
 }
 
 function toPageByIndex(index) {
+    console.log('index',index)
     const menu = menu_list.find(item => item.index == index[0])
+    console.log('menu',menu)
     const page_data = menu.child.find(item => item.index == index)
-    active_index.value = page_data.index
-    localStorage.setItem('active_index', page_data.index)
-    router.push(page_data.path)
+    console.log('page_data',page_data)
+    if(page_data && page_data.path) {
+        active_index.value = page_data.index
+        localStorage.setItem('active_index', page_data.index)
+        router.push(page_data.path)
+    } else {
+        router.push('/404')
+    }
 }
 
 onMounted(() => {

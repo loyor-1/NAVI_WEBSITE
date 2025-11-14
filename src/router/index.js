@@ -32,12 +32,18 @@ const router = createRouter({
         },
         {
           path: '/equipment_detail',
-          name: 'equipment_detail',
+          name: 'equipment_detail',//设备详情
+          meta: {
+            require_token: false
+          },
           component: () => import('@/pages/order/equipment_detail.vue'),
         },
         {
           path: '/appoint_order',
-          name: 'appoint_order',
+          name: 'appoint_order',//下单页
+          meta: {
+            require_token: true
+          },
           component: () => import('@/pages/order/appoint_order.vue'),
         }
       ]
@@ -54,15 +60,23 @@ const router = createRouter({
       children: [
         {
           path: 'account_manage/user_space',
-          name: 'user_space',
+          name: 'user_space',//个人中心
           meta: {
             require_token: true
           },
           component: () => import('@/pages/user/account_manage/user_space.vue'),
         },
         {
+          path: 'order_manage/user_order_list',
+          name: 'user_order_list',//个人订单
+          meta: {
+            require_token: true
+          },
+          component: () => import('@/pages/user/order_manage/user_order_list.vue'),
+        },
+        {
           path: 'invoice_manage/title_manage',
-          name: 'title_manage',
+          name: 'title_manage',//抬头管理
           meta: {
             require_token: true
           },
@@ -70,7 +84,7 @@ const router = createRouter({
         },
         {
           path: 'invoice_manage/invoice_list',
-          name: 'invoice_list',
+          name: 'invoice_list',//我的发票
           meta: {
             require_token: true
           },
@@ -78,6 +92,15 @@ const router = createRouter({
         },
       ]
     },
+    // 404 路由配置 - 必须放在最后！
+    {
+      path: '/:pathMatch(.*)*', // 匹配所有路径
+      name: 'NotFound',
+      component: () => import('@/pages/error/404.vue'), // 直接渲染 NotFound 组件
+      // 或者，你也可以重定向到一个专门的 /404 路径
+      // redirect: '/404' 
+      // 这种情况下，你需要另外定义一个 path: '/404' 的路由
+    }
   ],
 })
 

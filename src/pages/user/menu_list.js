@@ -17,18 +17,27 @@ export const menu_list = [
         label: '订单管理',
         icon: Document,
         child: [
-            { index: '2-1', label: '我的订单' },
+            { index: '2-1', label: '我的订单', path: '/user/order_manage/user_order_list' },
             { index: '2-2', label: '订单操作' },
             { index: '2-3', label: '草稿箱' },
         ]
     },
     {
         index: '3',
-        label: '订单管理',
+        label: '团队管理',
+        icon: Document,
+        child: [
+            { index: '3-1', label: '我的团队' },
+            { index: '3-2', label: '团队订单' },
+        ]
+    },
+    {
+        index: '4',
+        label: '发票管理',
         icon: Tickets,
         child: [
-            { index: '3-1', label: '抬头管理' , path: '/user/invoice_manage/title_manage'},
-            { index: '3-2', label: '我的发票', path: '/user/invoice_manage/invoice_list' },
+            { index: '4-1', label: '抬头管理' , path: '/user/invoice_manage/title_manage'},
+            { index: '4-2', label: '我的发票', path: '/user/invoice_manage/invoice_list' },
         ]
     }
 ]

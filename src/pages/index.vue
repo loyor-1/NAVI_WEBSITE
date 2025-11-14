@@ -89,10 +89,10 @@ function toPage(index) {
           <img class="pre_active" src="@/assets/img/pre_active.png" alt="">
           <ul class="user-menu" :class="{'user-menu-show': menu_switch == 'show', 'user-menu-hide': menu_switch == 'hide'}" @mouseenter="changeMenuSwitch('show')" @mouseleave="changeMenuSwitch('hide')">
             <li class="menu-li" @click="toPage('1-1')">个人中心</li>
-            <li class="menu-li">我的订单</li>
-            <li class="menu-li">我的团队</li>
-            <li class="menu-li">邀请好友</li>
-            <li class="menu-li" @click="toPage('3-2')">我的发票</li>
+            <li class="menu-li" @click="toPage('2-1')">我的订单</li>
+            <li class="menu-li" @click="toPage('3-1')">我的团队</li>
+            <li class="menu-li" @click="toPage('1-2')">邀请好友</li>
+            <li class="menu-li" @click="toPage('4-2')">我的发票</li>
             <li class="menu-li" @click="logout">退出登录</li>
           </ul>
         </div>

@@ -334,7 +334,7 @@ function gopage(index) {
                         <span class="font-5CC300 font-600">￥ {{ assets_loading ? '...' : (user_assets.ownDebt || 0).toFixed(2) }} </span>
                     </div>
                     <div class="button-box flex-center">
-                        <div class="assets-button font-mini custom-button" @click="gopage('3-2')">上传凭证</div>
+                        <div class="assets-button font-mini custom-button" @click="gopage('4-2')">上传凭证</div>
                     </div>
                 </div>
                 <div class="info-item">
