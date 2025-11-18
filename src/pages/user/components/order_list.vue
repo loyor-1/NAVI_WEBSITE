@@ -111,7 +111,7 @@ async function getOrderList() {
     try {
         const res = await useGetOrderList(params.value)
         res.data.data.list.forEach(item => {
-            item.equipment_pic = import.meta.env.VITE_FILE_API + item.fileList[0].url
+            item.equipment_pic = (item.fileList && item.fileList.length) ? import.meta.env.VITE_FILE_API + item.fileList[0].url : ''
         })
         order_list.value = res.data.data.list
         total_cost.value = {
@@ -320,7 +320,6 @@ function emitChangeShowPage(order_id) {
         border-bottom: 1px solid #cccccc;
     }
     .menu-box {
-        width: calc((88vw - 30px) * 0.78 * 0.18);
         height: calc(100vh - 450px);
         padding: 15px 0;
         .default-button {
@@ -337,7 +336,6 @@ function emitChangeShowPage(order_id) {
     gap: 15px;
     justify-content: flex-start;
     align-content: flex-start;
-    width: calc((88vw - 30px) * 0.78 * 0.82);
     min-width: 791px;
     min-height: calc(100vh - 350px);
     padding: 15px;

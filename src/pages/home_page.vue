@@ -206,7 +206,7 @@ async function getHotList() {
     try {
         const res = await useGetHotList()
         res.rows.forEach(item => {
-            item.equipment_pic = import.meta.env.VITE_FILE_API + item.fileList[0].url
+            item.equipment_pic = (item.fileList && item.fileList.length) ? import.meta.env.VITE_FILE_API + item.fileList[0].url : ''
         })
         hot_list.value = res.rows
     }

@@ -317,7 +317,7 @@ function gopage(index) {
                         <el-tooltip raw-content placement="bottom" :content="`账户余额为：预存余额￥${ user_assets.depositAdvance } + 赠送金￥${ user_assets.cashCouponBalance }<br/>赠送金只能支付订单和补差价，不参与还款、活动等其他福利`">
                             <el-icon><WarningFilled /></el-icon>
                         </el-tooltip>
-                        <span style="margin-left: 5px;">账户余额：</span>
+                        <span class="font-mini" style="margin-left: 5px;">账户余额：</span>
                         <span class="font-5CC300 font-600">￥ {{ assets_loading ? '...' : ((user_assets.depositAdvance + user_assets.cashCouponBalance) || 0).toFixed(2) }} </span>
                     </div>
                     <div class="button-box flex-center">
@@ -330,7 +330,7 @@ function gopage(index) {
                         <el-tooltip raw-content placement="bottom" content="已开发票但未入账金额">
                             <el-icon><WarningFilled /></el-icon>
                         </el-tooltip>
-                        <span style="margin-left: 5px;">待入帐：</span>
+                        <span class="font-mini" style="margin-left: 5px;">待入帐：</span>
                         <span class="font-5CC300 font-600">￥ {{ assets_loading ? '...' : (user_assets.ownDebt || 0).toFixed(2) }} </span>
                     </div>
                     <div class="button-box flex-center">
@@ -342,7 +342,7 @@ function gopage(index) {
                         <el-tooltip raw-content placement="bottom" :content="`信用余额为：授信总额￥${ user_assets.lineCredit } - 个人信用欠款￥${ user_assets.toBePaidDebt }`">
                             <el-icon><WarningFilled /></el-icon>
                         </el-tooltip>
-                        <span style="margin-left: 5px;">信用余额：</span>
+                        <span class="font-mini" style="margin-left: 5px;">信用余额：</span>
                         <span class="font-5CC300 font-600">￥ {{ assets_loading ? '...' : (user_assets.clientCreditBalance || 0).toFixed(2) }} </span>
                     </div>
                     <div class="button-box flex-center">
@@ -351,7 +351,7 @@ function gopage(index) {
                 </div>
                 <div class="info-item">
                     <div class="assets flex-center">
-                        <span style="margin-left: 5px;">待开发票：</span>
+                        <span class="font-mini" style="margin-left: 5px;">待开发票：</span>
                         <span class="font-5CC300 font-600">￥ {{ assets_loading ? '...' : (user_assets.demandInvoiceMoney || 0).toFixed(2) }} </span>
                     </div>
                     <div class="button-box flex-center">
