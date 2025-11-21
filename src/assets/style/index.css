@@ -170,7 +170,7 @@ html {
     background-color: #FF4A2B30;
 }
 
-.button-disabled {
+.disabled-button {
     cursor: default;
     user-select: none;
     display: flex;

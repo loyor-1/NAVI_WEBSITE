@@ -18,6 +18,8 @@ import 'element-plus/theme-chalk/base.css'
 
 const app = createApp(App)
 
+
+// element中文插件
 for (const [key, component] of Object.entries(ElementPlusIconsVue)) {
   app.component(key, component)
 }
@@ -41,6 +43,6 @@ const global_methods = {
 // 批量添加到全局
 Object.keys(global_methods).forEach(key => {
   app.config.globalProperties[key] = global_methods[key];
-});
+})
 
 app.mount('#app')

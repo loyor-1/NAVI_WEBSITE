@@ -70,7 +70,7 @@ function deleteInvoiceTitle(headId) {
     <div class="page-main">
         <div class="page-head flex-center">
             <div class="custom-button add-head" @click="openAddDialog()">新增抬头</div>
-            <div class="font-600 font-middle">抬头管理</div>
+            <div class="font-middle">抬头管理</div>
         </div>
         <div class="page-content" v-loading="loading">
             <el-scrollbar>
@@ -120,7 +120,7 @@ function deleteInvoiceTitle(headId) {
                             </div>
                         </div>
                         <div class="flex-center-col button-box">
-                            <div class="button-disabled button-col" v-if="item.isDefault === 1">默认抬头</div>
+                            <div class="disabled-button button-col" v-if="item.isDefault === 1">默认抬头</div>
                             <div class="custom-button button-col" v-if="item.isDefault === 0 || item.isDefault == null" @click="setDefault(item.headId)">设为默认</div>
                             <div class="default-button button-col" @click="openAddDialog(item)">修改抬头</div>
                             <div class="delete-button button-col" v-if="item.isDefault !== 1" @click="deleteInvoiceTitle(item.headId)">删除抬头</div>
@@ -206,6 +206,7 @@ function deleteInvoiceTitle(headId) {
                     height: 100%;
                     padding-left: 5px;
                     border-right: 1px solid #E8E8E8;
+                    background-color: #94C9FF30;
                 }
                 .content {
                     justify-content: flex-start;

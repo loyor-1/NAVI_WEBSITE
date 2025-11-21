@@ -75,6 +75,14 @@ const router = createRouter({
           component: () => import('@/pages/user/order_manage/user_order_list.vue'),
         },
         {
+          path: 'order_manage/user_order_operate',
+          name: 'user_order_operate',//个人订单操作
+          meta: {
+            require_token: true
+          },
+          component: () => import('@/pages/user/order_manage/user_order_operate.vue'),
+        },
+        {
           path: 'invoice_manage/title_manage',
           name: 'title_manage',//抬头管理
           meta: {

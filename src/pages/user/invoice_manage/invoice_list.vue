@@ -9,6 +9,7 @@ const instance = getCurrentInstance()
 
 const loading = ref(false)
 const total = ref(0)
+const apply_code = ref('')//临时存储申请编号
 const invoice_list = ref([])//发票列表
 const status_value = ref('')//发票状态
 const child_ref = ref(null)//子界面实例
@@ -34,12 +35,17 @@ const status_list = reactive([
 	{ label: '已开票', value: 3 },
 	{ label: '已销毁/失败', value: -1},
 ])
-// 累计检测金额
-const total_cost = ref({
-    client: 0,
-    team: 0,
-    total: 0
-})
+
+watch(
+    params,
+    () => {
+        getInvoiceList()
+    },
+    { 
+        deep: true,
+        immediate: true,
+    }
+)
 
 //获取发票列表
 async function getInvoiceList() {
@@ -68,18 +74,17 @@ function refresh(msg, time) {
     getInvoiceList()
 }
 
+// 申请编号搜索
+function inputApplyCode() {
+    params.value.applyCode = apply_code.value
+}
+
 //发票状态筛选
-function changeStatus(value) {
+async function changeStatus(value) {
     show_page_index.value = -1
     status_value.value = value
-    //用于重置params，使其初始化只存储基础字段，去除其他字段
-    const { pageNum, pageSize, orderByColumn, isAsc, applyCode } = params.value
     const new_params = {
-        pageNum,
-        pageSize,
-        orderByColumn,
-        isAsc,
-        applyCode,
+        ...params.value
     }
     if(value > 0) {
         new_params.invoiceStatus = value
@@ -90,8 +95,17 @@ function changeStatus(value) {
                 break
         }
     }
-    params.value = new_params
-    getInvoiceList()
+    loading.value = true
+    try {
+        const res = await useGetInvoiceList(new_params)
+        invoice_list.value = res.rows
+        total.value = res.total
+        loading.value = false
+    }
+    catch(err) {
+        console.log(err)
+        loading.value = false
+    }
 }
 
 //发票状态码转换为字符
@@ -170,9 +184,9 @@ function changeShowPage(row, index) {
     <div class="page-main flex-center">
         <div class="utils-box">
             <div class="search-box flex-center">
-                <el-input v-model="params.applyCode" placeholder="请输入申请编号">
+                <el-input v-model="apply_code" placeholder="请输入申请编号">
                     <template #append>
-                        <el-button @click="getInvoiceList">
+                        <el-button @click="inputApplyCode">
                             <el-icon><Search /></el-icon>
                         </el-button>
                     </template>
@@ -187,67 +201,65 @@ function changeShowPage(row, index) {
                 <div class="custom-button" @click="downloadFile">下载测试报告模板</div>
             </div>
         </div>
-        <el-scrollbar>
-            <div class="invoice-box" v-loading="loading" v-if="invoice_list.length">
-                <el-table class="invoice-table" v-if="show_page_index < 0" :data="invoice_list" height="calc(100vh - 182px)" border :header-cell-style="{backgroundColor: '#94C9FF30', height: '60px'}">
-                    <el-table-column prop="applyCode" label="申请编号" width="140" align="center"></el-table-column>
-                    <el-table-column prop="invoiceTitle" label="发票抬头" align="center" show-overflow-tooltip></el-table-column>
-                    <el-table-column label="发票类型" width="120" align="center">
-                        <template #default="scope">{{ getDictLabel('invoice_type', scope.row.invoiceType) }}</template>
-                    </el-table-column>
-                    <el-table-column prop="addDate" label="申请时间" width="180" align="center"></el-table-column>
-                    <el-table-column prop="invoiceAmount" label="开票金额(元)" width="120" align="center">
-                        <template #default="scope">¥{{ scope.row.invoiceAmount || '0.00' }}</template>
-                    </el-table-column>
-                    <el-table-column label="开票状态" width="120" align="center">
-                      <template #default="scope">{{ statusFilter(scope.row) }}</template>
-                    </el-table-column>        
-                    <el-table-column prop="paymentStatus" label="是否回款" width="120" align="center">
-                        <template #default="scope">
-                            {{ getDictLabel('payment_status', scope.row.paymentStatus) }}
-                        </template>
-                    </el-table-column>
-                    <el-table-column prop="certificateStatus" label="凭证状态" width="120" align="center">
-                        <template #default="scope"> {{ scope.row.certificateStatus == 2 ? '已上传' : '未上传' }} </template>
-                    </el-table-column>
-                    <el-table-column label="需报账资料" width="150" align="center">
-                        <template #default="scope">
-                            <div class="link-text" v-if="scope.row.accountingListInfoList && scope.row.accountingListInfoList.length" @click="fileHandle(scope.row.accountingListInfoList,'电子版测试清单')">电子版测试清单</div>
-                            <div class="link-text" v-if="scope.row.accountingContractInfoList && scope.row.accountingContractInfoList.length" @click="fileHandle(scope.row.accountingContractInfoList,'电子合同')">电子合同</div>
-                            <div class="link-text" v-if="scope.row.accountingReportInfoList && scope.row.accountingReportInfoList.length" @click="fileHandle(scope.row.accountingReportInfoList,'电子报告')">电子报告</div>
-                            <div class="link-text" v-if="scope.row.standingbookInfoList && scope.row.standingbookInfoList.length" @click="fileHandle(scope.row.standingbookInfoList,'对账单')">对账单</div>
-                            <div class="link-text" v-if="scope.row.accountingOtherInfoList && scope.row.accountingOtherInfoList.length" @click="fileHandle(scope.row.accountingOtherInfoList,'其他资料')">其他资料</div>
-                        </template>
-                    </el-table-column>
-                    <el-table-column label="操作" width="150" align="center">
-                        <template #default="scope">
-                            <div class="link-text" v-if="scope.row.invoiceStatus == 3" @click="downInvoice(scope.row)">下载发票</div>
-                            <div class="link-text-FF4A2B" v-if="scope.row.invoiceStatus == 5" @click="delHandle(scope.row)">删除</div>
-                            <div 
-                              class="link-text"
-                              v-if="scope.row.certificateStatus == 1 && (scope.row.invoiceStatus == 2 || scope.row.invoiceStatus == 3)"
-                              @click="changeShowPage(scope.row, 0)"
-                            >
-                                上传打款凭证
-                            </div>
-                            <div class="link-text" @click="changeShowPage(scope.row, 1)">查看详情</div>
-                        </template>
-                    </el-table-column>
-                </el-table>
-                <div class="page-view" v-else>
-                    <div class="view-title flex-center font-600">
-                        <div class="view-back custom-button" v-if="show_page_index >= 0" @click="show_page_index = -1">返回</div>
-                        <div>{{ show_page[show_page_index].label }}</div>
-                    </div>
-                    <div class="view-content">
-                        <el-scrollbar>
-                            <component ref="child_ref" :is="show_page[show_page_index].component" @refresh="refresh"></component>
-                        </el-scrollbar>
-                    </div>
+        <div class="invoice-box" v-loading="loading" v-if="invoice_list.length">
+            <el-table class="invoice-table" v-if="show_page_index < 0" :data="invoice_list" height="calc(100vh - 182px)" border :header-cell-style="{backgroundColor: '#94C9FF30', height: '60px'}">
+                <el-table-column prop="applyCode" label="申请编号" width="140" align="center"></el-table-column>
+                <el-table-column prop="invoiceTitle" label="发票抬头" align="center" show-overflow-tooltip></el-table-column>
+                <el-table-column label="发票类型" width="120" align="center">
+                    <template #default="scope">{{ getDictLabel('invoice_type', scope.row.invoiceType) }}</template>
+                </el-table-column>
+                <el-table-column prop="addDate" label="申请时间" width="180" align="center"></el-table-column>
+                <el-table-column prop="invoiceAmount" label="开票金额(元)" width="120" align="center">
+                    <template #default="scope">¥{{ scope.row.invoiceAmount || '0.00' }}</template>
+                </el-table-column>
+                <el-table-column label="开票状态" width="120" align="center">
+                  <template #default="scope">{{ statusFilter(scope.row) }}</template>
+                </el-table-column>        
+                <el-table-column prop="paymentStatus" label="是否回款" width="120" align="center">
+                    <template #default="scope">
+                        {{ getDictLabel('payment_status', scope.row.paymentStatus) }}
+                    </template>
+                </el-table-column>
+                <el-table-column prop="certificateStatus" label="凭证状态" width="120" align="center">
+                    <template #default="scope"> {{ scope.row.certificateStatus == 2 ? '已上传' : '未上传' }} </template>
+                </el-table-column>
+                <el-table-column label="需报账资料" width="150" align="center">
+                    <template #default="scope">
+                        <div class="link-text" v-if="scope.row.accountingListInfoList && scope.row.accountingListInfoList.length" @click="fileHandle(scope.row.accountingListInfoList,'电子版测试清单')">电子版测试清单</div>
+                        <div class="link-text" v-if="scope.row.accountingContractInfoList && scope.row.accountingContractInfoList.length" @click="fileHandle(scope.row.accountingContractInfoList,'电子合同')">电子合同</div>
+                        <div class="link-text" v-if="scope.row.accountingReportInfoList && scope.row.accountingReportInfoList.length" @click="fileHandle(scope.row.accountingReportInfoList,'电子报告')">电子报告</div>
+                        <div class="link-text" v-if="scope.row.standingbookInfoList && scope.row.standingbookInfoList.length" @click="fileHandle(scope.row.standingbookInfoList,'对账单')">对账单</div>
+                        <div class="link-text" v-if="scope.row.accountingOtherInfoList && scope.row.accountingOtherInfoList.length" @click="fileHandle(scope.row.accountingOtherInfoList,'其他资料')">其他资料</div>
+                    </template>
+                </el-table-column>
+                <el-table-column label="操作" width="150" align="center">
+                    <template #default="scope">
+                        <div class="link-text" v-if="scope.row.invoiceStatus == 3" @click="downInvoice(scope.row)">下载发票</div>
+                        <div class="link-text-FF4A2B" v-if="scope.row.invoiceStatus == 5" @click="delHandle(scope.row)">删除</div>
+                        <div 
+                          class="link-text"
+                          v-if="scope.row.certificateStatus == 1 && (scope.row.invoiceStatus == 2 || scope.row.invoiceStatus == 3)"
+                          @click="changeShowPage(scope.row, 0)"
+                        >
+                            上传打款凭证
+                        </div>
+                        <div class="link-text" @click="changeShowPage(scope.row, 1)">查看详情</div>
+                    </template>
+                </el-table-column>
+            </el-table>
+            <div class="page-view" v-else>
+                <div class="view-title flex-center font-600">
+                    <div class="view-back custom-button" v-if="show_page_index >= 0" @click="show_page_index = -1">返回</div>
+                    <div>{{ show_page[show_page_index].label }}</div>
+                </div>
+                <div class="view-content">
+                    <el-scrollbar>
+                        <component ref="child_ref" :is="show_page[show_page_index].component" @refresh="refresh"></component>
+                    </el-scrollbar>
                 </div>
             </div>
-            <div class="invoice-box invoice-box-null flex-center font-middle font-5D5D5D" v-loading="loading" v-else>暂无发票信息...</div>
-        </el-scrollbar>
+        </div>
+        <div class="invoice-box invoice-box-null flex-center font-middle font-5D5D5D" v-loading="loading" v-else>暂无发票信息...</div>
     </div>
     <div class="pagination-box">
         <el-pagination
@@ -313,11 +325,6 @@ function changeShowPage(row, index) {
 }
 
 .invoice-box {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 15px;
-    justify-content: flex-start;
-    align-content: flex-start;
     width: calc((88vw - 32px) * 0.85);
     height: calc(100vh - 152px);
     min-width: 1050px;

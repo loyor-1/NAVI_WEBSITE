@@ -9,6 +9,14 @@ export function useGetDownLoadUrl(query) {
     })
 }
 
+// 客服二维码
+export function useGetCustomerServiceQrcode() {
+    return service({
+        url: '/system/dict/data/type/customer_service_qrcode',
+        method: 'get',
+    })
+}
+
 //首页轮播图
 export function useGetCarouselList(params) {
     return service({
@@ -317,4 +325,22 @@ export function useGetInvoiceApplyLogList(id) {
         url: '/equipment/invoiceApplyLog/list/' + id,
         method: 'get'
     })
+}
+
+// 个人/团队还款
+export function useOrderRepayment(data) {
+    return service({
+        method: 'post',
+        url: '/system/team/financialCenter/repayment',
+        data,
+    });
+}
+
+// 获取设备列表
+export function useGetEquipmentList(params) {
+    return service({
+        method: 'get',
+        url: '/equipment/equipmentInfo/list',
+        params,
+    });
 }

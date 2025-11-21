@@ -18,7 +18,7 @@ export const menu_list = [
         icon: Document,
         child: [
             { index: '2-1', label: '我的订单', path: '/user/order_manage/user_order_list' },
-            { index: '2-2', label: '订单操作' },
+            { index: '2-2', label: '订单操作', path: '/user/order_manage/user_order_operate' },
             { index: '2-3', label: '草稿箱' },
         ]
     },

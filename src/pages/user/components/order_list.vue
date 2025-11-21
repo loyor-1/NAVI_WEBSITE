@@ -336,6 +336,7 @@ function emitChangeShowPage(order_id) {
     gap: 15px;
     justify-content: flex-start;
     align-content: flex-start;
+    width: calc((88vw - 30px) * 0.78 * 0.82);
     min-width: 791px;
     min-height: calc(100vh - 350px);
     padding: 15px;
