@@ -167,17 +167,33 @@ function emitChangeShowPage(data) {
         switch(data.component) {
             case 'orderDetail':
                 // 检查方法是否存在，避免报错
-                if (typeof child_ref.value.getOrderInfo === 'function') {
-                  child_ref.value.getOrderInfo(data.order_id)
+                if (typeof child_ref.value.getOrderInfo == 'function') {
+                    child_ref.value.getOrderInfo(data.order_id)
                 } else {
-                  console.warn('orderDetail 组件未暴露 getOrderInfo 方法')
+                    console.warn('orderDetail 组件未暴露 getOrderInfo 方法')
                 }
                 break
         }
     })
 }
 function changeShowPage(index) {
-    if(show_page_index.value != index) show_page_index.value = index
+    if(show_page_index.value == index) {
+        return
+    } else {
+        show_page_index.value = index
+        nextTick(() => {
+            switch(index) {
+                case 2:
+                    // 检查方法是否存在，避免报错
+                    if (typeof child_ref.value.initHandle == 'function') {
+                        child_ref.value.initHandle()
+                    } else {
+                        console.warn('orderDetail 组件未暴露 initHandle 方法')
+                    }
+                    break
+            }
+        })
+    }
 }
 
 // 下载实验结果

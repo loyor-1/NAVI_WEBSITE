@@ -1,13 +1,23 @@
 <script setup>
-import { computed, ref, watch } from 'vue'
-import { useGetOrderList, useGetEquipmentList, useOrderRepayment } from '@/api'
+import { computed, ref, watch, nextTick, getCurrentInstance } from 'vue'
+import { useGetOrderList, useGetEquipmentList, useOrderRepayment, useEmailSend, useExportInvoiceResult } from '@/api'
 import { getDictLabel } from '@/api/dict'
 import { ElMessage } from 'element-plus'
+import applyPrepayment from '../components/apply_prepayment.vue'
+import { getUserInfo } from '@/utils/auth'
+
+const instance = getCurrentInstance()
 
 const loading = ref(false)
+const ref_apply_invoice = ref(null)
 const ref_table = ref(null)
+const apply_invoice_switch = ref(false)
 const repay_dialog = ref(false)
 const repay_loading = ref(false)
+const email_dialog = ref(false)
+const email_valid = ref(false)
+const email_loading = ref(false)
+const user_info = JSON.parse(getUserInfo())
 const operate_index = ref(0)//操作按钮的索引
 const payment_data = ref({})//支付方式筛选条件
 const equipment_list = ref([])//预约检测设备列表
@@ -17,6 +27,7 @@ const params = ref({})// 订单列表查询接口上传参数
 const order_list = ref([])//订单列表
 const total = ref(0)
 const select_list = ref([])//勾选的订单
+const email = ref('')//接收实验结果的邮箱
 
 //tab栏
 const operate_list = [
@@ -102,7 +113,7 @@ async function getEquipmentList(e) {
         equipment_select_loading.value = true
         const params = {
             pageNum: 1,
-            pageSize: 30,
+            pageSize: 20,
             equipmentName: e,
         }
         const res = await useGetEquipmentList(params)
@@ -141,13 +152,14 @@ async function changeOperate(index) {
         return
     }
     loading.value = true
+    apply_invoice_switch.value = false
     operate_index.value = index
     clearTableCheck()
     switch(index) {
 		case 0:
 		    // 立即还款
 		    params.value = {
-		    	pageSize: 10,
+		    	pageSize: 20,
 		    	pageNum: 1,
 		    	status: 7,
 		    	paymentStatus: 1,
@@ -158,7 +170,7 @@ async function changeOperate(index) {
 		case 1:
 		    // 开发票
 		    params.value = {
-		    	pageSize: 10,
+		    	pageSize: 20,
 		    	pageNum: 1,
 		    	status: 7,
 		    	billStatus: 1,
@@ -170,7 +182,7 @@ async function changeOperate(index) {
 		case 2:
 		    // 下载实验结果
 		    params.value = {
-		    	pageSize: 10,
+		    	pageSize: 20,
 		    	pageNum: 1,
 		    	statuss: '7,9',
 				emailSendFlag: 1,
@@ -179,7 +191,7 @@ async function changeOperate(index) {
 		case 3:
 		    // 下载对账单
 		    params.value = {
-		    	pageSize: 10,
+		    	pageSize: 20,
 		    	pageNum: 1,
 		    	statuss: '7,9',
 		    	billStatus: 1,
@@ -203,35 +215,43 @@ async function operateButton() {
 			break
 		case 1:
 		    //开发票
-            const invoiceList = []
-	        this.selectList.forEach(item => {
-	        	const obj = this.orderList.find(item_ => item_.orderId == item)
-	        	invoiceList.push({
+            const invoice_list = []
+	        select_list.value.forEach(item => {
+	        	const obj = order_list.value.find(i => i.orderId == item.orderId)
+	        	invoice_list.push({
 					orderId: obj.orderId,
 					prepaidPayment: obj.prepaidPayment,
 				})
 	        })
-            this.applicationPrePage = true
-            this.$refs.applicationPre.init(1, invoiceList, this.experimentTotalCost)
+            const invoice_amount = select_list.value.reduce((sum, item) => {
+                return sum + Number(item.experimentTotalCost)
+            }, 0)
+            apply_invoice_switch.value = true
+            nextTick(() => {
+                // 检查方法是否存在，避免报错
+                if (typeof ref_apply_invoice.value.initHandle == 'function') {
+                    ref_apply_invoice.value.initHandle(1, invoice_list, invoice_amount)
+                } else {
+                    console.warn('applyPrepayment 组件未暴露 initHandle 方法')
+                }
+            })
 			break
 		case 2:
 		    //下载实验结果
-            this.EmailDialog = true
-            this.email = this.userInfo.email
-            if(this.email) {
-                this.validateEmail()
-            }
+            email_dialog.value = true
+            email.value = user_info.email
+            console.log(user_info)
+            validateEmail()
 			break
 		case 3:
 		    //下载对账单
-            const orderCodesList = []
-            this.selectList.forEach(item => {
-                const orderCode = this.orderList.find(item_ => item_.orderId == item).orderCode
-                orderCodesList.push(orderCode)
-            })
-            const exportRes = await invoiceResultExport({orderCodes: orderCodesList.join(',')})
-            await this.$download.name(exportRes.msg)
-            this.clearTableCheck()
+            const order_codes = select_list.value.map(i => i.orderCode).join(',')
+            const params = {
+                orderCodes: order_codes
+            }
+            const res_export = await useExportInvoiceResult(params)
+            await instance.appContext.config.globalProperties.download.name(res_export.msg)
+            clearTableCheck()
 			break
 	}
 }
@@ -275,7 +295,7 @@ function changePayment(e) {
         params.value.prepaidPayment = e.value
     } else {
         params.value = {
-			pageSize: 15,
+			pageSize: 20,
 			pageNum: 1,
 			pageNum_max: 1,
 			status: 7,
@@ -291,6 +311,46 @@ function changeDate(e) {
     clearTableCheck()
     params.value.orderDateBegin = e ? e[0] : undefined
     params.value.orderDateEnd = e ? e[1] : undefined
+}
+
+//开发票后返回【开发票】列表
+async function emitChangeShowPage() {
+    apply_invoice_switch.value = false
+    clearTableCheck()
+    await getOrderList()
+}
+
+//关闭【下载实验结果】弹框
+function closeEmailDialog() {
+    email_valid.value = true
+}
+
+//校验【邮箱】
+function validateEmail() {
+    const rule = /[\w!#$%&'*+/=?^_`{|}~-]+(?:\.[\w!#$%&'*+/=?^_`{|}~-]+)*@(?:[\w](?:[\w-]*[\w])?\.)+[\w](?:[\w-]*[\w])?/
+    email_valid.value = rule.test(email.value)
+}
+
+//【发送邮箱】
+async function mailSend() {
+    validateEmail()
+    if(!email_valid.value) return
+    try {
+        const params = {
+            email: email.value,
+            orderIds: select_list.value.map(i => i.orderId).join(',')
+        }
+        email_loading.value = true
+        await useEmailSend(params)
+        email_dialog.value = false
+        email_loading.value = false
+        clearTableCheck()
+        ElMessage.success('发送邮箱成功！')
+    }
+    catch(err) {
+        console.log(err)
+        email_loading.value = false
+    }
 }
 </script>
 
@@ -309,7 +369,7 @@ function changeDate(e) {
                         </el-select>
                         <!-- 预约检测设备筛选 -->
                         <el-select 
-                          v-show="operate_index == 1" 
+                          v-show="[1, 3].includes(operate_index)" 
                           v-model="params.keyWord" 
                           :remote-method="getEquipmentList"
                           :loading="equipment_select_loading"
@@ -333,7 +393,8 @@ function changeDate(e) {
             <div class="desc flex-center">{{ operate_list[operate_index].desc }}</div>
             <div class="invoice-box" v-loading="loading" v-if="order_list.length">
                 <el-table 
-                  class="invoice-table" 
+                  class="invoice-table"
+                  v-if="!apply_invoice_switch"
                   ref="ref_table" 
                   height="calc(100vh - 160px)" 
                   border 
@@ -364,7 +425,7 @@ function changeDate(e) {
                     <el-table-column label="完成时间" prop="finishOrderDate" width="180" align="center"></el-table-column>
                     <el-table-column label="订单备注" prop="customRemark" min-width="180" align="center" :formatter="(row) => row.customRemark || '--'"></el-table-column>
                 </el-table>
-                <div class="pagination-box flex-center">
+                <div class="pagination-box flex-center" v-if="!apply_invoice_switch">
                     <div class="font-FF4A2B">{{ reduce_data }}</div>
                     <el-pagination
                       v-model:current-page="params.pageNum"
@@ -374,6 +435,15 @@ function changeDate(e) {
                       layout="total, sizes, prev, pager, next"
                       :total="total"
                     />
+                </div>
+                <div class="page-view" v-if="apply_invoice_switch">
+                    <div class="view-title flex-center font-600">
+                        <div class="view-back custom-button" @click="apply_invoice_switch = false">返回</div>
+                        <div>申请开票</div>
+                    </div>
+                    <div class="view-content">
+                        <applyPrepayment ref="ref_apply_invoice" @emitChangeShowPage="emitChangeShowPage"></applyPrepayment>
+                    </div>
                 </div>
             </div>
             <div class="invoice-box invoice-box-null flex-center font-middle font-5D5D5D" v-loading="loading" v-else>暂无发票信息...</div>
@@ -394,7 +464,19 @@ function changeDate(e) {
                 <el-button type="primary" :loading="repay_loading" @click="repay">确 定</el-button>
             </span>
         </template>
-        
+    </el-dialog>
+     <!-- 实验结果发送邮箱 -->
+    <el-dialog title="温馨提示" v-model="email_dialog" width="650px" :close-on-click-modal="false" @closed="closeEmailDialog">
+        <el-input :class="{'validate-false': !email_valid}" placeholder="请输入用以接收实验结果的邮箱" v-model="email" @blur="validateEmail">
+            <template #prepend>邮箱地址</template>
+        </el-input>
+        <div style="color: #FF4A2B; height: 20px;"> {{ !email_valid ? '邮箱格式错误' : '' }} </div>
+        <template #footer>
+            <div class="dialog-footer">
+                <el-button @click="email_dialog = false">取 消</el-button>
+                <el-button type="primary" :loading="email_loading" :disabled="!email_valid || !email" @click="mailSend">确 定</el-button>
+            </div>
+        </template>
     </el-dialog>
 </template>
 
@@ -477,11 +559,44 @@ function changeDate(e) {
             height: 60px;
             padding: 0 15px;
         }
+        .page-view {
+            width: calc((88vw - 30px) * 0.8 - 20px);
+            min-width: 969px;
+            height: calc(100vh - 100px);
+            border-radius: 0 0 10px 10px;
+            background-color: #FFFFFF90;
+            .view-title {
+                position: relative;
+                top: 0;
+                width: calc((88vw - 30px) * 0.8 - 20px);
+                min-width: 969px;
+                height: 45px;
+                background-color: #94C9FF80;
+                .view-back {
+                    position: absolute;
+                    left: 15px;
+                    width: 60px;
+                    height: 30px;
+                    font-weight: normal;
+                }
+            }
+            .view-content {
+                width: calc((88vw - 30px) * 0.8 - 20px);
+                min-width: 969px;
+                height: calc(100vh - 145px);
+                border-radius: 0 0 10px 10px;
+            }
+        }
     }
     .invoice-box-null {
         justify-content: center;
         align-content: center;
         height: calc(100% - 70px);
     }
+}
+
+.validate-false {
+    border: 1px solid #FF4A2B;
+    border-radius: 5px;
 }
 </style>

@@ -344,3 +344,21 @@ export function useGetEquipmentList(params) {
         params,
     });
 }
+
+//实验结果发送邮箱
+export function useEmailSend(params) {
+    return service({
+        url: '/equipment/uploadCenter/qqMailSend',
+        method: 'post',
+        params,
+    })
+}
+
+//下载对账单
+export function useExportInvoiceResult(params) {
+    return service({
+        url: '/equipment/order/exportStandingBook',
+        method: 'get',
+        params,
+    })
+}

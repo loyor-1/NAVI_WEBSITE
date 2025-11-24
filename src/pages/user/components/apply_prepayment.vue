@@ -1,6 +1,6 @@
 <script setup>
 import dayjs from "dayjs";
-import { computed, ref, watch } from "vue";
+import { computed, nextTick, ref, watch } from "vue";
 import { getUserInfo } from '@/utils/auth';
 import { useRouter } from "vue-router";
 import { ElMessageBox, ElMessage } from 'element-plus';
@@ -171,7 +171,6 @@ watch(
             form.value.clearValidate(['salesmanNameRules'])
         }
     },
-    { deep: true },
 )
 
 watch(
@@ -236,7 +235,6 @@ watch(
 			form_data.value.receivingContactInformation = ''
         }
     },
-    { deep: true },
     { immediate: true },
 )
 
@@ -245,28 +243,27 @@ function disabledDate(time) {
 }
 
 async function initHandle(apply_type, invoice_order_list, invoice_amount) {
+    loading.value = true
+    const res_invoice = await useGetUserInvoiceHeadList({clientId: user_info.value.clientId})
+    user_invoice_list.value = res_invoice.rows.filter(item => item.isDefault == 1)
     if(apply_type == 1) {
+        // form.value.clearValidate(['invoiceInformationRules'])
         form_data.value = {
 			applyType: 1, //申请类型  1申请开票  2申请预存
-			orderInvoice: [],
+			orderInvoice: invoice_order_list,
 			// orderInvoice:[
 			// 	{
-			// 		money: null,//发票金额
 			// 		orderId: null,//订单ID
 			// 		prepaidPayment: null,//支付方式
-			// 		detectionItemName: '',//检测项目名称"
-			// 		detectionMeteringUnit: '',//检测项目计量单位
-			// 		quantity: null,//数量
-			// 		unitPrice: null,//单价
 			// 	}
 			// ],
-			invoiceAmount: null,
+			invoiceAmount: invoice_amount,
 			remark: '', //开票备注
 			invoiceType: 1, //发票类型   1 普通发票  2 专用发票   
 			payerInvoiceType: '32', //发票类型  普通发票 32  专用发票 31
 			accountingInformation: '', //报账所需资料
 			otherInformation: '', // 其他资料
-			ifDefault: 2, //是否选择默认抬头
+			ifDefault: 1, //是否选择默认抬头
 			invoiceTitle: '', //发票抬头
 			enterpriseTaxNumber: '', //企业税号
 			receivingContact: '', //收件邮箱
@@ -275,24 +272,21 @@ async function initHandle(apply_type, invoice_order_list, invoice_amount) {
 			registeredAddress: '', //注册地址
 			registeredTelephone: '', //注册电话
 		}
-		form_data.value.invoiceAmount = invoice_amount
-        form_data.value.orderInvoice = invoice_order_list
-    }
-    const project_params = {
-        ifSelfSupport: 1, //是否自营
-    }
-    const res_invoice = await useGetUserInvoiceHeadList({clientId: user_info.value.clientId})
-    const res_project = await useGetTestItemList(project_params)
-    user_invoice_list.value = res_invoice.rows.filter(item => item.isDefault == 1)
-    project_detail_list.value = res_project.data
-    project_list.value = res_project.data.map(item => {
-        return {
-            label: item.detectionItemName,
-            value: item.detectionItemId,
+    } else {
+        const project_params = {
+            ifSelfSupport: 1, //是否自营
         }
-    })
+        const res_project = await useGetTestItemList(project_params)
+        project_detail_list.value = res_project.data
+        project_list.value = res_project.data.map(item => {
+            return {
+                label: item.detectionItemName,
+                value: item.detectionItemId,
+            }
+        })
+    }
+    loading.value = false
 }
-initHandle()
 
 //选择【预存有礼】
 function setStoredCourtesy(e) {
@@ -522,13 +516,15 @@ function openExample() {
     const url = 'https://pstatic.navi-sci.cn/applicationPre/invoice_Example_row.png'
     window.open(url, '_blank')
 }
+
+defineExpose({ initHandle })
 </script>
 
 <template>
-    <div v-loading="loading">
+    <div style="width: 100%; height: 100%;" v-loading="loading">
         <!-- 申请预存/开票 -->
-        <el-scrollbar>
-            <div class="page-main">
+        <div class="page-main">
+            <el-scrollbar>
                 <el-form class="form" ref="form" :rules="rules" :model="form_data" label-width="130px" label-position="left">
                     <el-form-item v-if="form_data.applyType == 2" label="预存类型">
                         <div>
@@ -741,8 +737,8 @@ function openExample() {
                     </el-form-item>
                 </el-form>
                 <div class="confirm-button custom-button" @click="validateFormDate">提交</div>
-            </div>
-        </el-scrollbar>
+            </el-scrollbar>
+        </div>
         
     
         <!-- 申请成功弹框 -->
@@ -770,9 +766,8 @@ function openExample() {
 <style lang="scss" scoped>
 .page-main {
     position: relative;
-    width: calc((88vw - 30px) * 0.78);
-    min-width: 965px;
-    height: calc(100vh - 290px);
+    width: 100%;
+    height: 100%;
     :deep(.el-checkbox),:deep(.el-radio),:deep(.el-input) {
         height: 45px;
     }
@@ -824,7 +819,7 @@ tr:last-child:hover {
 }
 
 .form {
-    width: calc((88vw - 30px) * 0.78);
+    width: 100%;
     padding: 30px 50px 80px;
     .storedCourtesy-desc {
         margin-left: 30px;
