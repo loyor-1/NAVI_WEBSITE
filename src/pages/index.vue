@@ -149,7 +149,7 @@ function toPage(index) {
 }
 
 .app-head {
-  z-index:999999;
+  z-index:2001;//因为loading遮罩层的z-index为2000
   position: sticky;
   top: 0;
   flex-direction: column;
@@ -266,7 +266,7 @@ function toPage(index) {
         }
       }
       .user-menu {
-        z-index: 999;
+        z-index: 1;
         overflow: hidden;
         list-style: none;
         position: absolute;

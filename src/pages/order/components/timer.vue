@@ -6,9 +6,11 @@ const emit = defineEmits(['updateValue']);
 
 const value_data = ref({
     duration: 0,
+    fieIdValue: 0,
 })
 
 function updateValue() {
+    value_data.value.fieIdValue = value_data.value.duration.toString()
     emit('updateValue', value_data.value)
 }
 </script>

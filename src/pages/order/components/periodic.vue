@@ -33,7 +33,7 @@ function openPeriodicTable() {
         </div>
     </div>
 
-    <periodicTable ref="periodicTableRef" :data="base_data" @updatePeriodic="updatePeriodic"></periodicTable>
+    <periodicTable style="margin-top: 180px;" ref="periodicTableRef" :data="base_data" @updatePeriodic="updatePeriodic"></periodicTable>
 </template>
 
 <style lang="scss" scoped>

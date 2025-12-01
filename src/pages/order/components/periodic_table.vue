@@ -185,7 +185,7 @@ defineExpose({
 </script>
 
 <template>
-  <el-dialog style="width: 80vw; min-width: 1000px !important;" v-model="show_periodic_table" align-center>
+  <el-dialog style="width: 80vw; min-width: 1000px !important;" v-model="show_periodic_table" :lock-scroll="false" align-center>
     <div class="element-list">
       <span>至少选择</span>
       <span class="font-FF4A2B">1</span>
@@ -221,10 +221,10 @@ defineExpose({
                       }"
                       @click="selectElement(getElementAtPosition(x, y))"
                     >
-                        <div class="number">{{ getElementAtPosition(x, y).number }}</div>
-                        <div class="symbol">{{ getElementAtPosition(x, y).symbol }}</div>
-                        <div class="name">{{ getElementAtPosition(x, y).name }}</div>
-                        <div class="mass">{{ getElementAtPosition(x, y).mass.toFixed(2) }}</div>
+                        <div class="number font-mini">{{ getElementAtPosition(x, y).number }}</div>
+                        <div class="symbol font-mini">{{ getElementAtPosition(x, y).symbol }}</div>
+                        <div class="name font-mini">{{ getElementAtPosition(x, y).name }}</div>
+                        <div class="mass font-mini">{{ getElementAtPosition(x, y).mass.toFixed(2) }}</div>
                     </div>
                 </template>
             </template>
@@ -323,10 +323,10 @@ defineExpose({
   }
   .element-detail {
     position: absolute;
-    top: 5%;
+    top: 0;
     left: 25%;
     width: 30%;
-    padding: 20px;
+    padding: 15px;
     background-color: white;
     border-radius: 8px;
     box-shadow: 0px 0px 8px 2px rgba(0,0,0,0.1);

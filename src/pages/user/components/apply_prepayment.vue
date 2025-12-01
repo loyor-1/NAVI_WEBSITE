@@ -885,7 +885,7 @@ tr:last-child:hover {
     }
 }
 .confirm-button {
-    z-index: 999;
+    z-index: 1;
     position: sticky;
     bottom: 0;
     height: 50px;
@@ -902,7 +902,7 @@ tr:last-child:hover {
     }
 }
 .success-dialog {
-    z-index: 9999;
+    z-index: 1;
     animation: showSuccessDialog 0.2s linear forwards;
     position: fixed;
     top: 8%;

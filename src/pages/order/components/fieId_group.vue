@@ -16,26 +16,31 @@ const props = defineProps(['base_data'])
 const emit = defineEmits(['updateValue']);
 
 const value_data = ref({
-    fieldGroupRelevanceList: [],//字段信息数组
     formulaDetailList: [],//字段组计算价格公式
     fieldGroupValues: [],
+    reservePointMethod: undefined,//价格保留规则 1 保留两位 2向上取整
     totalPrice: 0,
 })
 
 async function getFieldGroupList() {
     const res = await useGetFieldGroupList(props.base_data.fieldGroupId)
-    value_data.value.fieldGroupRelevanceList = res.data.fieldGroupRelevanceList
+    value_data.value.reservePointMethod = res.data.reservePointMethod
     value_data.value.formulaDetailList = res.data.formulaDetailList
-    value_data.value.fieldGroupValues = res.data.fieldGroupRelevanceList
+    value_data.value.fieldGroupValues = res.data.fieldGroupRelevanceList.map(item => {
+        if(item.fieIdType == 13){
+			item.fieIdValue = item.basicValue
+		}
+        return item
+    })
 }
 getFieldGroupList()
 
 function updateFieldGroupValue(item, index, value) {
-    value_data.value.fieldGroupRelevanceList[index] = {
+    const new_value = {
         ...item,
         ...value
     }
-    value_data.value.fieldGroupValues = value_data.value.fieldGroupRelevanceList
+    value_data.value.fieldGroupValues[index] = new_value
     updateValue()
 }
 
@@ -45,11 +50,9 @@ function updateValue() {
 </script>
 
 <template>
-    <div class="field-group-item" v-for="(item, index) in value_data.fieldGroupRelevanceList" :key="item.fieIdId">
+    <div class="field-group-item" v-for="(item, index) in value_data.fieldGroupValues" :key="item.fieIdId">
         <!-- 单选 -->
         <radio v-if="item.fieIdType == 1" :base_data="item" @updateValue="(value) => updateFieldGroupValue(item, index, value)"></radio>
-        <!-- 多选 -->
-        <checkbox v-else-if="item.fieIdType == 2" :base_data="item" @updateValue="(value) => updateFieldGroupValue(item, index, value)"></checkbox>
         <!-- 单行文本 -->
         <singleLine v-else-if="item.fieIdType == 3" :base_data="item" @updateValue="(value) => updateFieldGroupValue(item, index, value)"></singleLine>
         <!-- 多行文本 -->

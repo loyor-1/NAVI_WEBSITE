@@ -2,7 +2,7 @@
 import { useRoute, useRouter } from 'vue-router';
 import { useGetEquipmentInfo, useGetActives, useGetFieIdList } from '@/api'
 import { reactive, ref, watch } from 'vue';
-import { initFieIdList, changeRelevance } from '@/utils/order';
+import { initFieIdList, changeRelevance, reduceTotalMoney } from '@/utils/order';
 import { ElMessageBox } from 'element-plus'
 import radio from './components/radio.vue'
 import checkbox from './components/checkbox.vue';
@@ -14,8 +14,8 @@ import float from './components/float.vue';
 import uploadFile from './components/uploadFile.vue';
 import range from './components/range.vue';
 import periodic from './components/periodic.vue';
-import downloadFile from './components/downloadFile.vue';
-import fieIdGroup from './components/fieIdGroup.vue';
+import downloadFile from './components/download_file.vue';
+import fieIdGroup from './components/fieId_group.vue';
 import timer from './components/timer.vue';
 
 const route = useRoute()
@@ -25,20 +25,21 @@ const loading = ref(true)
 const actvie_flag = ref(false)
 const show_instructions = ref(true)
 const show_global = ref(true)
+const upload_code_dialog = ref(false)
+const split_groups_dialog = ref(false)
 const equipment_info = ref({})//设备详情
 const groups_fieId_list = ref([])//用于添加样品组的初始化字段
 const sample_name_list = reactive(['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z'])// A-Z 大写字母数组
+const specimen_code_index = ref(undefined)//批量导入样品编号的样品组索引
+const specimen_code_text = ref('')//批量导入样品编号文本
+const split_groups_index = ref(undefined)//拆分样品组的样品组索引
+const split_groups_options = ref([])//被拆分的样品编号列表
+const split_groups_list = ref([])//存储选中的被拆分的样品编号
 
 //预约设备接口参数
 const appoint_data = ref({
     equipmentId: route.query.equipment_id,//预约设备id
-    //全局字段列表
-	globalFieldValues: [
-		{
-			sampleName: '全局问题',
-			fieIdList: [], //配置字段列表
-		}
-	],
+	globalFieldValues: [],//全局字段列表
     //样品组数据
     groups: [
         {
@@ -53,13 +54,13 @@ const appoint_data = ref({
     ],
     message: '',//实验留言
     customRemark: '',//订单备注
-    fieIdList: [],//上传附件
+    fileList: [],//上传附件
+    totalCost: '',//订单总金额
 })
 
 watch(
     () => appoint_data.value.groups.length,
     () => {
-        console.log('appoint_data.value.groups', appoint_data.value.groups)
         appoint_data.value.groups.forEach((item, index) => {
             item.sampleName = sample_name_list[index]
             item.specimen_code_list.forEach(i => {
@@ -71,6 +72,15 @@ watch(
     },
     {
         deep: true,
+    }
+)
+
+watch(
+    () => appoint_data.value,
+    () => { reduceOrderPrice() },
+    {
+        deep: true,
+        immediate: true,
     }
 )
 
@@ -113,7 +123,7 @@ async function getFieIdList() {
     }
     try {
         const res_global = await useGetFieIdList(global_params)
-        appoint_data.value.globalFieldValues[0].fieIdList = initFieIdList(res_global.data)// 处理全局字段
+        appoint_data.value.globalFieldValues = initFieIdList(res_global.data)// 处理全局字段
         const res_groups = await useGetFieIdList(groups_params)
         appoint_data.value.groups[0].fieIdList = initFieIdList(res_groups.data)// 处理样品组字段
         groups_fieId_list.value = initFieIdList(res_groups.data)
@@ -136,6 +146,7 @@ function addGroup() {
         fieIdList: groups_fieId_list.value, //配置字段列表,
     })
 }
+
 //删除样品组
 function deleteGroup(group_index) {
     ElMessageBox.alert('是否删除该样品组', '温馨提示', {
@@ -146,10 +157,12 @@ function deleteGroup(group_index) {
         appoint_data.value.groups.splice(group_index, 1)
     })
 }
+
 //复制样品组
 function copyGroup(data) {
-    const {show_groups, specimenNum, specimen_code_list, specimenCode, specimenIngredient, fieIdList} = data
-    appoint_data.value.groups.push({
+    const new_data = JSON.parse(JSON.stringify(data))
+    const {show_groups, specimenNum, specimen_code_list, specimenCode, specimenIngredient, fieIdList} = new_data
+    const obj = {
         show_groups,
         sampleName: sample_name_list[appoint_data.value.groups.length],
         specimenNum, //样品数量
@@ -157,17 +170,20 @@ function copyGroup(data) {
         specimenCode, //样品编号
         specimenIngredient, //样品成分
         fieIdList, //配置字段列表,
-    })
+    }
+    appoint_data.value.groups.push(obj)
 }
+
 //更改全局字段的值
 function updateGlobalValue(item, index, value) {
     const new_value = {
         ...item,
         ...value
     }
-    appoint_data.value.globalFieldValues[0].fieIdList[index] = new_value
-    appoint_data.value.globalFieldValues[0].fieIdList = changeRelevance(appoint_data.value.globalFieldValues[0].fieIdList, new_value, true)
+    appoint_data.value.globalFieldValues[index] = new_value
+    appoint_data.value.globalFieldValues = changeRelevance(appoint_data.value.globalFieldValues, new_value)
 }
+
 //更改字段组字段的值
 function updateGroupValue(fieId_item, group_index, fieId_index, value) {
     const new_value = {
@@ -175,8 +191,9 @@ function updateGroupValue(fieId_item, group_index, fieId_index, value) {
         ...value
     }
     appoint_data.value.groups[group_index].fieIdList[fieId_index] = new_value
-    appoint_data.value.groups[group_index].fieIdList = changeRelevance(appoint_data.value.groups[group_index].fieIdList, new_value, false)
+    appoint_data.value.groups[group_index].fieIdList = changeRelevance(appoint_data.value.groups[group_index].fieIdList, new_value)
 }
+
 // 更改样品数量
 function changeNum(newValue, oldValue, group_index) {
     const num = newValue - oldValue
@@ -190,10 +207,92 @@ function changeNum(newValue, oldValue, group_index) {
     } else {
         appoint_data.value.groups[group_index].specimen_code_list.splice(newValue, Math.abs(num))
     }
+    appoint_data.value.groups[group_index].specimenCode = appoint_data.value.groups[group_index].specimen_code_list.map(i => i.value).join(',')
 }
+
 // 上传附件
-function uploadOrderFile(fieIdList) {
-    appoint_data.value.fieIdList = fieIdList
+function uploadOrderFile(value) {
+    appoint_data.value.fileList = value.fileList
+}
+
+// 打开批量导入样品编号弹框
+function openUploadCodeDialog(group_index) {
+    specimen_code_index.value = group_index
+    upload_code_dialog.value = true
+}
+
+// 关闭批量导入样品编号弹框
+function closeUploadCodeDialog() {
+    specimen_code_index.value = undefined
+    specimen_code_text.value = ''
+}
+
+// 确认批量导入
+function confirmUploadCode() {
+    const value = specimen_code_text.value.replace(/，/g, ",")
+    const list = value.split(',').map((item, index) => {
+        return {
+            id: index + 1,
+            value: item,
+        }
+    })
+    if(list[list.length - 1].value == '') {
+        list.splice(list.length - 1, 1)
+    }
+    appoint_data.value.groups[specimen_code_index.value].specimen_code_list = list
+    appoint_data.value.groups[specimen_code_index.value].specimenNum = list.length
+    appoint_data.value.groups[specimen_code_index.value].specimenCode = list.map(i => i.value).join(',')
+    upload_code_dialog.value = false
+}
+
+// 打开拆分样品组弹框
+function openSplitGroupsDialog(group_index) {
+    if(!appoint_data.value.groups[group_index].specimenNum) return
+    split_groups_index.value = group_index
+    split_groups_options.value = JSON.parse(JSON.stringify(appoint_data.value.groups[group_index].specimen_code_list))
+    split_groups_dialog.value = true
+}
+
+// 关闭拆分样品组弹框
+function closeSplitGroupsDialog() {
+    split_groups_index.value = undefined
+    split_groups_options.value = []
+    split_groups_list.value = []
+}
+
+//确认拆分样品组
+function confirmSplitGroups() {
+    appoint_data.value.groups[split_groups_index.value].specimen_code_list = appoint_data.value.groups[split_groups_index.value].specimen_code_list.filter(item => {
+        const flag = split_groups_list.value.some(i => i.id == item.id)
+        if(!flag) return item
+    })
+    appoint_data.value.groups[split_groups_index.value].specimenNum = appoint_data.value.groups[split_groups_index.value].specimen_code_list.length
+    appoint_data.value.groups[split_groups_index.value].specimenCode = appoint_data.value.groups[split_groups_index.value].specimen_code_list.map(item => item.value).join(',')
+    const data = JSON.parse(JSON.stringify(appoint_data.value.groups[split_groups_index.value]))
+    data.specimenNum = split_groups_list.value.length
+    data.specimenCode = split_groups_list.value.map(item => item.value).join(',')
+    data.specimen_code_list = split_groups_list.value
+    appoint_data.value.groups.splice(split_groups_index.value, 0, data)
+    split_groups_dialog.value = false
+}
+
+//计算订单金额
+function reduceOrderPrice() {
+    const global_money = reduceTotalMoney(appoint_data.value, 'global')
+    const groups_money = reduceTotalMoney(appoint_data.value, 'groups')
+    appoint_data.value.totalCost = (global_money + groups_money).toFixed(2)
+}
+
+// 下一步
+function nextStep() {
+    try{
+        
+    }
+    catch(err) {
+        console.log(err)
+    }
+    
+    
 }
 </script>
 
@@ -259,8 +358,8 @@ function uploadOrderFile(fieIdList) {
             </div>
         </el-collapse-transition>
     </div>
-
-    <div class="profile" v-if="appoint_data.globalFieldValues[0].fieIdList.length">
+    <!-- 全局字段 -->
+    <div class="profile" v-if="appoint_data.globalFieldValues.length">
         <div class="profile-head flex-center">
             <div class="flex-center">
                 <div class="slider"></div>
@@ -273,7 +372,7 @@ function uploadOrderFile(fieIdList) {
         </div>
         <el-collapse-transition>
             <div class="profile-content" v-show="show_global" v-loading="loading">
-                <div v-for="(item, index) in appoint_data.globalFieldValues[0].fieIdList" :key="item.fieIdId">
+                <div v-for="(item, index) in appoint_data.globalFieldValues" :key="item.fieIdId">
                     <!-- 单选 -->
                     <radio v-if="item.fieIdType == 1 && item.show" :base_data="item" @updateValue="(value) => updateGlobalValue(item, index, value)"></radio>
                     <!-- 多选 -->
@@ -297,14 +396,14 @@ function uploadOrderFile(fieIdList) {
                     <!-- 附件下载 -->
                     <downloadFile v-else-if="item.fieIdType == 11 && item.show" :base_data="item"></downloadFile>
                     <!-- 字段组 -->
-                    <fieIdGroup v-else-if="item.fieIdType == 12 && item.show" :base_data="item"></fieIdGroup>
+                    <fieIdGroup v-else-if="item.fieIdType == 12 && item.show" :base_data="item" @updateValue="(value) => updateGlobalValue(item, index, value)"></fieIdGroup>
                     <!-- 时间 -->
                     <timer v-else-if="item.fieIdType == 14 && item.show" :base_data="item" @updateValue="(value) => updateGlobalValue(item, index, value)"></timer>
                 </div>
             </div>
         </el-collapse-transition>
     </div>
-
+    <!-- 样品组信息 -->
     <div v-if="appoint_data.groups.length">
         <div class="profile" v-for="(item, group_index) in appoint_data.groups" :key="group_index">
             <div class="profile-head flex-center">
@@ -326,13 +425,19 @@ function uploadOrderFile(fieIdList) {
                         <div class="fieId-content">
                             <el-input-number :min="0" :step="1" step-strictly v-model="item.specimenNum" @change="(newValue, oldValue) => changeNum(newValue, oldValue, group_index)"/>
                         </div>
+                        <div class="num-button-1 default-button" @click="openUploadCodeDialog(group_index)">批量导入样品编号</div>
+                        <div class="num-button-2" :class="[item.specimenNum ? 'default-button' : 'disabled-button']" @click="openSplitGroupsDialog(group_index)">拆分样品组</div>
                     </div>
                     <div class="fieId-box">
                         <div class="fieId-label">样品编号</div>
                         <div class="fieId-content">
-                            <div class="specimen-code" v-for="i in item.specimen_code_list" :key="i.id">
-                                <el-input placeholder="请输入样品编号" v-model="i.value"/>
-                            </div>
+                            <el-scrollbar>
+                                <div class="specimen-code-box">
+                                    <div class="specimen-code" v-for="i in item.specimen_code_list" :key="i.id">
+                                        <el-input placeholder="请输入样品编号" v-model="i.value"/>
+                                    </div>
+                                </div>
+                            </el-scrollbar>
                         </div>
                     </div>
                     <div class="fieId-box">
@@ -365,7 +470,7 @@ function uploadOrderFile(fieIdList) {
                         <!-- 附件下载 -->
                         <downloadFile v-else-if="fieId_item.fieIdType == 11 && fieId_item.show" :base_data="fieId_item"></downloadFile>
                         <!-- 字段组 -->
-                        <fieIdGroup v-else-if="fieId_item.fieIdType == 12 && fieId_item.show" :base_data="fieId_item"></fieIdGroup>
+                        <fieIdGroup v-else-if="fieId_item.fieIdType == 12 && fieId_item.show" :base_data="fieId_item" @updateValue="(value) => updateGroupValue(fieId_item, group_index, fieId_index, value)"></fieIdGroup>
                         <!-- 时间 -->
                         <timer v-else-if="fieId_item.fieIdType == 14 && fieId_item.show" :base_data="fieId_item" @updateValue="(value) => updateGroupValue(fieId_item, group_index, fieId_index, value)"></timer>
                     </div>
@@ -373,7 +478,7 @@ function uploadOrderFile(fieIdList) {
             </el-collapse-transition>
         </div>
     </div>
-
+    <!-- 其他实验信息 -->
     <div class="profile">
         <div class="profile-head flex-center">
             <div class="flex-center">
@@ -402,14 +507,58 @@ function uploadOrderFile(fieIdList) {
             <div class="button-box">
                 <div class="flex-center price">
                     <span class="font-5D5D5D">合计费用： </span>
-                    <span class="font-FF4A2B font-middle">￥{{ 99999 }}</span>
+                    <span class="font-FF4A2B font-middle">￥{{ appoint_data.totalCost }}</span>
                     <img class="gold" src="@/assets/svg/money.svg" alt="">
                 </div>
                 <div class="default-button" @click="addGroup">添加样品</div>
-                <div class="custom-button">下一步</div>
+                <div class="custom-button" @click="nextStep">下一步</div>
             </div>
         </div>
     </div>
+
+    <!-- 批量导入样品编号 -->
+    <el-dialog
+      class="upload-code-dialog"
+      title="批量导入样品编号"
+      v-model="upload_code_dialog"
+      :close-on-click-modal="false"
+      width="650px"
+      top="200px"
+      @close="closeUploadCodeDialog"
+    >
+        <div class="upload-code-tips">
+          <div>1、不支持特殊符号；</div>
+          <div>2、多个样品编号请用逗号（“，”）区分；</div>
+          <div>3、样品编号将按照您填写的顺序进行自动匹配；</div>
+        </div>
+        <el-input type="textarea" :rows="5" placeholder="请输入样品编号" v-model="specimen_code_text"></el-input>
+        <template #footer>
+            <el-button @click="upload_code_dialog = false">取 消 导 入</el-button>
+            <el-button type="success" :disabled="!specimen_code_text" @click="confirmUploadCode">确 定 导 入</el-button>
+        </template>
+    </el-dialog>
+
+    <!-- 拆分样品组弹框 -->
+    <el-dialog
+      title="拆分样品组"
+      v-model="split_groups_dialog"
+      :close-on-click-modal="false"
+      width="700px"
+      top="200px"
+      @close="closeSplitGroupsDialog"
+    >
+        <el-checkbox-group v-model="split_groups_list">
+            <el-scrollbar>
+                <div class="split-box">
+                    <el-checkbox v-for="item in split_groups_options" :key="item.id" :label="item" border>{{ item.value }}</el-checkbox>
+                </div>
+            </el-scrollbar>
+        </el-checkbox-group>
+        <template #footer>
+            <el-button @click="split_groups_dialog = false">取 消 拆 分</el-button>
+            <el-button type="success" :disabled="!split_groups_list.length || (split_groups_list.length == split_groups_options.length)" @click="confirmSplitGroups">确 定 拆 分</el-button>
+        </template>
+    </el-dialog>
 </template>
 
 <style lang="scss" scoped>
@@ -521,12 +670,32 @@ function uploadOrderFile(fieIdList) {
     .profile-content {
         display: flex;
         flex-direction: column;
-        row-gap: 10px;
         width: 80vw;
         min-width: 1440px;
         height: fit-content;
         padding: 15px;
- 
+    }
+    .specimen-code-box {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 15px;
+        max-height: 200px;
+    }
+    .num-button-1 {
+        position: absolute;
+        top: 50%;
+        transform: translateY(-50%);
+        right: 180px;
+        width: 160px;
+        height: 35px;
+    }
+    .num-button-2 {
+        position: absolute;
+        top: 50%;
+        transform: translateY(-50%);
+        right: 10px;
+        width: 160px;
+        height: 35px;
     }
     .upload-file {
         padding: 15px;
@@ -571,5 +740,18 @@ function uploadOrderFile(fieIdList) {
             }
         }
     }
+}
+
+.upload-code-tips {
+    margin-bottom: 10px;
+    padding: 10px;
+    background-color: #FFF8EB;
+}
+
+.split-box {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 5px;
+    max-height: 300px;
 }
 </style>

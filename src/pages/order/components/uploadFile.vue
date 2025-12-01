@@ -1,12 +1,12 @@
 <script setup>
-import axios from 'axios';
-import { ElMessage } from 'element-plus';
-import { defineProps, defineEmits, ref } from 'vue';
-import { getToken } from '@/utils/auth';
+import axios from 'axios'
+import { ElMessage } from 'element-plus'
+import { defineProps, defineEmits, ref } from 'vue'
+import { getToken } from '@/utils/auth'
 import { useGetFileUUID, useBlockUploadSuccess } from '@/api'
 
 const props = defineProps(['base_data'])
-const emit = defineEmits(['updateValue']);
+const emit = defineEmits(['updateValue'])
 
 const value_data = ref({
     fieIdValue: '',
@@ -34,44 +34,44 @@ getFileUUID()
 // 上传前校检格式和大小
 function handleBeforeUpload(file) {
     if (file.name.length > 50) {
-        ElMessage.error('文件名长度不能超过50个字');
-        return false;
+        ElMessage.error('文件名长度不能超过50个字')
+        return false
     }
-    return true;
+    return true
 }
 // 文件个数超出
 function handleExceed() {
-    ElMessage.warning(`当前限制只能上传 5 个文件`);
+    ElMessage.warning(`当前限制只能上传 5 个文件`)
 }
 //TODO  可以将分块大小放到组件中设置
 async function upload(options) {
-    uploading.value = true;
-    let file = options.file;
-    let chunkSize = 10 * 1024 * 1024; // 每个块的大小为 100MB
-    let size = file.size;
+    uploading.value = true
+    let file = options.file
+    let chunkSize = 10 * 1024 * 1024 // 每个块的大小为 100MB
+    let size = file.size
     if (size <= 10 * 1024 * 1024) {
-        chunkSize = 1 * 1024 * 1024;
+        chunkSize = 1 * 1024 * 1024
     } else if (size <= 50 * 1024 * 1024) {
-        chunkSize = 5 * 1024 * 1024;
+        chunkSize = 5 * 1024 * 1024
     } else {
-        chunkSize = 10 * 1024 * 1024;
+        chunkSize = 10 * 1024 * 1024
     }
-    const chunks = [];
-    let startPos = 0;
-    let percentage = 0;
+    const chunks = []
+    let startPos = 0
+    let percentage = 0
     while (startPos < file.size) {
-        chunks.push(file.slice(startPos, startPos + chunkSize));
-        startPos += chunkSize;
+        chunks.push(file.slice(startPos, startPos + chunkSize))
+        startPos += chunkSize
     }
-    let uploadStatus = [];
+    let uploadStatus = []
     chunks.map((chunk, index) => {
-        const data = new FormData();
-        data.set('dirName', uuid.value);
-        data.set('fileName', file.name);
-        data.set('size', file.size);
-        data.set('chunks', chunks.length);
-        data.set('chunk', index + 1);
-        data.append('file', chunk);
+        const data = new FormData()
+        data.set('dirName', uuid.value)
+        data.set('fileName', file.name)
+        data.set('size', file.size)
+        data.set('chunks', chunks.length)
+        data.set('chunk', index + 1)
+        data.append('file', chunk)
         axios.post(
             action,
             data, 
@@ -82,33 +82,33 @@ async function upload(options) {
             }
         ).then((res) => {
             if (res.data.code === 200) {
-                percentage++;
-                uploadStatus.push('true');
+                percentage++
+                uploadStatus.push('true')
             } else {
-                uploadStatus.push('false');
+                uploadStatus.push('false')
             }
-            updatePercentage(percentage, chunks.length, file.size, file.name, uploadStatus);
+            updatePercentage(percentage, chunks.length, file.size, file.name, uploadStatus)
         })
         .catch((err) => {
-            console.log(err, 'err');
-            uploadStatus.push(false);
-            updatePercentage(percentage, chunks.length, file.size, file.name, uploadStatus);
-        });
-    });
+            console.log(err, 'err')
+            uploadStatus.push(false)
+            updatePercentage(percentage, chunks.length, file.size, file.name, uploadStatus)
+        })
+    })
 }
 
 function updatePercentage(num, total, size, name, list) {
     if (list.length === total) {
         if (list.includes('false')) {
-            uploading.value = false;
-            percentage.value = 0;
-            value_data.value.filedList.pop();
-            ElMessage.error('文件上传失败');
+            uploading.value = false
+            percentage.value = 0
+            value_data.value.filedList.pop()
+            ElMessage.error('文件上传失败')
         } else {
-            getUploadUrl(size, name);
+            getUploadUrl(size, name)
         }
     }
-    percentage.value = Math.floor((num / total) * 100);
+    percentage.value = Math.floor((num / total) * 100)
 }
 
 async function getUploadUrl(size, name) {
@@ -118,29 +118,29 @@ async function getUploadUrl(size, name) {
             url: res.data,
             name: name
         }
-        value_data.value.fileList.push(fileInfo);
-        handleUploadSuccess(res, fileInfo, value_data.value.fileList);
+        value_data.value.fileList.push(fileInfo)
+        handleUploadSuccess(res, fileInfo, value_data.value.fileList)
     }
     catch(err) {
-        uploading.value = false;
+        uploading.value = false
         percentage.value = 0
     }
 }
 // 上传成功回调
 function handleUploadSuccess(res, file, fileList) {
-    ElMessage.success('上传成功');
-    uploading.value = false;
+    ElMessage.success('上传成功')
+    uploading.value = false
     percentage.value = 0
     value_data.value.fileList = fileList.map((i) => {
-        return { name: i.name, url: i.response ? i.response.data.url : i.url };
-    });
+        return { name: i.name, url: i.response ? i.response.data.url : i.url }
+    })
+    value_data.value.fieIdValue = JSON.stringify(value_data.value.fileList)
     updateValue()
 }
 
 function handleRemove(file, fileList) {
-    value_data.value.fileList = value_data.value.fileList.filter((item) => item.uid !== file.uid);
+    value_data.value.fileList = value_data.value.fileList.filter((item) => item.uid !== file.uid)
 }
-
 
 function updateValue() {
     emit('updateValue', value_data.value)

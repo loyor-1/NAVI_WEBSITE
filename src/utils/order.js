@@ -1,3 +1,5 @@
+import { ElMessage } from "element-plus"
+
 export function moneyKey(data) {
 	const total_cost = [1, 2, 3, 4, 5, 8, 10, 11]
 	const experiment_total_cost = [7, 9, 12]
@@ -88,239 +90,291 @@ export function initFieIdList(list) {
 }
 
 //动态改变字段的显示与隐藏
-export function changeRelevance(list, data, isGlobal) {
-	console.log(data)
-	let new_list = JSON.parse(JSON.stringify(list))
-	const index_list = []
-	new_list.forEach((item, index) => {
-		if(item.isRelevance && item.relevanceField == data.fieIdId) {
-			index_list.push(index)
-		}
-	})
-	if(index_list.length) {
-		index_list.forEach(i => {
-			const relevance_list = new_list[i].relevanceOptionId ? new_list[i].relevanceOptionId.split(',') : []
-			new_list[i].show = relevance_list.some(x => data.optionId.includes(Number(x)))
-		})
-	} else {
+export function changeRelevance(list, selected) {
+    let new_list = JSON.parse(JSON.stringify(list))
+    const new_selected = JSON.parse(JSON.stringify(selected))
+    // 映射用户选取的值
+    const target_index = new_list.findIndex(item => item.fieIdId == new_selected.fieIdId)
+    new_list[target_index].options = new_selected.options
+    new_list[target_index].fieIdValue = new_selected.fieIdValue
+    new_list[target_index].optionId = new_selected.optionId
+    new_list[target_index].valueId = new_selected.valueId
+    if(new_selected.fieIdType == 9) new_list[target_index].fieldValueRange = new_selected.fieldValueRange
+    if(new_selected.fieIdType == 14) new_list[target_index].duration = new_selected.duration
 
-	}
-	// new_list = getTotalMoney(new_list, isGlobal)
-	return new_list
-}
-
-//计算总金额
-/**
- * @param list {Array} 外部传入的列表
- * @param isGlobal {Boolean} 是否是全局问题
- * @return {object} 返回明细列表和总金额
- */
-const getTotalMoney = (list_, isGlobal) => {
-    //如果不是计算全局问题，就要将样品数量存到字段里面
-    const list = JSON.parse(JSON.stringify(list_))
-    if (!isGlobal) {
-        list.map(item => {
-            // specimenNum
-            item.fieIdList.map(items => {
-                items.specimenNum = item.specimenNum
-            })
-        })
-    }
-    //拿到需要计算价格的数据 字段隐藏状态为false 且 fieIdType为1，2,6,7,9,10,13,14的 其中fieIdType为6，7，9，14的需要isCalculatePrice为1时才需要进行计算
-    let fieIdList = list.map(item =>
-        item.fieIdList.filter(items =>
-            !items.hide && [1, 2, 6, 7, 9, 10, 12, 13, 14].includes(items.fieIdType) &&
-            (items.fieIdType !== 6 && items.fieIdType !== 7 && items.fieIdType !== 9 && items.fieIdType !== 14 || items.isCalculatePrice === 1) && items.calculateWay != 4
-        )
-    );
-    // 为每个元素添加原始索引
-	fieIdList.map((k, kIndex) => {
-	    k.map((i, iIndex) => {
-	        i.originalIndex = { kIndex, iIndex };
-	    });
-	});
-    let totalList = []
-        //处理金额相关的字段
-    fieIdList.map(k => {
-        let list = []
-        k.map(i => {
-            //元素周期表、整数、浮点数、范围、字段组情况、预约时长
-            if (i.fieIdType == 10 || i.fieIdType == 6 || i.fieIdType == 7 || i.fieIdType == 9 || i.fieIdType == 12 || i.fieIdType == 14) {
-                //如果 fieIdType类型为 整数、浮点、范围则计算总金额
-                if (i.fieIdType == 6 || i.fieIdType == 7 || i.fieIdType == 14) {
-                    if (i.fieIdValue) {
-                        i.totalPrice = Number(i.fieIdValue) * Number(i.elementPrice)
-                    } else {
-                        i.totalPrice = 0
-                    }
-                }
-                //范围需要先计算他的差值
-                if (i.fieIdType == 9) {
-                    if (i.fieldValueRange && i.fieldValueRange) {
-                        let value = Number(i.fieldValueRange) - Number(i.fieIdValue)
-                        if (value <= 0) {
-                            i.totalPrice = 0
-                        } else {
-                            i.totalPrice = value * Number(i.elementPrice)
-                        }
-                    } else {
-                        i.totalPrice = 0
-                    }
-                }
-                list.push(i);
-            }
-            // 单选、多选情况/根据optionId选择的选项id找到对应选项
-            if (i.optionId && Array.isArray(i.options)) {
-                i.options.forEach(option => {
-                    i.optionId.forEach(openid => {
-                        if(option.optionId === openid){
-                            if(option.unitPrice != 0 || option.isNegotiatedPrice == 1){
-                                list.push({
-                                    ...option,
-                                    fieIdName: i.fieIdName,
-                                    specimenNum: i.specimenNum,
-                                    calculateWay: i.calculateWay,
-                                    fieIdType: i.fieIdType,
-                                    //议价字段在选项里面
-                                    bargainReminder: option.bargainReminder,
-                                    isNegotiatedPrice: option.isNegotiatedPrice
-                                });
-                            }
-                            
-                        }
-                    })
-                });
-            }
-
-        })
-        totalList.push(list)
-    });
-    // 按照原始顺序重新排序 totalList
-	totalList = totalList.map(list =>
-		list.sort((a, b) => {
-			if (a.originalIndex && b.originalIndex) {
-				if (a.originalIndex.kIndex === b.originalIndex.kIndex) {
-					return a.originalIndex.iIndex - b.originalIndex.iIndex;
-				} else {
-					return a.originalIndex.kIndex - b.originalIndex.kIndex;
-				}
-			}
-		})
-	);
-    let bargainReminderList = []
-    totalList.map(key => {
-        key.maps = {}
-        key.dest = []
-        key.map(item => {
-            //单选、多选金额
-            if (item.fieIdType == 1 || item.fieIdType == 2) {
-                // 根据价格计算方式处理字段(calculateWay)价格
-                // 1 按样品数量 3 固定价格 4 不计算价格
-                if (item.calculateWay == 1) {
-                    item.totalPrice = Number(item.unitPrice) * Number(item.specimenNum);
-                } else {
-                    item.totalPrice = item.unitPrice
-                }
-                //议价
-                if (item.isNegotiatedPrice == 1) {
-                    bargainReminderList.push(item.bargainReminder)
-                }
-            }
-            // 字段组 字段组都直接拿他的totalPrice 字段组可能存在议价的情况
-            if (item.fieIdType == 12) {
-                // 根据价格计算方式处理字段(calculateWay)价格
-                // 1 按样品数量 3 固定价格 4 不计算价格
-                if (item.calculateWay == 1) {
-                    if (item.totalPrice) {
-                        item.totalPrice = item.totalPrice * item.specimenNum
-                    } else {
-                        item.totalPrice = 0
-                    }
-                    if (item.isNegotiatedPrice == 1) {
-                        bargainReminderList.push(item.bargainReminder)
-                    }
-                } else {
-                    if (item.totalPrice) {
-                        item.totalPrice = item.totalPrice
-                    } else {
-                        item.totalPrice = 0
-                    }
-                    if (item.isNegotiatedPrice == 1) {
-                        bargainReminderList.push(item.bargainReminder)
-                    }
-                }
-            }
-            //整数、浮点、范围、字段组都直接拿他的totalPrice 字段组可能存在议价的情况
-            if (item.fieIdType == 6 || item.fieIdType == 7 || item.fieIdType == 9 || item.fieIdType == 14) {
-                if (item.totalPrice) {
-                    item.totalPrice = item.totalPrice
-                } else {
-                    item.totalPrice = 0
-                }
-                // if(item.fieIdType == 12){
-                // 	if(item.isNegotiatedPrice == 1){
-                // 		bargainReminderList.push(item.bargainReminder)
-                // 	}
-                // }
-            }
-            //元素周期表
-            //整数、浮点、范围、字段组都直接拿他的fieIdValue
-            if (item.fieIdType == 10) {
-                if (item.fieIdValue) {
-                    let elementList = item.fieIdValue.split(',')
-                    if (isGlobal) {
-                        item.totalPrice = Number(item.elementPrice) * Number(elementList.length)
-                    } else {
-                        item.totalPrice = Number(item.elementPrice) * Number(elementList.length) * Number(item.specimenNum)
-                    }
-                    let startPrice = Number(item.elementPrice) * Number(elementList.length)
-                    if (startPrice >= item.startPrice) {
-                        item.unitPrice = item.totalPrice
-                    } else {
-                        item.unitPrice = item.startPrice * Number(item.specimenNum)
-                        item.totalPrice = item.unitPrice
-                    }
-                    // item.unitPrice = item.totalPrice
-                }
-            }
-            //字段多选时合并金额
-            if (!key.maps[item.fieIdId]) {
-                key.dest.push(item);
-                key.maps[item.fieIdId] = item;
-            } else {
-                key.dest.map(j =>  {
-                    if (item.fieIdId == j.fieIdId) {
-                        j.unitPrice = Number(j.unitPrice) + Number(item.unitPrice);
-                        j.totalPrice = Number(j.totalPrice) + Number(item.totalPrice);
-                    }
-                });
-            }
-        })
-        //计算单个样品的总金额
-        key.totalMomey = getTotalMoneys(key.dest, 'totalPrice')
-        return {
-            ...key,
-            subChargeVOList: key.dest
-        };
+    //处理链式变更的字段
+    const queue = showFieId(new_list, new_selected)
+    queue.forEach(item => {
+        new_list[item.index].show = item.show
     })
-    //计算所有样品的总金额
-    let totalCost = getTotalMoneys(totalList, 'totalMomey')
-    totalCost = mathjs.round(totalCost, 2)
-    let result = {
-        totalCost,
-        totalList,
-        bargainReminderList: bargainReminderList,
-    }
+    const hide_list = queue.filter(item => !item.show)
+    hide_list.forEach(i => {
+        new_list[i.index].fieIdValue = undefined
+        new_list[i.index].optionId = undefined
+        new_list[i.index].valueId = undefined
+        if(new_selected.fieIdType == 9) new_list[target_index].fieldValueRange = undefined
+        if(new_selected.fieIdType == 14) new_list[target_index].duration = undefined
+    })
+    hide_list.forEach(i => {
+        new_list = changeRelevance(new_list, new_list[i.index])
+    })
+    return new_list
+}
+function showFieId(list, selected) {
+    const new_list = JSON.parse(JSON.stringify(list))
+    const result = []
+    new_list.forEach((item, index) => {
+        if(item.relevanceField == selected.fieIdId && item.isRelevance) {
+            const option_list = item.relevanceOptionId ? item.relevanceOptionId.split(',') : []
+            const value_list = selected.valueId ? selected.valueId.toString().split(',') : []
+            result.push({
+                index: index,
+                show: option_list.some(i => value_list.includes(i)),
+            })
+        }
+    })
     return result
 }
 
-//总金额计算
-const getTotalMoneys = (list, value) => {
-    return list.reduce((total, item) => {
-        if (!isNaN(Number(item[value]))) {
-            return total + item[value];
-        } else {
-            return total;
-        }
-    }, 0);
+
+//计算总金额
+export function reduceTotalMoney(list, type) {
+    //拿到需要计算价格的数据 =》 （字段隐显示状态为show == true） && （fieIdType 为 1，2,6,7,9,10,12,14）&& （fieIdType为6，7，9，14时，isCalculatePrice为1）&& (calculateWay 不为 4)
+    const new_list = JSON.parse(JSON.stringify(list))
+    const validTypes = [1, 2, 6, 7, 9, 10, 12, 14]// 允许的字段类型
+    const calcPriceTypes = [6, 7, 9, 14]// 需要校验isCalculatePrice的类型
+
+    if(type == 'global') {
+        //筛选出参与计算的全局字段
+        const global_reduce_list = new_list.globalFieldValues.filter(item => {
+            if(item.show && validTypes.includes(item.fieIdType) && (!calcPriceTypes.includes(item.fieIdType) || item.isCalculatePrice === 1) && item.calculateWay != 4) return item
+        })
+
+        // 计算全局字段的价格
+        const golbal_price = global_reduce_list.reduce((sum, item) => {
+            let total = 0
+            if([1].includes(item.fieIdType)) {
+                // 【单选】全局字段的单选只有 固定价格/不计算价格 两种计价方式
+                const select_option_data = item.options.find(i => i.optionId == item.valueId)
+                total = Number(select_option_data.unitPrice)
+            } else if([2].includes(item.fieIdType)) {
+                // 【多选】全局字段的多选只有 固定价格/不计算价格 两种计价方式
+                const value_list = item.valueId ? item.valueId.toString().split(',') : []
+                const select_option_list = item.options.filter(i => value_list.includes(i.optionId.toString()))
+                total = select_option_list.reduce((checkbox_sum, i) => {
+                    return checkbox_sum + Number(i.unitPrice)
+                }, 0)
+            } else if([6, 7, 14].includes(item.fieIdType)) {
+                //【整数】【浮点】【时间（机时）】直接计算 --- 值 X 单价
+                if (item.fieIdValue) {
+                    total = Number(item.fieIdValue) * Number(item.elementPrice)
+                } else {
+                    total = 0
+                }
+            } else if([9].includes(item.fieIdType)) {
+                //【范围】需要先计算他的差值
+                if (item.fieIdValue && item.fieldValueRange) {
+                    const range_value = Number(item.fieldValueRange) - Number(item.fieIdValue)
+                    if (range_value <= 0) {
+                        total = 0
+                    } else {
+                        total = range_value * Number(item.elementPrice)
+                    }
+                } else {
+                    total = 0
+                }
+            } else if([10].includes(item.fieIdType)) {
+                //【元素周期表】
+                if (item.fieIdValue) {
+                    const element_list = item.fieIdValue.split(',')
+                    total = (Number(item.elementPrice) * element_list.length >= Number(item.startPrice)) ? (Number(item.elementPrice) * element_list.length) : Number(item.startPrice)
+                } else {
+                    total = 0
+                }
+            } else if([12].includes(item.fieIdType)) {
+                // 【字段组】
+                total = Number(reduceFieldGroupsTotalMoney(item.fieldGroupValues, item.formulaDetailList, item.reservePointMethod))
+            }
+
+            return sum + total
+        }, 0)
+
+        return golbal_price
+    } else if(type == 'groups') {
+        //筛选出参与计算的【样品组】内部参与价格计算的字段
+        const groups_reduce_list = new_list.groups.map(item => {
+            const reduce_list = item.fieIdList.filter(i => {
+                if(i.show && validTypes.includes(i.fieIdType) && (!calcPriceTypes.includes(i.fieIdType) || i.isCalculatePrice === 1) && i.calculateWay != 4) return i
+            })
+            return {
+                specimenNum: item.specimenNum,
+                reduce_list,
+            }
+        })
+
+        // 计算【样品组】的价格
+        const groups_price = groups_reduce_list.reduce((sum, item) => {
+            const groups_total = item.reduce_list.reduce((s, i) => {
+                let total = 0
+
+                if([1].includes(i.fieIdType)) {
+                    // 【单选】一般字段的单选有 1 按样品数量 3 固定价格 4 不计算价格 三种计价方式
+                    const select_option_data = i.options.find(options_i => options_i.optionId == i.valueId)
+                    if (i.calculateWay == 1) {
+                        total = Number(select_option_data.unitPrice) * Number(item.specimenNum)
+                    } else {
+                        total = Number(select_option_data.unitPrice)
+                    }
+                } else if([2].includes(i.fieIdType)) {
+                    // 【多选】一般字段的多选有 1 按样品数量 3 固定价格 4 不计算价格 三种计价方式
+                    const value_list = i.valueId ? i.valueId.toString().split(',') : []
+                    const select_option_list = i.options.filter(options_i => value_list.includes(options_i.optionId.toString()))
+                    if (i.calculateWay == 1) {
+                        total = select_option_list.reduce((checkbox_sum, checkbox_i) => {
+                            return checkbox_sum + Number(checkbox_i.unitPrice) * Number(item.specimenNum)
+                        }, 0)
+                    } else {
+                        total = select_option_list.reduce((checkbox_sum, checkbox_i) => {
+                            return checkbox_sum + Number(checkbox_i.unitPrice)
+                        }, 0)
+                    }
+                } else if([6, 7, 14].includes(i.fieIdType)) {
+                    //【整数】【浮点】【时间（机时）】直接计算 --- 值 X 单价
+                    if (i.fieIdValue) {
+                        total = Number(i.fieIdValue) * Number(i.elementPrice)
+                    } else {
+                        total = 0
+                    }
+                } else if([9].includes(i.fieIdType)) {
+                    //【范围】需要先计算他的差值
+                    if (i.fieIdValue && i.fieldValueRange) {
+                        const range_value = Number(i.fieldValueRange) - Number(i.fieIdValue)
+                        if (range_value <= 0) {
+                            total = 0
+                        } else {
+                            total = range_value * Number(i.elementPrice)
+                        }
+                    } else {
+                        total = 0
+                    }
+                } else if([10].includes(i.fieIdType)) {
+                    //【元素周期表】
+                    if (i.fieIdValue) {
+                        const element_list = i.fieIdValue.split(',')
+                        total = (Number(i.elementPrice) * element_list.length >= Number(i.startPrice)) ? (Number(i.elementPrice) * element_list.length) : Number(i.startPrice)
+                    } else {
+                        total = 0
+                    }
+                } else if([12].includes(i.fieIdType)) {
+                    // 【字段组】
+                    total = Number(reduceFieldGroupsTotalMoney(i.fieldGroupValues, i.formulaDetailList, i.reservePointMethod))
+                }
+
+                return s + total
+            }, 0)
+            
+            return sum + groups_total
+        }, 0)
+
+        return groups_price
+    } else {
+        ElMessage.error('计算价格出错，字段类型不为：【全局字段】【一般字段】【字段组】')
+        throw new Error('计算价格出错')
+    }
 }
+function reduceFieldGroupsTotalMoney(field_list, formula_list, reserve_point_method) {
+    let formula = ''
+    formula_list.forEach(item => {
+        if(item.flag) {
+            formula += item.fieIdName
+        } else {
+            const data = field_list.find(i => i.fieIdId == item.fieIdId)
+            
+            if(data.fieIdType == 1) {
+                //单选类型取值为选项的单价
+                const selected_radio = data.options.find( i => i.optionId == data.valueId )
+                const radio_price = selected_radio.unitPrice || 0
+                formula += radio_price
+            } else if(data.fieIdType == 9) {
+                //【范围】需要先计算他的差值
+                if (data.fieIdValue && data.fieldValueRange) {
+                    const range_value = Number(item.fieldValueRange) - Number(item.fieIdValue)
+                    if (range_value <= 0) {
+                        formula += 0
+                    } else {
+                        formula += range_value
+                    }
+                } else {
+                    formula += 0
+                }
+            } else if(data.fieIdType == 14){
+                //如果是日期则需要查询他是否参与计价
+				if(data.isCalculatePrice == 0){
+					if(data.fieIdValue && data.fieIdValue != undefined && data.fieIdValue != null){
+						formula += data.fieIdValue
+					}else{
+						formula += 0
+					}
+				}else{
+					if(data.fieIdValue && data.fieIdValue != undefined && data.fieIdValue != null && data.elementPrice){
+						formula = `${data.value}*${data.elementPrice}+${formula}${data.value}`
+					}else{
+						formula += 0
+					}
+				}
+			}else{
+				if(data.fieIdValue && data.fieIdValue != undefined && data.fieIdValue != null){
+					formula += data.fieIdValue
+				}else{
+					formula += 0
+				}
+			}
+        }
+    })
+
+    const math = require('mathjs')
+    const abs_regex = /\|([^|]+)\|/g // 使用正则表达式找到所有绝对值部分
+    let match;
+    let processed_expression = JSON.parse(JSON.stringify(formula))
+	// 遍历所有匹配的绝对值表达式
+	while ((match = abs_regex.exec(formula)) !== null) {
+        const abs_expression = match[1]; // 绝对值内部的表达式
+        // 计算绝对值内部表达式
+        const inner_result = math.evaluate(abs_expression)
+        // 计算绝对值
+        const abs_result = Math.abs(inner_result)
+        // 替换原表达式中的绝对值部分
+        processed_expression = processed_expression.replace(`|${abs_expression}|`, abs_result.toString())
+    }
+	// 计算最终结果
+    let result = math.evaluate(processed_expression)
+    //reservePointMethod 1 保留两位 2向上取整
+	if(reserve_point_method == 1){
+		result = math.format(result, { notation: 'fixed', precision: 2 });
+	} else {
+		result = math.ceil(result);
+	}
+    return result
+}
+
+// if([1].includes(item.fieIdType)) {
+//     // 【单选】根据价格计算方式处理字段(calculateWay)价格  1 按样品数量 3 固定价格 4 不计算价格
+//     if (item.calculateWay == 1) {
+//         total = Number(item.unitPrice) * Number(item.specimenNum);
+//     } else {
+//         total = Number(item.unitPrice)
+//     }
+// } else if([2].includes(item.fieIdType)) {
+//     // 【多选】根据价格计算方式处理字段(calculateWay)价格  1 按样品数量 3 固定价格 4 不计算价格
+//     const value_list = item.valueId ? item.valueId.toString().split(',') : []
+//     const select_option_list = item.options.filter(i => value_list.includes(i.optionId.toString()))
+//     if (item.calculateWay == 1) {
+//         total = select_option_list.reduce((checkbox_sum, i) => {
+//             return checkbox_sum + Number(i.unitPrice) * Number(i.specimenNum)
+//         }, 0)
+//     } else {
+//         total = select_option_list.reduce((checkbox_sum, i) => {
+//             return checkbox_sum + Number(i.unitPrice)
+//         }, 0)
+//     }
+// }
