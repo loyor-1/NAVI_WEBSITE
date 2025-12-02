@@ -1,4 +1,5 @@
 import { ElMessage } from "element-plus"
+import * as math from 'mathjs'
 
 export function moneyKey(data) {
 	const total_cost = [1, 2, 3, 4, 5, 8, 10, 11]
@@ -149,6 +150,17 @@ export function reduceTotalMoney(list, type) {
         const global_reduce_list = new_list.globalFieldValues.filter(item => {
             if(item.show && validTypes.includes(item.fieIdType) && (!calcPriceTypes.includes(item.fieIdType) || item.isCalculatePrice === 1) && item.calculateWay != 4) return item
         })
+        // 全局字段的价格明细列表
+        const global_fee_detail = [
+            {
+                sample_name: '全局问题',
+                price: '',
+                detail_list: [
+                    // { label: '', value: '' }
+                ],
+            }
+        ]
+        let global_bargain_status = false
 
         // 计算全局字段的价格
         const golbal_price = global_reduce_list.reduce((sum, item) => {
@@ -156,14 +168,26 @@ export function reduceTotalMoney(list, type) {
             if([1].includes(item.fieIdType)) {
                 // 【单选】全局字段的单选只有 固定价格/不计算价格 两种计价方式
                 const select_option_data = item.options.find(i => i.optionId == item.valueId)
-                total = Number(select_option_data.unitPrice)
+                // isNegotiatedPrice == 1 时为待议价
+                if(select_option_data && select_option_data.isNegotiatedPrice == 1) {
+                    global_bargain_status = true
+                    total = '待议价'
+                } else {
+                    total = Number(select_option_data ? select_option_data.unitPrice : 0)
+                }
             } else if([2].includes(item.fieIdType)) {
                 // 【多选】全局字段的多选只有 固定价格/不计算价格 两种计价方式
                 const value_list = item.valueId ? item.valueId.toString().split(',') : []
                 const select_option_list = item.options.filter(i => value_list.includes(i.optionId.toString()))
-                total = select_option_list.reduce((checkbox_sum, i) => {
-                    return checkbox_sum + Number(i.unitPrice)
-                }, 0)
+                // 当多选的选项中存在某一个选项 isNegotiatedPrice == 1 时为待议价
+                if(select_option_list.some(i => i.isNegotiatedPrice == 1)) {
+                    global_bargain_status = true
+                    total = '待议价'
+                } else {
+                    total = select_option_list.reduce((checkbox_sum, i) => {
+                        return checkbox_sum + Number(i.unitPrice)
+                    }, 0)
+                }
             } else if([6, 7, 14].includes(item.fieIdType)) {
                 //【整数】【浮点】【时间（机时）】直接计算 --- 值 X 单价
                 if (item.fieIdValue) {
@@ -193,13 +217,44 @@ export function reduceTotalMoney(list, type) {
                 }
             } else if([12].includes(item.fieIdType)) {
                 // 【字段组】
-                total = Number(reduceFieldGroupsTotalMoney(item.fieldGroupValues, item.formulaDetailList, item.reservePointMethod))
+                if(item.formulaDetailList) {
+                    const field_groups_result = reduceFieldGroupsTotalMoney(item.fieldGroupValues, item.formulaDetailList, item.reservePointMethod)
+                    total = field_groups_result.field_groups_bargain_status ? '待议价' : Number(field_groups_result.field_groups_price) * Number(item.elementPrice)
+                } else {
+                    total = 0
+                }
             }
 
+            //只有存在大于0的价格才显示费用详情
+            if(total > 0 || total == '待议价') {
+                let label = ''
+                if(item.fieIdType != 12) {
+                    label = item.fieIdName
+                } else {
+                    const text = item.formulaDetailList.filter(formula_i => formula_i.fieIdType && formula_i.fieIdType != 13).map(formula_i => formula_i.fieIdName).join('、')
+                    label = `${item.fieIdName}(${text})`
+                }
+                global_fee_detail[0].detail_list.push({
+                    label,
+                    value: total == '待议价' ? '待议价' : `￥${total}`,
+                })
+            }
+
+            // 重置total，如果为‘待议价’，就赋值为0
+            total = total == '待议价' ? 0 : total
             return sum + total
         }, 0)
 
-        return golbal_price
+        //只有全局字段总金额大于0才显示总金额
+        if(golbal_price > 0) {
+            global_fee_detail[0].price = `￥${golbal_price}`
+        }
+
+        return {
+            bargain_status: global_bargain_status,
+            total_cost: golbal_price,
+            fee_detail: global_fee_detail,
+        } 
     } else if(type == 'groups') {
         //筛选出参与计算的【样品组】内部参与价格计算的字段
         const groups_reduce_list = new_list.groups.map(item => {
@@ -207,36 +262,61 @@ export function reduceTotalMoney(list, type) {
                 if(i.show && validTypes.includes(i.fieIdType) && (!calcPriceTypes.includes(i.fieIdType) || i.isCalculatePrice === 1) && i.calculateWay != 4) return i
             })
             return {
-                specimenNum: item.specimenNum,
+                sample_name: `${item.sampleName}组样品`,
+                specimen_num: item.specimenNum,
                 reduce_list,
             }
         })
+        // 样品组的价格明细列表
+        const groups_fee_detail = [
+            {
+                // sample_name: 'A组样品',
+                // price: '',
+                // detail_list: [
+                //     { label: '', value: '' }
+                // ],
+            }
+        ]
+        let groups_bargain_status = false
 
         // 计算【样品组】的价格
         const groups_price = groups_reduce_list.reduce((sum, item) => {
+            const groups_detail_list = []
             const groups_total = item.reduce_list.reduce((s, i) => {
                 let total = 0
 
                 if([1].includes(i.fieIdType)) {
                     // 【单选】一般字段的单选有 1 按样品数量 3 固定价格 4 不计算价格 三种计价方式
                     const select_option_data = i.options.find(options_i => options_i.optionId == i.valueId)
-                    if (i.calculateWay == 1) {
-                        total = Number(select_option_data.unitPrice) * Number(item.specimenNum)
+                    // isNegotiatedPrice == 1 时为待议价
+                    if(select_option_data && select_option_data.isNegotiatedPrice == 1) {
+                        groups_bargain_status = true
+                        total = '待议价'
                     } else {
-                        total = Number(select_option_data.unitPrice)
+                        if (i.calculateWay == 1) {
+                            total = select_option_data ? Number(select_option_data.unitPrice) * Number(item.specimen_num) : 0
+                        } else {
+                            total = select_option_data ? Number(select_option_data.unitPrice) : 0
+                        }
                     }
                 } else if([2].includes(i.fieIdType)) {
                     // 【多选】一般字段的多选有 1 按样品数量 3 固定价格 4 不计算价格 三种计价方式
                     const value_list = i.valueId ? i.valueId.toString().split(',') : []
                     const select_option_list = i.options.filter(options_i => value_list.includes(options_i.optionId.toString()))
-                    if (i.calculateWay == 1) {
-                        total = select_option_list.reduce((checkbox_sum, checkbox_i) => {
-                            return checkbox_sum + Number(checkbox_i.unitPrice) * Number(item.specimenNum)
-                        }, 0)
+                    // 当多选的选项中存在某一个选项 isNegotiatedPrice == 1 时为待议价
+                    if(select_option_list.some(options_i => options_i.isNegotiatedPrice == 1)) {
+                        groups_bargain_status = true
+                        total = '待议价'
                     } else {
-                        total = select_option_list.reduce((checkbox_sum, checkbox_i) => {
-                            return checkbox_sum + Number(checkbox_i.unitPrice)
-                        }, 0)
+                        if (i.calculateWay == 1) {
+                            total = select_option_list.reduce((checkbox_sum, checkbox_i) => {
+                                return checkbox_sum + Number(checkbox_i.unitPrice) * Number(item.specimen_num)
+                            }, 0)
+                        } else {
+                            total = select_option_list.reduce((checkbox_sum, checkbox_i) => {
+                                return checkbox_sum + Number(checkbox_i.unitPrice)
+                            }, 0)
+                        }
                     }
                 } else if([6, 7, 14].includes(i.fieIdType)) {
                     //【整数】【浮点】【时间（机时）】直接计算 --- 值 X 单价
@@ -267,16 +347,48 @@ export function reduceTotalMoney(list, type) {
                     }
                 } else if([12].includes(i.fieIdType)) {
                     // 【字段组】
-                    total = Number(reduceFieldGroupsTotalMoney(i.fieldGroupValues, i.formulaDetailList, i.reservePointMethod))
+                    if(i.formulaDetailList) {
+                        const field_groups_result = reduceFieldGroupsTotalMoney(i.fieldGroupValues, i.formulaDetailList, i.reservePointMethod)
+                        console.log('field_groups_result', field_groups_result)
+                        total = field_groups_result.field_groups_bargain_status ? '待议价' : Number(field_groups_result.field_groups_price) * Number(i.elementPrice)
+                    } else {
+                        total = 0
+                    }
                 }
 
+                //只有存在大于0的价格才显示费用详情
+                if(total > 0 || total == '待议价') {
+                    let label = ''
+                    if(i.fieIdType != 12) {
+                        label = i.fieIdName
+                    } else {
+                        const text = i.formulaDetailList.filter(formula_i => formula_i.fieIdType && formula_i.fieIdType != 13).map(formula_i => formula_i.fieIdName).join('、')
+                        label = `${i.fieIdName}(${text})`
+                    }
+                    groups_detail_list.push({
+                        label,
+                        value: total == '待议价' ? '待议价' : `￥${total}`,
+                    })
+                }
+
+                // 重置total，如果为‘待议价’，就赋值为0
+                total = total == '待议价' ? 0 : total
                 return s + total
             }, 0)
             
+            groups_fee_detail.push({
+                sample_name: item.sample_name,
+                price: groups_total ? `￥${groups_total}` : '',
+                detail_list: groups_detail_list,
+            })
             return sum + groups_total
         }, 0)
 
-        return groups_price
+        return {
+            bargain_status: groups_bargain_status,
+            total_cost: groups_price,
+            fee_detail: groups_fee_detail,
+        }
     } else {
         ElMessage.error('计算价格出错，字段类型不为：【全局字段】【一般字段】【字段组】')
         throw new Error('计算价格出错')
@@ -284,6 +396,7 @@ export function reduceTotalMoney(list, type) {
 }
 function reduceFieldGroupsTotalMoney(field_list, formula_list, reserve_point_method) {
     let formula = ''
+    let bargain_status = false
     formula_list.forEach(item => {
         if(item.flag) {
             formula += item.fieIdName
@@ -293,8 +406,13 @@ function reduceFieldGroupsTotalMoney(field_list, formula_list, reserve_point_met
             if(data.fieIdType == 1) {
                 //单选类型取值为选项的单价
                 const selected_radio = data.options.find( i => i.optionId == data.valueId )
-                const radio_price = selected_radio.unitPrice || 0
-                formula += radio_price
+                if(selected_radio && selected_radio.isNegotiatedPrice == 1) {
+                    bargain_status = true
+                    formula += 0
+                } else {
+                    const radio_price = selected_radio.unitPrice || 0
+                    formula += radio_price
+                }
             } else if(data.fieIdType == 9) {
                 //【范围】需要先计算他的差值
                 if (data.fieIdValue && data.fieldValueRange) {
@@ -332,29 +450,38 @@ function reduceFieldGroupsTotalMoney(field_list, formula_list, reserve_point_met
         }
     })
 
-    const math = require('mathjs')
-    const abs_regex = /\|([^|]+)\|/g // 使用正则表达式找到所有绝对值部分
-    let match;
-    let processed_expression = JSON.parse(JSON.stringify(formula))
-	// 遍历所有匹配的绝对值表达式
-	while ((match = abs_regex.exec(formula)) !== null) {
-        const abs_expression = match[1]; // 绝对值内部的表达式
-        // 计算绝对值内部表达式
-        const inner_result = math.evaluate(abs_expression)
-        // 计算绝对值
-        const abs_result = Math.abs(inner_result)
-        // 替换原表达式中的绝对值部分
-        processed_expression = processed_expression.replace(`|${abs_expression}|`, abs_result.toString())
+    if(!bargain_status) {
+        const abs_regex = /\|([^|]+)\|/g // 使用正则表达式找到所有绝对值部分
+        let match;
+        let processed_expression = JSON.parse(JSON.stringify(formula))
+	    // 遍历所有匹配的绝对值表达式
+	    while ((match = abs_regex.exec(formula)) !== null) {
+            const abs_expression = match[1]; // 绝对值内部的表达式
+            // 计算绝对值内部表达式
+            const inner_result = math.evaluate(abs_expression)
+            // 计算绝对值
+            const abs_result = Math.abs(inner_result)
+            // 替换原表达式中的绝对值部分
+            processed_expression = processed_expression.replace(`|${abs_expression}|`, abs_result.toString())
+        }
+	    // 计算最终结果
+        let result = math.evaluate(processed_expression)
+        //reservePointMethod 1 保留两位 2向上取整
+	    if(reserve_point_method == 1){
+	    	result = math.format(result, { notation: 'fixed', precision: 2 });
+	    } else {
+	    	result = math.ceil(result);
+	    }
+        return {
+            field_groups_price: result,
+            field_groups_bargain_status: false,
+        }
+    } else {
+        return {
+            field_groups_price: 0,
+            field_groups_bargain_status: true,
+        }
     }
-	// 计算最终结果
-    let result = math.evaluate(processed_expression)
-    //reservePointMethod 1 保留两位 2向上取整
-	if(reserve_point_method == 1){
-		result = math.format(result, { notation: 'fixed', precision: 2 });
-	} else {
-		result = math.ceil(result);
-	}
-    return result
 }
 
 // if([1].includes(item.fieIdType)) {

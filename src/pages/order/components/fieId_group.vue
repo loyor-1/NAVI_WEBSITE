@@ -2,13 +2,12 @@
 import { defineProps, defineEmits, ref } from 'vue'
 import { useGetFieldGroupList } from '@/api'
 import radio from './radio.vue'
-import checkbox from './checkbox.vue';
 import singleLine from './single_line.vue';
 import multiLine from './multi_line.vue';
 import richText from './rich_text.vue'
 import integer from './integer.vue';
 import float from './float.vue';
-import uploadFile from './uploadFile.vue';
+import uploadFile from './upload_file.vue';
 import range from './range.vue';
 import timer from './timer.vue';
 

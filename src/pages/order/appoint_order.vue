@@ -11,22 +11,25 @@ import multiLine from './components/multi_line.vue';
 import richText from './components/rich_text.vue'
 import integer from './components/integer.vue';
 import float from './components/float.vue';
-import uploadFile from './components/uploadFile.vue';
+import uploadFile from './components/upload_file.vue';
 import range from './components/range.vue';
 import periodic from './components/periodic.vue';
 import downloadFile from './components/download_file.vue';
 import fieIdGroup from './components/fieId_group.vue';
 import timer from './components/timer.vue';
+import feeDetail from './components/dialog/fee_detail.vue';
 
 const route = useRoute()
 const router = useRouter()
 
+const ref_fee_detail = ref(null)
 const loading = ref(true)
 const actvie_flag = ref(false)
 const show_instructions = ref(true)
 const show_global = ref(true)
 const upload_code_dialog = ref(false)
 const split_groups_dialog = ref(false)
+const bargain_status = ref(false)
 const equipment_info = ref({})//设备详情
 const groups_fieId_list = ref([])//用于添加样品组的初始化字段
 const sample_name_list = reactive(['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z'])// A-Z 大写字母数组
@@ -55,6 +58,7 @@ const appoint_data = ref({
     message: '',//实验留言
     customRemark: '',//订单备注
     fileList: [],//上传附件
+    originalPrice: 0,//预约单原价
     totalCost: '',//订单总金额
 })
 
@@ -278,9 +282,19 @@ function confirmSplitGroups() {
 
 //计算订单金额
 function reduceOrderPrice() {
-    const global_money = reduceTotalMoney(appoint_data.value, 'global')
-    const groups_money = reduceTotalMoney(appoint_data.value, 'groups')
+    const global_money = reduceTotalMoney(appoint_data.value, 'global').total_cost
+    const groups_money = reduceTotalMoney(appoint_data.value, 'groups').total_cost
+    const global_bargain_status = reduceTotalMoney(appoint_data.value, 'groups').bargain_status
+    const groups_bargain_status = reduceTotalMoney(appoint_data.value, 'groups').bargain_status
+    bargain_status.value = global_bargain_status || groups_bargain_status
+    console.log('价格', global_money, groups_money)
+    appoint_data.value.originalPrice = global_money + groups_money
     appoint_data.value.totalCost = (global_money + groups_money).toFixed(2)
+}
+
+//打开费用明细弹框
+function openFeeDetail() {
+    ref_fee_detail.value.init(appoint_data.value)
 }
 
 // 下一步
@@ -505,10 +519,14 @@ function nextStep() {
                 </div>
             </div>
             <div class="button-box">
-                <div class="flex-center price">
-                    <span class="font-5D5D5D">合计费用： </span>
-                    <span class="font-FF4A2B font-middle">￥{{ appoint_data.totalCost }}</span>
-                    <img class="gold" src="@/assets/svg/money.svg" alt="">
+                <div class="flex-center-col price">
+                    <div class="flex-center">
+                        <span class="font-5D5D5D">合计费用： </span>
+                        <span v-if="bargain_status">待议价</span>
+                        <span class="font-FF4A2B font-middle" v-else>￥{{ appoint_data.totalCost }}</span>
+                        <img class="gold" src="@/assets/svg/money.svg" alt="">
+                    </div>
+                    <div class="font-mini font-5D5D5D desc" @click="openFeeDetail">点击查看费用详情</div>
                 </div>
                 <div class="default-button" @click="addGroup">添加样品</div>
                 <div class="custom-button" @click="nextStep">下一步</div>
@@ -516,6 +534,8 @@ function nextStep() {
         </div>
     </div>
 
+    <!-- 费用明细弹框 -->
+    <feeDetail ref="ref_fee_detail"></feeDetail>
     <!-- 批量导入样品编号 -->
     <el-dialog
       class="upload-code-dialog"
@@ -722,7 +742,9 @@ function nextStep() {
             width: 20%;
             min-width: 288px;
             height: 100%;
+            padding-bottom: 10px;
             .price {
+                cursor: pointer;
                 height: 80px;
                 border: 1px solid #C8C9CC;
                 border-radius: 5px;
@@ -730,6 +752,9 @@ function nextStep() {
                     width: 50px;
                     height: 50px;
                     margin-left: 5px;
+                }
+                .desc {
+                    text-decoration: underline;
                 }
             }
             .default-button {
