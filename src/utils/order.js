@@ -47,7 +47,7 @@ export function orderStatus(data) {
 			if(data.recycleStatus == 2) {
 				status_string = '回运'
 			}
-		    break  
+		    break
 		case 8:
 		    status_string = '已取消'
 		    break
@@ -75,7 +75,7 @@ export function initFieIdList(list) {
 		item.show = item.isRelevance ? false : true
 		item.fieIdValue = ""
 		switch(item.fieIdType) {
-			case 5: 
+			case 5:
 			    item.fieIdValue = item.richTextDefault
 				break
 			case 9:
@@ -236,7 +236,7 @@ export function reduceTotalMoney(list, type) {
                 }
                 global_fee_detail[0].detail_list.push({
                     label,
-                    value: total == '待议价' ? '待议价' : `￥${total}`,
+                    value: total == '待议价' ? '待议价' : `￥${total.toFixed(2)}`,
                 })
             }
 
@@ -247,14 +247,14 @@ export function reduceTotalMoney(list, type) {
 
         //只有全局字段总金额大于0才显示总金额
         if(golbal_price > 0) {
-            global_fee_detail[0].price = `￥${golbal_price}`
+            global_fee_detail[0].price = `￥${golbal_price.toFixed(2)}`
         }
 
         return {
             bargain_status: global_bargain_status,
-            total_cost: golbal_price,
+            total_cost: golbal_price.toFixed(2),
             fee_detail: global_fee_detail,
-        } 
+        }
     } else if(type == 'groups') {
         //筛选出参与计算的【样品组】内部参与价格计算的字段
         const groups_reduce_list = new_list.groups.map(item => {
@@ -269,13 +269,13 @@ export function reduceTotalMoney(list, type) {
         })
         // 样品组的价格明细列表
         const groups_fee_detail = [
-            {
-                // sample_name: 'A组样品',
-                // price: '',
-                // detail_list: [
-                //     { label: '', value: '' }
-                // ],
-            }
+            // {
+            //     sample_name: 'A组样品',
+            //     price: '',
+            //     detail_list: [
+            //         { label: '', value: '' }
+            //     ],
+            // }
         ]
         let groups_bargain_status = false
 
@@ -349,7 +349,6 @@ export function reduceTotalMoney(list, type) {
                     // 【字段组】
                     if(i.formulaDetailList) {
                         const field_groups_result = reduceFieldGroupsTotalMoney(i.fieldGroupValues, i.formulaDetailList, i.reservePointMethod)
-                        console.log('field_groups_result', field_groups_result)
                         total = field_groups_result.field_groups_bargain_status ? '待议价' : Number(field_groups_result.field_groups_price) * Number(i.elementPrice)
                     } else {
                         total = 0
@@ -367,7 +366,7 @@ export function reduceTotalMoney(list, type) {
                     }
                     groups_detail_list.push({
                         label,
-                        value: total == '待议价' ? '待议价' : `￥${total}`,
+                        value: total == '待议价' ? '待议价' : `￥${total.toFixed(2)}`,
                     })
                 }
 
@@ -375,10 +374,10 @@ export function reduceTotalMoney(list, type) {
                 total = total == '待议价' ? 0 : total
                 return s + total
             }, 0)
-            
+
             groups_fee_detail.push({
                 sample_name: item.sample_name,
-                price: groups_total ? `￥${groups_total}` : '',
+                price: groups_total ? `￥${groups_total.toFixed(2)}` : '',
                 detail_list: groups_detail_list,
             })
             return sum + groups_total
@@ -386,7 +385,7 @@ export function reduceTotalMoney(list, type) {
 
         return {
             bargain_status: groups_bargain_status,
-            total_cost: groups_price,
+            total_cost: groups_price.toFixed(2),
             fee_detail: groups_fee_detail,
         }
     } else {
@@ -402,7 +401,7 @@ function reduceFieldGroupsTotalMoney(field_list, formula_list, reserve_point_met
             formula += item.fieIdName
         } else {
             const data = field_list.find(i => i.fieIdId == item.fieIdId)
-            
+
             if(data.fieIdType == 1) {
                 //单选类型取值为选项的单价
                 const selected_radio = data.options.find( i => i.optionId == data.valueId )

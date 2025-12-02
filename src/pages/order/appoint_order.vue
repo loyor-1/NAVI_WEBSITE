@@ -287,9 +287,8 @@ function reduceOrderPrice() {
     const global_bargain_status = reduceTotalMoney(appoint_data.value, 'groups').bargain_status
     const groups_bargain_status = reduceTotalMoney(appoint_data.value, 'groups').bargain_status
     bargain_status.value = global_bargain_status || groups_bargain_status
-    console.log('价格', global_money, groups_money)
-    appoint_data.value.originalPrice = global_money + groups_money
-    appoint_data.value.totalCost = (global_money + groups_money).toFixed(2)
+    appoint_data.value.originalPrice = Number(global_money) + Number(groups_money)
+    appoint_data.value.totalCost = (Number(global_money) + Number(groups_money)).toFixed(2)
 }
 
 //打开费用明细弹框
@@ -300,13 +299,13 @@ function openFeeDetail() {
 // 下一步
 function nextStep() {
     try{
-        
+
     }
     catch(err) {
         console.log(err)
     }
-    
-    
+
+
 }
 </script>
 
@@ -354,7 +353,7 @@ function nextStep() {
             <div class="multi-line-ellipsis-1 font-mini">{{ equipment_info.technicalAdvisorTextPrompts }}</div>
         </div>
     </div>
-    
+
     <div class="profile">
         <div class="profile-head flex-center">
             <div class="flex-center">
