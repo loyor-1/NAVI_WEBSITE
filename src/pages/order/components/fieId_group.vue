@@ -26,6 +26,7 @@ async function getFieldGroupList() {
     value_data.value.reservePointMethod = res.data.reservePointMethod
     value_data.value.formulaDetailList = res.data.formulaDetailList
     value_data.value.fieldGroupValues = res.data.fieldGroupRelevanceList.map(item => {
+        item.validate = true
         if(item.fieIdType == 13){
 			item.fieIdValue = item.basicValue
 		}

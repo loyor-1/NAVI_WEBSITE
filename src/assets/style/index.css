@@ -228,6 +228,13 @@ html {
         padding: 10px;
     }
 }
+.fieId-box-warning {
+    border: 1px solid #FF4A2B;
+    .fieId-label {
+        border-right: 1px solid #FF4A2B;
+        background-color: #FF4A2B50;
+    }
+}
 
 /* 可点击的字体文本 */
 .link-text {

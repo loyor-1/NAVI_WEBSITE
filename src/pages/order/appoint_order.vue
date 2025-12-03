@@ -2,8 +2,8 @@
 import { useRoute, useRouter } from 'vue-router';
 import { useGetEquipmentInfo, useGetActives, useGetFieIdList } from '@/api'
 import { reactive, ref, watch } from 'vue';
-import { initFieIdList, changeRelevance, reduceTotalMoney } from '@/utils/order';
-import { ElMessageBox } from 'element-plus'
+import { initFieIdList, changeRelevance, reduceTotalMoney, validateField } from '@/utils/order';
+import { ElMessage, ElMessageBox } from 'element-plus'
 import radio from './components/radio.vue'
 import checkbox from './components/checkbox.vue';
 import singleLine from './components/single_line.vue';
@@ -25,6 +25,7 @@ const router = useRouter()
 const ref_fee_detail = ref(null)
 const loading = ref(true)
 const actvie_flag = ref(false)
+const show_groups_box = ref(true)
 const show_instructions = ref(true)
 const show_global = ref(true)
 const upload_code_dialog = ref(false)
@@ -45,15 +46,15 @@ const appoint_data = ref({
 	globalFieldValues: [],//全局字段列表
     //样品组数据
     groups: [
-        {
-            show_groups: true,
-            sampleName: "A",
-            specimenNum: 0, //样品数量
-            specimen_code_list: [],
-            specimenCode: "", //样品编号
-            specimenIngredient: "", //样品成分
-            fieIdList: [], //配置字段列表,
-        }
+        // {
+        //     show_groups: true,
+        //     sampleName: "A",
+        //     specimenNum: 0, //样品数量
+        //     specimen_code_list: [],
+        //     specimenCode: "", //样品编号
+        //     specimenIngredient: "", //样品成分
+        //     fieIdList: [], //配置字段列表,
+        // }
     ],
     message: '',//实验留言
     customRemark: '',//订单备注
@@ -129,8 +130,15 @@ async function getFieIdList() {
         const res_global = await useGetFieIdList(global_params)
         appoint_data.value.globalFieldValues = initFieIdList(res_global.data)// 处理全局字段
         const res_groups = await useGetFieIdList(groups_params)
-        appoint_data.value.groups[0].fieIdList = initFieIdList(res_groups.data)// 处理样品组字段
-        groups_fieId_list.value = initFieIdList(res_groups.data)
+        if(res_groups.data && res_groups.data.length) {
+            show_groups_box.value = true
+            groups_fieId_list.value = initFieIdList(res_groups.data)
+            addGroup()
+        } else {
+            show_groups_box.value = false
+        }
+        // appoint_data.value.groups[0].fieIdList = initFieIdList(res_groups.data)// 处理样品组字段
+        
     }
     finally{
         loading.value = false
@@ -144,9 +152,12 @@ function addGroup() {
         show_groups: true,
         sampleName: sample_name_list[appoint_data.value.groups.length],
         specimenNum: 0, //样品数量
+        specimenNum_validate: true,
         specimen_code_list: [],
         specimenCode: "", //样品编号
+        specimen_code_validate: true,
         specimenIngredient: "", //样品成分
+        specimenIngredient_validate: true,
         fieIdList: groups_fieId_list.value, //配置字段列表,
     })
 }
@@ -299,22 +310,33 @@ function openFeeDetail() {
 // 下一步
 function nextStep() {
     try{
-
+        const result = validateField(appoint_data.value)
+        if(!result.validate) {
+            ElMessage.error(result.message)
+        }
+        appoint_data.value.globalFieldValues.forEach(item => {
+            const list_data = result.global_result.find(i => i.fieIdId == item.fieIdId)
+            item.validate = list_data ? list_data.validate : true
+        })
+        appoint_data.value.groups.forEach((item, index) => {
+            const data = result.groups_result[index]
+            item.specimenNum_validate = data.specimenNum_validate
+            item.specimen_code_validate = data.specimen_code_validate
+            item.specimenIngredient_validate = data.specimenIngredient_validate
+            // 替换每个样品组内的字段校验结果
+            item.fieIdList.forEach(list_i => {
+                const list_data = data.fieId_list.find(i => i.fieIdId == list_i.fieIdId)
+                list_i.validate = list_data ? list_data.validate : true
+            })
+        })
     }
     catch(err) {
         console.log(err)
     }
-
-
 }
 </script>
 
 <template>
-    <div>
-        <div>还剩</div>
-        <div>订单价格</div>
-        <div>订单价格明细</div>
-    </div>
     <div class="euipment-box flex-center">
         <div class="img-box flex-center">
             <el-image class="euipment-img" :src="equipment_info.quipment_pic">
@@ -417,7 +439,7 @@ function nextStep() {
         </el-collapse-transition>
     </div>
     <!-- 样品组信息 -->
-    <div v-if="appoint_data.groups.length">
+    <div v-if="appoint_data.groups.length && show_groups_box">
         <div class="profile" v-for="(item, group_index) in appoint_data.groups" :key="group_index">
             <div class="profile-head flex-center">
                 <div class="flex-center">
@@ -433,16 +455,22 @@ function nextStep() {
             </div>
             <el-collapse-transition>
                 <div class="profile-content" v-show="item.show_groups" v-loading="loading">
-                    <div class="fieId-box">
-                        <div class="fieId-label">样品数量</div>
+                    <div class="fieId-box" :class="{'fieId-box-warning': !item.specimenNum_validate}">
+                        <div class="fieId-label">
+                            <span class="font-FF4A2B">*</span>
+                            <span>样品数量</span>
+                        </div>
                         <div class="fieId-content">
                             <el-input-number :min="0" :step="1" step-strictly v-model="item.specimenNum" @change="(newValue, oldValue) => changeNum(newValue, oldValue, group_index)"/>
                         </div>
                         <div class="num-button-1 default-button" @click="openUploadCodeDialog(group_index)">批量导入样品编号</div>
                         <div class="num-button-2" :class="[item.specimenNum ? 'default-button' : 'disabled-button']" @click="openSplitGroupsDialog(group_index)">拆分样品组</div>
                     </div>
-                    <div class="fieId-box">
-                        <div class="fieId-label">样品编号</div>
+                    <div class="fieId-box" :class="{'fieId-box-warning': !item.specimen_code_validate}">
+                        <div class="fieId-label">
+                            <span class="font-FF4A2B">*</span>
+                            <span>样品编号</span>
+                        </div>
                         <div class="fieId-content">
                             <el-scrollbar>
                                 <div class="specimen-code-box">
@@ -453,8 +481,11 @@ function nextStep() {
                             </el-scrollbar>
                         </div>
                     </div>
-                    <div class="fieId-box">
-                        <div class="fieId-label">样品成分</div>
+                    <div class="fieId-box" :class="{'fieId-box-warning': !item.specimenIngredient_validate}">
+                        <div class="fieId-label">
+                            <span class="font-FF4A2B">*</span>
+                            <span>样品成分</span>
+                        </div>
                         <div class="fieId-content">
                             <el-input v-model="item.specimenIngredient" placeholder="请输入样品成分"/>
                         </div>
@@ -500,7 +531,7 @@ function nextStep() {
             </div>
         </div>
         <div class="upload-file">
-            <uploadFile :base_data="{fieIdName: '上传附件'}" @updateValue="uploadOrderFile"></uploadFile>
+            <uploadFile :base_data="{fieIdName: '上传附件', validate: true}" @updateValue="uploadOrderFile"></uploadFile>
         </div>
         <div class="other-info-box">
             <div class="other-info">
@@ -527,7 +558,7 @@ function nextStep() {
                     </div>
                     <div class="font-mini font-5D5D5D desc" @click="openFeeDetail">点击查看费用详情</div>
                 </div>
-                <div class="default-button" @click="addGroup">添加样品</div>
+                <div class="default-button" v-if="show_groups_box" @click="addGroup">添加样品</div>
                 <div class="custom-button" @click="nextStep">下一步</div>
             </div>
         </div>

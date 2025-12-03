@@ -73,6 +73,7 @@ export function initFieIdList(list) {
 	//有关联id的初始化需要被隐藏
     new_list.forEach(item => {
 		item.show = item.isRelevance ? false : true
+        item.validate = true
 		item.fieIdValue = ""
 		switch(item.fieIdType) {
 			case 5:
@@ -148,7 +149,7 @@ export function reduceTotalMoney(list, type) {
     if(type == 'global') {
         //筛选出参与计算的全局字段
         const global_reduce_list = new_list.globalFieldValues.filter(item => {
-            if(item.show && validTypes.includes(item.fieIdType) && (!calcPriceTypes.includes(item.fieIdType) || item.isCalculatePrice === 1) && item.calculateWay != 4) return item
+            if(item.show && validTypes.includes(item.fieIdType) && (!calcPriceTypes.includes(item.fieIdType) || item.isCalculatePrice == 1) && item.calculateWay != 4) return item
         })
         // 全局字段的价格明细列表
         const global_fee_detail = [
@@ -259,7 +260,7 @@ export function reduceTotalMoney(list, type) {
         //筛选出参与计算的【样品组】内部参与价格计算的字段
         const groups_reduce_list = new_list.groups.map(item => {
             const reduce_list = item.fieIdList.filter(i => {
-                if(i.show && validTypes.includes(i.fieIdType) && (!calcPriceTypes.includes(i.fieIdType) || i.isCalculatePrice === 1) && i.calculateWay != 4) return i
+                if(i.show && validTypes.includes(i.fieIdType) && (!calcPriceTypes.includes(i.fieIdType) || i.isCalculatePrice == 1) && i.calculateWay != 4) return i
             })
             return {
                 sample_name: `${item.sampleName}组样品`,
@@ -483,24 +484,109 @@ function reduceFieldGroupsTotalMoney(field_list, formula_list, reserve_point_met
     }
 }
 
-// if([1].includes(item.fieIdType)) {
-//     // 【单选】根据价格计算方式处理字段(calculateWay)价格  1 按样品数量 3 固定价格 4 不计算价格
-//     if (item.calculateWay == 1) {
-//         total = Number(item.unitPrice) * Number(item.specimenNum);
-//     } else {
-//         total = Number(item.unitPrice)
-//     }
-// } else if([2].includes(item.fieIdType)) {
-//     // 【多选】根据价格计算方式处理字段(calculateWay)价格  1 按样品数量 3 固定价格 4 不计算价格
-//     const value_list = item.valueId ? item.valueId.toString().split(',') : []
-//     const select_option_list = item.options.filter(i => value_list.includes(i.optionId.toString()))
-//     if (item.calculateWay == 1) {
-//         total = select_option_list.reduce((checkbox_sum, i) => {
-//             return checkbox_sum + Number(i.unitPrice) * Number(i.specimenNum)
-//         }, 0)
-//     } else {
-//         total = select_option_list.reduce((checkbox_sum, i) => {
-//             return checkbox_sum + Number(i.unitPrice)
-//         }, 0)
-//     }
-// }
+//校验必填选项
+export function validateField(list) {
+    const new_list = JSON.parse(JSON.stringify(list))
+    const global_list = new_list.globalFieldValues.filter(item => item.show && item.isRequired)
+    const groups_list = new_list.groups.map(item => {
+        const fieId_list = item.fieIdList.filter(i => i.show && i.isRequired)
+        return {
+            sample_name: item.sampleName,
+            specimen_num: item.specimenNum,
+            specimenNum_validate: true,
+            specimen_code_list: item.specimen_code_list,
+            specimen_code_validate: true,
+            specimen_ingredient: item.specimenIngredient,
+            specimenIngredient_validate: true,
+            fieId_list: fieId_list,
+        }
+    })
+    let message = ''
+
+    let global_valid = true
+    global_list.forEach(item => {
+        if([11, 13].includes(item.fieIdType)) {
+            item.validate = true
+        } else if(item.fieIdType == 12 && item.fieldGroupValues){
+            item.fieldGroupValues.forEach(i => {
+                if(i.isRequired != 1 || [2, 10, 11, 12, 13].includes(i.fieIdType)) {
+                    i.validate = true
+                } else {
+                    const boolean_range = [9].includes(i.fieIdType) && (i.fieIdValue == undefined || i.fieIdValue == null || i.fieldValueRange == undefined || i.fieldValueRange == null || (i.fieIdValue == i.fieldValueRange))
+                    const boolean_other = ![9].includes(i.fieIdType) && !i.fieIdValue
+                    if(boolean_range || boolean_other) {
+                        global_valid = false
+                        message = message ? message : `【全局字段】 ${i.fieIdName} 填写不规范`
+                    }
+                    i.validate = !(boolean_range || boolean_other)
+                }
+            })
+        } else if(item.isRequired == 1 && item.fieIdType != 12){
+            const boolean_range = [9].includes(item.fieIdType) && (item.fieIdValue == undefined || item.fieIdValue == null || item.fieldValueRange == undefined || item.fieldValueRange == null || (item.fieIdValue == item.fieldValueRange))
+            const boolean_other = ![9].includes(item.fieIdType) && !item.fieIdValue
+            if(boolean_range || boolean_other) {
+                global_valid = false
+                message = message ? message : `【全局字段】 ${item.fieIdName} 填写不规范`
+            }
+            item.validate = !(boolean_range || boolean_other)
+        }
+    })
+
+    let groups_valid = true
+    groups_list.forEach(item => {
+        if(!item.specimen_num) {
+            item.specimenNum_validate = false
+            groups_valid = false
+            message = message ? message : `【${item.sample_name}组样品】未填写 样品数量`
+
+        }
+        if(!item.specimen_code_list || !item.specimen_code_list.length || item.specimen_code_list.some(i => Boolean(i.value) == false)) {
+            item.specimen_code_validate = false
+            groups_valid = false
+            message = message ? message : `【${item.sample_name}组样品】未填写 样品编号`
+        }
+        if(!item.specimen_ingredient) {
+            item.specimenIngredient_validate = false
+            groups_valid = false
+            message = message ? message : `【${item.sample_name}组样品】未填写 样品成分`
+        }
+        item.fieId_list.forEach(list_i => {
+            if([11, 13].includes(list_i.fieIdType)) {
+                list_i.validate = true
+            } else if(list_i.fieIdType == 12 && list_i.fieldGroupValues){
+                list_i.fieldGroupValues.forEach(field_group_i => {
+                    if(field_group_i.isRequired != 1 || [2, 10, 11, 12, 13].includes(field_group_i.fieIdType)) {
+                        field_group_i.validate = true
+                    } else {
+                        const boolean_range = [9].includes(field_group_i.fieIdType) && (field_group_i.fieIdValue == undefined || field_group_i.fieIdValue == null || field_group_i.fieldValueRange == undefined || field_group_i.fieldValueRange == null || (field_group_i.fieIdValue == field_group_i.fieldValueRange))
+                        const boolean_other = ![9].includes(field_group_i.fieIdType) && !field_group_i.fieIdValue
+                        if(boolean_range || boolean_other) {
+                            groups_valid = false
+                            message = message ? message : `【${item.sample_name}组样品】 ${field_group_i.fieIdName} 填写不规范`
+                        }
+                        field_group_i.validate = !(boolean_range || boolean_other)
+                    }
+                })
+            } else if(list_i.isRequired == 1 && list_i.fieIdType != 12){
+                const boolean_range = [9].includes(list_i.fieIdType) && (list_i.fieIdValue == undefined || list_i.fieIdValue == null || list_i.fieldValueRange == undefined || list_i.fieldValueRange == null || (list_i.fieIdValue == list_i.fieldValueRange))
+                const boolean_other = ![9].includes(list_i.fieIdType) && !list_i.fieIdValue
+                if(boolean_range || boolean_other) {
+                    groups_valid = false
+                    message = message ? message : `【${item.sample_name}组样品】 ${list_i.fieIdName} 填写不规范`
+                }
+                list_i.validate = !(boolean_range || boolean_other)
+            }
+        })
+    })
+
+
+    console.log('global_list', global_list)
+    console.log('groups_list', groups_list)
+
+    return {
+        validate: groups_valid && groups_valid,
+        message: message,
+        global_result: global_list,
+        groups_result: groups_list,
+    }
+}

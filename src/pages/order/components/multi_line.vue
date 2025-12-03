@@ -14,8 +14,10 @@ function updateValue() {
 </script>
 
 <template>
-    <div class="fieId-box">
-        <div class="fieId-label">{{ props.base_data.fieIdName }}</div>
+    <div class="fieId-box" :class="{'fieId-box-warning': !props.base_data.validate}">
+        <div class="fieId-label">
+            <span><span class="font-FF4A2B" v-if="props.base_data.isRequired">*</span>{{ props.base_data.fieIdName }}</span>
+        </div>
         <div class="fieId-content">
             <el-input type="textarea" resize="none" :rows="4" placeholder="请输入" v-model="value_data.fieIdValue" @input="updateValue"/>
         </div>
