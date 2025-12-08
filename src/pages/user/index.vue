@@ -1,7 +1,7 @@
 <script setup>
 import { useRouter } from 'vue-router'
 import { menu_list } from './menu_list'
-import { onMounted, ref } from 'vue'
+import { onMounted, onUnmounted, ref } from 'vue'
 import mitt_bus from '@/utils/mitt_bus'
 
 const router = useRouter()
@@ -33,6 +33,10 @@ function toPageByIndex(index) {
 
 onMounted(() => {
     mitt_bus.on('changeUserActiveIndex', toPageByIndex)
+})
+
+onUnmounted(() => {
+    mitt_bus.off('changeUserActiveIndex')
 })
 </script>
 

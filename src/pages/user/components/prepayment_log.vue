@@ -9,7 +9,7 @@ const total = ref(0)//记录总条数
 
 //个人预存记录接口查询参数
 const params = ref({
-    clientId: JSON.parse(getUserInfo()).clientId,
+    clientId: getUserInfo().clientId,
     pageNum: 1,
     pageSize: 25,
 })

@@ -25,13 +25,15 @@ function openPeriodicTable() {
 </script>
 
 <template>
-    <div class="fieId-box" :class="{'fieId-box-warning': !props.base_data.validate}">
-        <div class="fieId-label">
-            <span><span class="font-FF4A2B" v-if="props.base_data.isRequired">*</span>{{ props.base_data.fieIdName }}</span>
-        </div>
-        <div class="fieId-content">
-            <div v-if="value_data.fieIdValue">您已选择：{{ value_data.fieIdValue }}</div>
-            <div class="custom-button" @click="openPeriodicTable">选择元素</div>
+    <div class="fieId-style">
+        <div :id="props.base_data.fieIdId" class="fieId-box" :class="{'fieId-box-warning': !props.base_data.validate}">
+            <div class="fieId-label">
+                <span><span class="font-FF4A2B" v-if="props.base_data.isRequired">*</span>{{ props.base_data.fieIdName }}</span>
+            </div>
+            <div class="fieId-content">
+                <div v-if="value_data.fieIdValue">您已选择：{{ value_data.fieIdValue }}</div>
+                <div class="custom-button" @click="openPeriodicTable">选择元素</div>
+            </div>
         </div>
     </div>
 

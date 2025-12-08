@@ -1,5 +1,5 @@
 <script setup>
-import { defineProps, defineEmits, ref } from 'vue'
+import { defineProps, defineEmits, ref, onMounted, onUnmounted } from 'vue'
 import { useGetFieldGroupList } from '@/api'
 import radio from './radio.vue'
 import singleLine from './single_line.vue';
@@ -10,6 +10,7 @@ import float from './float.vue';
 import uploadFile from './upload_file.vue';
 import range from './range.vue';
 import timer from './timer.vue';
+import mitt_bus from '@/utils/mitt_bus';
 
 const props = defineProps(['base_data'])
 const emit = defineEmits(['updateValue']);
@@ -21,6 +22,7 @@ const value_data = ref({
     totalPrice: 0,
 })
 
+//获取字段组内的字段信息
 async function getFieldGroupList() {
     const res = await useGetFieldGroupList(props.base_data.fieldGroupId)
     value_data.value.reservePointMethod = res.data.reservePointMethod
@@ -35,6 +37,19 @@ async function getFieldGroupList() {
 }
 getFieldGroupList()
 
+//更新字段组的校验信息
+function validateFieldGroups(field_group_values) {
+    value_data.value.fieldGroupValues.forEach(item => {
+        const list_data = field_group_values.find(i => i.fieIdId == item.fieIdId)
+        if(list_data) {
+            item.validate = list_data.validate
+        } else {
+            item.validate = true
+        }
+    })
+}
+
+//更新字段组的值
 function updateFieldGroupValue(item, index, value) {
     const new_value = {
         ...item,
@@ -47,6 +62,14 @@ function updateFieldGroupValue(item, index, value) {
 function updateValue() {
     emit('updateValue', value_data.value)
 }
+
+onMounted(() => {
+    mitt_bus.on('updateFieldGroupValues', validateFieldGroups)
+})
+
+onUnmounted(() => {
+    mitt_bus.off('updateFieldGroupValues')
+})
 </script>
 
 <template>

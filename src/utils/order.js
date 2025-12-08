@@ -473,7 +473,7 @@ function reduceFieldGroupsTotalMoney(field_list, formula_list, reserve_point_met
 	    	result = math.ceil(result);
 	    }
         return {
-            field_groups_price: result,
+            field_groups_price: (result !== NaN && result !== undefined && result !== 'Infinity') ? result : 0,
             field_groups_bargain_status: false,
         }
     } else {
@@ -578,10 +578,6 @@ export function validateField(list) {
             }
         })
     })
-
-
-    console.log('global_list', global_list)
-    console.log('groups_list', groups_list)
 
     return {
         validate: groups_valid && groups_valid,

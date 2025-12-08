@@ -200,41 +200,51 @@ html {
     }
 }
 /* 下单页面字段相关样式 */
-.fieId-box {
-    animation: fieIdBoxShow 0.3s linear forwards;
-    overflow: hidden;
-    position: relative;
-    display: flex;
+.fieId-style {
     width: 100%;
     margin-bottom: 10px;
-    border-radius: 10px;
-    border: 1px solid #E8E8E8;
-    .fieId-label {
+    .fieId-box {
+        animation: fieIdBoxShow 0.3s linear forwards;
+        overflow: hidden;
+        position: relative;
         display: flex;
-        justify-content: center;
-        align-items: center;
-        width: 15%;
-        padding: 10px;
-        font-weight: 600;
-        border-right: 1px solid #E8E8E8;
-        background-color: #F4F7FA;
+        width: 100%;
+        border-radius: 10px;
+        border: 1px solid #E8E8E8;
+        .fieId-label {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            width: 15%;
+            padding: 10px;
+            font-weight: 600;
+            border-right: 1px solid #E8E8E8;
+            background-color: #F4F7FA;
+        }
+        .fieId-content {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 15px;
+            width: 85%;
+            padding: 10px;
+        }
     }
-    .fieId-content {
-        display: flex;
-        flex-wrap: wrap;
-        align-items: center;
-        gap: 15px;
-        width: 85%;
-        padding: 10px;
+    .fieId-tips {
+        animation: fieIdBoxShow 0.1s linear forwards;
+        width: 100%;
+        text-align: right;
+        color: #F0A74A;
+    }
+    .fieId-box-warning {
+        border: 1px solid #FF4A2B;
+        .fieId-label {
+            border-right: 1px solid #FF4A2B;
+            background-color: #FF4A2B50;
+        }
     }
 }
-.fieId-box-warning {
-    border: 1px solid #FF4A2B;
-    .fieId-label {
-        border-right: 1px solid #FF4A2B;
-        background-color: #FF4A2B50;
-    }
-}
+
 
 /* 可点击的字体文本 */
 .link-text {

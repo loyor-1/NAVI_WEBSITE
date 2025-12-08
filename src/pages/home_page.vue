@@ -297,20 +297,16 @@ function initChart() {
         },
         geo: {
             map: 'china',
-            label: {
-                emphasis: {
+            emphasis: {
+                label: {
                     show: false
-                }
-            },
-            itemStyle: {
-                normal: {
+                },
+                areaColor: '#cce8d7',
+                itemStyle: {
                     areaColor: '#e6f3ec',
                     borderColor: '#1a5632',
                     borderWidth: 1,
                 },
-                emphasis: {
-                    areaColor: '#cce8d7'
-                }
             },
             zoom: 1.2
         },
@@ -326,14 +322,14 @@ function initChart() {
                     formatter: '{b}',
                     position: 'right',
                     color: '#1a5632',
-                    fontSize: 12
-                },
-                itemStyle: {
-                    color: '#d64e3f'
+                    fontSize: 14,
                 },
                 emphasis: {
                     label: {
                         show: true,
+                        formatter: '{b}',
+                        position: 'right',
+                        color: '#1a5632',
                         fontSize: 14,
                         fontWeight: 'bold'
                     },
@@ -349,10 +345,8 @@ function initChart() {
                 geoIndex: 0,
                 data: [],
                 itemStyle: {
-                    normal: {
-                        opacity: 0.7,
-                        areaColor: '#e6f3ec'
-                    }
+                    opacity: 0.7,
+                    areaColor: '#e6f3ec'
                 }
             }
         ]

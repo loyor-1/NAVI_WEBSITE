@@ -12,13 +12,15 @@ function download() {
 </script>
 
 <template>
-    <div class="fieId-box" :class="{'fieId-box-warning': !props.base_data.validate}">
-        <div class="fieId-label">
-            <span><span class="font-FF4A2B" v-if="props.base_data.isRequired">*</span>{{ props.base_data.fieIdName }}</span>
-        </div>
-        <div class="fieId-content">
-            <el-button v-if="props.base_data.fileList.length" type="primary" plain @click="download"><el-icon><MostlyCloudy /></el-icon>下载附件</el-button>
-            <el-button v-else type="info" plain disabled><el-icon><MostlyCloudy /></el-icon>无可下载附件</el-button>
+    <div class="fieId-style">
+        <div :id="props.base_data.fieIdId" class="fieId-box" :class="{'fieId-box-warning': !props.base_data.validate}">
+            <div class="fieId-label">
+                <span><span class="font-FF4A2B" v-if="props.base_data.isRequired">*</span>{{ props.base_data.fieIdName }}</span>
+            </div>
+            <div class="fieId-content">
+                <el-button v-if="props.base_data.fileList.length" type="primary" plain @click="download"><el-icon><MostlyCloudy /></el-icon>下载附件</el-button>
+                <el-button v-else type="info" plain disabled><el-icon><MostlyCloudy /></el-icon>无可下载附件</el-button>
+            </div>
         </div>
     </div>
 </template>

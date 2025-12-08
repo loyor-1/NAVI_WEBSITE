@@ -7,7 +7,7 @@ import addInvoiceTitle from '../components/add_invoice_title.vue';
 
 const loading = ref(false)
 const ref_add_dialog = ref(null)
-const user_info = JSON.parse(getUserInfo())
+const user_info = getUserInfo()
 const invoice_title_list = ref([])
 
 async function getInvoiceTitleList() {

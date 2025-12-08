@@ -18,7 +18,7 @@ const assets_loading = ref(true)
 const download_file_list_dialog = ref(false)
 const child_ref = ref(null)//动态改变的子组件的实例
 const carousel_list = ref([])//轮播图列表
-const user_info = reactive(JSON.parse(getUserInfo()))//用户信息
+const user_info = reactive(getUserInfo())//用户信息
 const user_assets = ref({})//用户资产数据
 const download_file_list = ref([])//下载实验结果列表
 

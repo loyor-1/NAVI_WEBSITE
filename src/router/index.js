@@ -45,6 +45,14 @@ const router = createRouter({
             require_token: true
           },
           component: () => import('@/pages/order/appoint_order.vue'),
+        },
+        {
+          path: '/service_order',
+          name: 'service_order',//订单附加服务费用页
+          meta: {
+            require_token: true
+          },
+          component: () => import('@/pages/order/service_order.vue'),
         }
       ]
     },

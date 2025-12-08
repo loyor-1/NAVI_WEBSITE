@@ -23,12 +23,14 @@ function updateValue() {
 </script>
 
 <template>
-    <div class="fieId-box" :class="{'fieId-box-warning': !props.base_data.validate}">
-        <div class="fieId-label">
-            <span><span class="font-FF4A2B" v-if="props.base_data.isRequired">*</span>{{ props.base_data.fieIdName }}</span>
-        </div>
-        <div class="fieId-content">
-            <div class="radio" :class="{'radio-active': item.optionId == value_data.valueId}" v-for="item in props.base_data.options" :key="item.optionId" @click="changeRadio(item)">{{ item.optionName }}</div>
+    <div class="fieId-style">
+        <div :id="props.base_data.fieIdId" class="fieId-box" :class="{'fieId-box-warning': !props.base_data.validate}">
+            <div class="fieId-label">
+                <span><span class="font-FF4A2B" v-if="props.base_data.isRequired">*</span>{{ props.base_data.fieIdName }}</span>
+            </div>
+            <div class="fieId-content">
+                <div class="radio" :class="{'radio-active': item.optionId == value_data.valueId}" v-for="item in props.base_data.options" :key="item.optionId" @click="changeRadio(item)">{{ item.optionName }}</div>
+            </div>
         </div>
     </div>
 </template>

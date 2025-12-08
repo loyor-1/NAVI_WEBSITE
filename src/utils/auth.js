@@ -1,3 +1,5 @@
+import { useGetUserInfoByToken } from "@/api"
+
 export function setToken(token) {
   localStorage.setItem('token', token)
 }
@@ -15,7 +17,14 @@ export function setUserInfo(user_info) {
 }
 
 export function getUserInfo() {
-  return localStorage.getItem('user_info')
+  useGetUserInfoByToken().then(res => {
+    if(res) {
+      res.user.avatar_path = res.user.avatar ? import.meta.env.VITE_FILE_API + res.user.avatar : ''
+      setUserInfo(JSON.stringify(res.user))
+    }
+  })
+  const data = JSON.parse(localStorage.getItem('user_info'))
+  return data
 }
 
 export function removeUserInfo() {

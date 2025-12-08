@@ -12,7 +12,7 @@ const user_store = useUserStore()
 const tab_store = useTabStore()
 
 const menu_switch = ref('')
-const user_info = ref(JSON.parse(getUserInfo()))
+const user_info = ref(getUserInfo())
 const menu_timer = ref(null)
 
 // 用户面板

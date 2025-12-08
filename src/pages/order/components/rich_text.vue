@@ -54,25 +54,27 @@ onBeforeUnmount(async () => {
 </script>
 
 <template>
-    <div class="fieId-box" :class="{'fieId-box-warning': !props.base_data.validate}">
-        <div class="fieId-label">
-            <span><span class="font-FF4A2B" v-if="props.base_data.isRequired">*</span>{{ props.base_data.fieIdName }}</span>
-        </div>
-        <div class="fieId-content">
-            <div class="wangeditor-container">
-                <Toolbar
-                  :editor="editor"
-                  :defaultConfig="toolbarConfig"
-                  style="border-bottom: 1px solid #ccc"
-                />
-                <Editor
-                  v-model="value_data.fieIdValue"
-                  :editor="editor"
-                  :defaultConfig="editorConfig"
-                  style="height: 200px; overflow-y: auto"
-                  @onCreated="handleCreated"
-                  @onChange="handleChange"
-                />
+    <div class="fieId-style">
+        <div :id="props.base_data.fieIdId" class="fieId-box" :class="{'fieId-box-warning': !props.base_data.validate}">
+            <div class="fieId-label">
+                <span><span class="font-FF4A2B" v-if="props.base_data.isRequired">*</span>{{ props.base_data.fieIdName }}</span>
+            </div>
+            <div class="fieId-content">
+                <div class="wangeditor-container">
+                    <Toolbar
+                      :editor="editor"
+                      :defaultConfig="toolbarConfig"
+                      style="border-bottom: 1px solid #ccc"
+                    />
+                    <Editor
+                      v-model="value_data.fieIdValue"
+                      :editor="editor"
+                      :defaultConfig="editorConfig"
+                      style="height: 200px; overflow-y: auto"
+                      @onCreated="handleCreated"
+                      @onChange="handleChange"
+                    />
+                </div>
             </div>
         </div>
     </div>

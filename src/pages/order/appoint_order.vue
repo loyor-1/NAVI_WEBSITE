@@ -1,28 +1,31 @@
 <script setup>
-import { useRoute, useRouter } from 'vue-router';
+import { useRoute, useRouter } from 'vue-router'
 import { useGetEquipmentInfo, useGetActives, useGetFieIdList } from '@/api'
-import { reactive, ref, watch } from 'vue';
-import { initFieIdList, changeRelevance, reduceTotalMoney, validateField } from '@/utils/order';
+import { nextTick, reactive, ref, watch } from 'vue'
+import { initFieIdList, changeRelevance, reduceTotalMoney, validateField } from '@/utils/order'
 import { ElMessage, ElMessageBox } from 'element-plus'
+import serviceOrder from './service_order.vue'
 import radio from './components/radio.vue'
-import checkbox from './components/checkbox.vue';
-import singleLine from './components/single_line.vue';
-import multiLine from './components/multi_line.vue';
+import checkbox from './components/checkbox.vue'
+import singleLine from './components/single_line.vue'
+import multiLine from './components/multi_line.vue'
 import richText from './components/rich_text.vue'
-import integer from './components/integer.vue';
-import float from './components/float.vue';
-import uploadFile from './components/upload_file.vue';
-import range from './components/range.vue';
-import periodic from './components/periodic.vue';
-import downloadFile from './components/download_file.vue';
-import fieIdGroup from './components/fieId_group.vue';
-import timer from './components/timer.vue';
-import feeDetail from './components/dialog/fee_detail.vue';
+import integer from './components/integer.vue'
+import float from './components/float.vue'
+import uploadFile from './components/upload_file.vue'
+import range from './components/range.vue'
+import periodic from './components/periodic.vue'
+import downloadFile from './components/download_file.vue'
+import fieIdGroup from './components/fieId_group.vue'
+import timer from './components/timer.vue'
+import feeDetail from './components/dialog/fee_detail.vue'
+import mitt_bus from '@/utils/mitt_bus'
 
 const route = useRoute()
 const router = useRouter()
 
 const ref_fee_detail = ref(null)
+const ref_service_order = ref(null)
 const loading = ref(true)
 const actvie_flag = ref(false)
 const show_groups_box = ref(true)
@@ -31,6 +34,7 @@ const show_global = ref(true)
 const upload_code_dialog = ref(false)
 const split_groups_dialog = ref(false)
 const bargain_status = ref(false)
+const order_steps = ref(1)//下单步骤 1 下单字段填写页面  2 服务费用页面  3  支付页面
 const equipment_info = ref({})//设备详情
 const groups_fieId_list = ref([])//用于添加样品组的初始化字段
 const sample_name_list = reactive(['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z'])// A-Z 大写字母数组
@@ -304,31 +308,93 @@ function reduceOrderPrice() {
 
 //打开费用明细弹框
 function openFeeDetail() {
-    ref_fee_detail.value.init(appoint_data.value)
+    if(Number(appoint_data.value.totalCost)) ref_fee_detail.value.init(appoint_data.value)
+}
+
+// 滚动到指定id的div
+async function scrollToTargetById(target_id) {
+    await nextTick()  
+    // 根据变量中的 ID 获取目标元素
+    const target_element = document.getElementById(target_id)
+    
+    if (target_element) {
+        // 计算修正后的滚动位置（避开导航栏）
+        const target_rect = target_element.getBoundingClientRect();
+        const scroll_top = target_rect.top + window.scrollY - 150;
+        
+        // 执行滚动（手动控制位置更精准）
+        window.scrollTo({
+            top: scroll_top,
+            behavior: 'smooth'
+        });
+    } else {
+        console.warn(`未找到 ID 为 ${target_id} 的div元素`)
+    }
 }
 
 // 下一步
 function nextStep() {
     try{
         const result = validateField(appoint_data.value)
-        if(!result.validate) {
-            ElMessage.error(result.message)
-        }
+        const scroll_list = []
+
         appoint_data.value.globalFieldValues.forEach(item => {
             const list_data = result.global_result.find(i => i.fieIdId == item.fieIdId)
-            item.validate = list_data ? list_data.validate : true
+            if(list_data) {
+                item.validate = list_data.validate
+                if(list_data.fieIdType == 12) {
+                    mitt_bus.emit('updateFieldGroupValues', list_data.fieldGroupValues)
+                    list_data.fieldGroupValues.forEach(i => {
+                        if(!i.validate) scroll_list.push(i.fieIdId)
+                    })
+                } else if(!list_data.validate) {
+                    scroll_list.push(list_data.fieIdId)
+                }
+            } else {
+                item.validate = true
+            }
         })
         appoint_data.value.groups.forEach((item, index) => {
             const data = result.groups_result[index]
             item.specimenNum_validate = data.specimenNum_validate
             item.specimen_code_validate = data.specimen_code_validate
             item.specimenIngredient_validate = data.specimenIngredient_validate
+            if(!data.specimenNum_validate) {
+                scroll_list.push(`num-${index}`)
+            }
+            if(!data.specimen_code_validate) {
+                scroll_list.push(`code-${index}`)
+            }
+            if(!data.specimenIngredient_validate) {
+                scroll_list.push(`ingredient-${index}`)
+            }
             // 替换每个样品组内的字段校验结果
             item.fieIdList.forEach(list_i => {
                 const list_data = data.fieId_list.find(i => i.fieIdId == list_i.fieIdId)
-                list_i.validate = list_data ? list_data.validate : true
+                if(list_data) {
+                    list_i.validate = list_data.validate
+                    if(list_data.fieIdType == 12) {
+                        mitt_bus.emit('updateFieldGroupValues', list_data.fieldGroupValues)
+                        list_data.fieldGroupValues.forEach(i => {
+                            if(!i.validate) scroll_list.push(i.fieIdId)
+                        })
+                    } else if(!list_data.validate) {
+                        scroll_list.push(list_data.fieIdId)
+                    }
+                } else {
+                    list_i.validate = true
+                }
             })
         })
+        if(!result.validate) {
+            ElMessage.error(result.message)
+            if(scroll_list.length) {
+                scrollToTargetById(scroll_list[0])
+            }
+        } else {
+            order_steps.value = 2
+            ref_service_order.value.init()
+        }
     }
     catch(err) {
         console.log(err)
@@ -365,7 +431,7 @@ function nextStep() {
             </div>
             <div class="info-item flex-center font-FF4A2B" v-if="actvie_flag"> * 完成订单即可参与下单返现活动返现 * </div>
         </div>
-        <div style="flex: 1;"></div>
+        <div style="flex: 1"></div>
         <div class="tips flex-center">
             <el-image class="tips-pic" :src="equipment_info.QRCode_pic">
                 <template #error>
@@ -376,152 +442,178 @@ function nextStep() {
         </div>
     </div>
 
-    <div class="profile">
-        <div class="profile-head flex-center">
-            <div class="flex-center">
-                <div class="slider"></div>
-                <span class="font-middle font-600">预约须知</span>
-            </div>
-            <div @click="show_instructions = !show_instructions">
-                <el-icon class="caret-icon" v-if="show_instructions"><CaretTop /></el-icon>
-                <el-icon class="caret-icon" v-else><CaretBottom /></el-icon>
-            </div>
-        </div>
-        <el-collapse-transition>
-            <div v-loading="loading" v-show="show_instructions">
-                <div class="profile-content show_instructions" v-html="equipment_info.testingInstructions"></div>
-            </div>
-        </el-collapse-transition>
-    </div>
-    <!-- 全局字段 -->
-    <div class="profile" v-if="appoint_data.globalFieldValues.length">
-        <div class="profile-head flex-center">
-            <div class="flex-center">
-                <div class="slider"></div>
-                <span class="font-middle font-600">全局问题</span>
-            </div>
-            <div @click="show_global = !show_global">
-                <el-icon class="caret-icon" v-if="show_global"><CaretTop /></el-icon>
-                <el-icon class="caret-icon" v-else><CaretBottom /></el-icon>
-            </div>
-        </div>
-        <el-collapse-transition>
-            <div class="profile-content" v-show="show_global" v-loading="loading">
-                <div v-for="(item, index) in appoint_data.globalFieldValues" :key="item.fieIdId">
-                    <!-- 单选 -->
-                    <radio v-if="item.fieIdType == 1 && item.show" :base_data="item" @updateValue="(value) => updateGlobalValue(item, index, value)"></radio>
-                    <!-- 多选 -->
-                    <checkbox v-else-if="item.fieIdType == 2 && item.show" :base_data="item" @updateValue="(value) => updateGlobalValue(item, index, value)"></checkbox>
-                    <!-- 单行文本 -->
-                    <singleLine v-else-if="item.fieIdType == 3 && item.show" :base_data="item" @updateValue="(value) => updateGlobalValue(item, index, value)"></singleLine>
-                    <!-- 多行文本 -->
-                    <multiLine v-else-if="item.fieIdType == 4 && item.show" :base_data="item" @updateValue="(value) => updateGlobalValue(item, index, value)"></multiLine>
-                    <!-- 富文本 -->
-                    <richText v-else-if="item.fieIdType == 5 && item.show" :base_data="item" @updateValue="(value) => updateGlobalValue(item, index, value)"></richText>
-                    <!-- 整数 -->
-                    <integer v-else-if="item.fieIdType == 6 && item.show" :base_data="item" @updateValue="(value) => updateGlobalValue(item, index, value)"></integer>
-                    <!-- 浮点数 -->
-                    <float v-else-if="item.fieIdType == 7 && item.show" :base_data="item" @updateValue="(value) => updateGlobalValue(item, index, value)"></float>
-                    <!-- 上传附件 -->
-                    <uploadFile v-else-if="item.fieIdType == 8 && item.show" :base_data="item" @updateValue="(value) => updateGlobalValue(item, index, value)"></uploadFile>
-                    <!-- 数字范围 -->
-                    <range v-else-if="item.fieIdType == 9 && item.show" :base_data="item" @updateValue="(value) => updateGlobalValue(item, index, value)"></range>
-                    <!-- 元素周期表 -->
-                    <periodic v-else-if="item.fieIdType == 10 && item.show" :base_data="item" @updateValue="(value) => updateGlobalValue(item, index, value)"></periodic>
-                    <!-- 附件下载 -->
-                    <downloadFile v-else-if="item.fieIdType == 11 && item.show" :base_data="item"></downloadFile>
-                    <!-- 字段组 -->
-                    <fieIdGroup v-else-if="item.fieIdType == 12 && item.show" :base_data="item" @updateValue="(value) => updateGlobalValue(item, index, value)"></fieIdGroup>
-                    <!-- 时间 -->
-                    <timer v-else-if="item.fieIdType == 14 && item.show" :base_data="item" @updateValue="(value) => updateGlobalValue(item, index, value)"></timer>
-                </div>
-            </div>
-        </el-collapse-transition>
-    </div>
-    <!-- 样品组信息 -->
-    <div v-if="appoint_data.groups.length && show_groups_box">
-        <div class="profile" v-for="(item, group_index) in appoint_data.groups" :key="group_index">
+    <div>还有：</div>
+    <div>选项---鼠标悬浮时有提示文本</div>
+    <div>字段的提示开关和文本</div>
+
+
+
+    <!-- 下单第一步 -->
+    <div v-show="order_steps == 1">
+        <div class="profile">
             <div class="profile-head flex-center">
                 <div class="flex-center">
                     <div class="slider"></div>
-                    <span class="font-middle font-600">{{ item.sampleName }}组样品</span>
+                    <span class="font-middle font-600">预约须知</span>
                 </div>
-                <div class="flex-center">
-                    <el-icon class="delete-icon" v-show="appoint_data.groups.length > 1" @click="deleteGroup(group_index)"><DeleteFilled /></el-icon>
-                    <span class="copy-icon flex-center" @click="copyGroup(item)"><el-icon><CopyDocument /></el-icon>复制</span>
-                    <el-icon class="caret-icon" v-if="item.show_groups" @click="item.show_groups = !item.show_groups"><CaretTop /></el-icon>
-                    <el-icon class="caret-icon" v-else @click="item.show_groups = !item.show_groups"><CaretBottom /></el-icon>
+                <div @click="show_instructions = !show_instructions">
+                    <el-icon class="caret-icon" v-if="show_instructions"><CaretTop /></el-icon>
+                    <el-icon class="caret-icon" v-else><CaretBottom /></el-icon>
                 </div>
             </div>
             <el-collapse-transition>
-                <div class="profile-content" v-show="item.show_groups" v-loading="loading">
-                    <div class="fieId-box" :class="{'fieId-box-warning': !item.specimenNum_validate}">
-                        <div class="fieId-label">
-                            <span class="font-FF4A2B">*</span>
-                            <span>样品数量</span>
-                        </div>
-                        <div class="fieId-content">
-                            <el-input-number :min="0" :step="1" step-strictly v-model="item.specimenNum" @change="(newValue, oldValue) => changeNum(newValue, oldValue, group_index)"/>
-                        </div>
-                        <div class="num-button-1 default-button" @click="openUploadCodeDialog(group_index)">批量导入样品编号</div>
-                        <div class="num-button-2" :class="[item.specimenNum ? 'default-button' : 'disabled-button']" @click="openSplitGroupsDialog(group_index)">拆分样品组</div>
-                    </div>
-                    <div class="fieId-box" :class="{'fieId-box-warning': !item.specimen_code_validate}">
-                        <div class="fieId-label">
-                            <span class="font-FF4A2B">*</span>
-                            <span>样品编号</span>
-                        </div>
-                        <div class="fieId-content">
-                            <el-scrollbar>
-                                <div class="specimen-code-box">
-                                    <div class="specimen-code" v-for="i in item.specimen_code_list" :key="i.id">
-                                        <el-input placeholder="请输入样品编号" v-model="i.value"/>
-                                    </div>
-                                </div>
-                            </el-scrollbar>
-                        </div>
-                    </div>
-                    <div class="fieId-box" :class="{'fieId-box-warning': !item.specimenIngredient_validate}">
-                        <div class="fieId-label">
-                            <span class="font-FF4A2B">*</span>
-                            <span>样品成分</span>
-                        </div>
-                        <div class="fieId-content">
-                            <el-input v-model="item.specimenIngredient" placeholder="请输入样品成分"/>
-                        </div>
-                    </div>
-                    <div v-for="(fieId_item, fieId_index) in item.fieIdList" :key="fieId_item.fieIdId">
+                <div v-loading="loading" v-show="show_instructions">
+                    <div class="instruction show_instructions" v-html="equipment_info.testingInstructions"></div>
+                </div>
+            </el-collapse-transition>
+        </div>
+        <!-- 全局字段 -->
+        <div class="profile" v-if="appoint_data.globalFieldValues.length">
+            <div class="profile-head flex-center">
+                <div class="flex-center">
+                    <div class="slider"></div>
+                    <span class="font-middle font-600">全局问题</span>
+                </div>
+                <div @click="show_global = !show_global">
+                    <el-icon class="caret-icon" v-if="show_global"><CaretTop /></el-icon>
+                    <el-icon class="caret-icon" v-else><CaretBottom /></el-icon>
+                </div>
+            </div>
+            <el-collapse-transition>
+                <div class="profile-content" v-show="show_global" v-loading="loading">
+                    <div v-for="(item, index) in appoint_data.globalFieldValues" :key="item.fieIdId">
                         <!-- 单选 -->
-                        <radio v-if="fieId_item.fieIdType == 1 && fieId_item.show" :base_data="fieId_item" @updateValue="(value) => updateGroupValue(fieId_item, group_index, fieId_index, value)"></radio>
+                        <radio v-if="item.fieIdType == 1 && item.show" :base_data="item" @updateValue="(value) => updateGlobalValue(item, index, value)"></radio>
                         <!-- 多选 -->
-                        <checkbox v-else-if="fieId_item.fieIdType == 2 && fieId_item.show" :base_data="fieId_item" @updateValue="(value) => updateGroupValue(fieId_item, group_index, fieId_index, value)"></checkbox>
+                        <checkbox v-else-if="item.fieIdType == 2 && item.show" :base_data="item" @updateValue="(value) => updateGlobalValue(item, index, value)"></checkbox>
                         <!-- 单行文本 -->
-                        <singleLine v-else-if="fieId_item.fieIdType == 3 && fieId_item.show" :base_data="fieId_item" @updateValue="(value) => updateGroupValue(fieId_item, group_index, fieId_index, value)"></singleLine>
+                        <singleLine v-else-if="item.fieIdType == 3 && item.show" :base_data="item" @updateValue="(value) => updateGlobalValue(item, index, value)"></singleLine>
                         <!-- 多行文本 -->
-                        <multiLine v-else-if="fieId_item.fieIdType == 4 && fieId_item.show" :base_data="fieId_item" @updateValue="(value) => updateGroupValue(fieId_item, group_index, fieId_index, value)"></multiLine>
+                        <multiLine v-else-if="item.fieIdType == 4 && item.show" :base_data="item" @updateValue="(value) => updateGlobalValue(item, index, value)"></multiLine>
                         <!-- 富文本 -->
-                        <richText v-else-if="fieId_item.fieIdType == 5 && fieId_item.show" :base_data="fieId_item" @updateValue="(value) => updateGroupValue(fieId_item, group_index, fieId_index, value)"></richText>
+                        <richText v-else-if="item.fieIdType == 5 && item.show" :base_data="item" @updateValue="(value) => updateGlobalValue(item, index, value)"></richText>
                         <!-- 整数 -->
-                        <integer v-else-if="fieId_item.fieIdType == 6 && fieId_item.show" :base_data="fieId_item" @updateValue="(value) => updateGroupValue(fieId_item, group_index, fieId_index, value)"></integer>
+                        <integer v-else-if="item.fieIdType == 6 && item.show" :base_data="item" @updateValue="(value) => updateGlobalValue(item, index, value)"></integer>
                         <!-- 浮点数 -->
-                        <float v-else-if="fieId_item.fieIdType == 7 && fieId_item.show" :base_data="fieId_item" @updateValue="(value) => updateGroupValue(fieId_item, group_index, fieId_index, value)"></float>
+                        <float v-else-if="item.fieIdType == 7 && item.show" :base_data="item" @updateValue="(value) => updateGlobalValue(item, index, value)"></float>
                         <!-- 上传附件 -->
-                        <uploadFile v-else-if="fieId_item.fieIdType == 8 && fieId_item.show" :base_data="fieId_item" @updateValue="(value) => updateGroupValue(fieId_item, group_index, fieId_index, value)"></uploadFile>
+                        <uploadFile v-else-if="item.fieIdType == 8 && item.show" :base_data="item" @updateValue="(value) => updateGlobalValue(item, index, value)"></uploadFile>
                         <!-- 数字范围 -->
-                        <range v-else-if="fieId_item.fieIdType == 9 && fieId_item.show" :base_data="fieId_item" @updateValue="(value) => updateGroupValue(fieId_item, group_index, fieId_index, value)"></range>
+                        <range v-else-if="item.fieIdType == 9 && item.show" :base_data="item" @updateValue="(value) => updateGlobalValue(item, index, value)"></range>
                         <!-- 元素周期表 -->
-                        <periodic v-else-if="fieId_item.fieIdType == 10 && fieId_item.show" :base_data="fieId_item" @updateValue="(value) => updateGroupValue(fieId_item, group_index, fieId_index, value)"></periodic>
+                        <periodic v-else-if="item.fieIdType == 10 && item.show" :base_data="item" @updateValue="(value) => updateGlobalValue(item, index, value)"></periodic>
                         <!-- 附件下载 -->
-                        <downloadFile v-else-if="fieId_item.fieIdType == 11 && fieId_item.show" :base_data="fieId_item"></downloadFile>
+                        <downloadFile v-else-if="item.fieIdType == 11 && item.show" :base_data="item"></downloadFile>
                         <!-- 字段组 -->
-                        <fieIdGroup v-else-if="fieId_item.fieIdType == 12 && fieId_item.show" :base_data="fieId_item" @updateValue="(value) => updateGroupValue(fieId_item, group_index, fieId_index, value)"></fieIdGroup>
+                        <fieIdGroup v-else-if="item.fieIdType == 12 && item.show" :base_data="item" @updateValue="(value) => updateGlobalValue(item, index, value)"></fieIdGroup>
                         <!-- 时间 -->
-                        <timer v-else-if="fieId_item.fieIdType == 14 && fieId_item.show" :base_data="fieId_item" @updateValue="(value) => updateGroupValue(fieId_item, group_index, fieId_index, value)"></timer>
+                        <timer v-else-if="item.fieIdType == 14 && item.show" :base_data="item" @updateValue="(value) => updateGlobalValue(item, index, value)"></timer>
                     </div>
                 </div>
             </el-collapse-transition>
         </div>
+        <!-- 样品组信息 -->
+        <div v-if="appoint_data.groups.length && show_groups_box">
+            <div class="profile" v-for="(item, group_index) in appoint_data.groups" :key="group_index">
+                <div class="profile-head flex-center">
+                    <div class="flex-center">
+                        <div class="slider"></div>
+                        <span class="font-middle font-600">{{ item.sampleName }}组样品</span>
+                    </div>
+                    <div class="flex-center">
+                        <el-icon class="delete-icon" v-show="appoint_data.groups.length > 1" @click="deleteGroup(group_index)"><DeleteFilled /></el-icon>
+                        <span class="copy-icon flex-center" @click="copyGroup(item)"><el-icon><CopyDocument /></el-icon>复制</span>
+                        <el-icon class="caret-icon" v-if="item.show_groups" @click="item.show_groups = !item.show_groups"><CaretTop /></el-icon>
+                        <el-icon class="caret-icon" v-else @click="item.show_groups = !item.show_groups"><CaretBottom /></el-icon>
+                    </div>
+                </div>
+                <el-collapse-transition>
+                    <div :id="`num-${group_index}`" class="profile-content" v-show="item.show_groups" v-loading="loading">
+                        <div class="fieId-style">
+                            <div class="fieId-box" :class="{'fieId-box-warning': !item.specimenNum_validate}">
+                                <div class="fieId-label">
+                                    <span class="font-FF4A2B">*</span>
+                                    <span>样品数量</span>
+                                </div>
+                                <div class="fieId-content">
+                                    <el-input-number :min="0" :step="1" step-strictly v-model="item.specimenNum" @change="(newValue, oldValue) => changeNum(newValue, oldValue, group_index)"/>
+                                </div>
+                                <div class="num-button-1 default-button" @click="openUploadCodeDialog(group_index)">批量导入样品编号</div>
+                                <div class="num-button-2" :class="[item.specimenNum ? 'default-button' : 'disabled-button']" @click="openSplitGroupsDialog(group_index)">拆分样品组</div>
+                            </div>
+                        </div>
+                        <div class="fieId-style">
+                            <div :id="`code-${group_index}`" class="fieId-box" :class="{'fieId-box-warning': !item.specimen_code_validate}">
+                                <div class="fieId-label">
+                                    <span class="font-FF4A2B">*</span>
+                                    <span>样品编号</span>
+                                </div>
+                                <div class="fieId-content">
+                                    <el-scrollbar>
+                                        <div class="specimen-code-box">
+                                            <div class="specimen-code" v-for="i in item.specimen_code_list" :key="i.id">
+                                                <el-input placeholder="请输入样品编号" v-model="i.value"/>
+                                            </div>
+                                        </div>
+                                    </el-scrollbar>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="fieId-style">
+                            <div :id="`ingredient-${group_index}`" class="fieId-box" :class="{'fieId-box-warning': !item.specimenIngredient_validate}">
+                                <div class="fieId-label">
+                                    <span class="font-FF4A2B">*</span>
+                                    <span>样品成分</span>
+                                </div>
+                                <div class="fieId-content">
+                                    <el-input v-model="item.specimenIngredient" placeholder="请输入样品成分"/>
+                                </div>
+                            </div>
+                        </div>
+                        <div v-for="(fieId_item, fieId_index) in item.fieIdList" :key="fieId_item.fieIdId">
+                            <!-- 单选 -->
+                            <radio v-if="fieId_item.fieIdType == 1 && fieId_item.show" :base_data="fieId_item" @updateValue="(value) => updateGroupValue(fieId_item, group_index, fieId_index, value)"></radio>
+                            <!-- 多选 -->
+                            <checkbox v-else-if="fieId_item.fieIdType == 2 && fieId_item.show" :base_data="fieId_item" @updateValue="(value) => updateGroupValue(fieId_item, group_index, fieId_index, value)"></checkbox>
+                            <!-- 单行文本 -->
+                            <singleLine v-else-if="fieId_item.fieIdType == 3 && fieId_item.show" :base_data="fieId_item" @updateValue="(value) => updateGroupValue(fieId_item, group_index, fieId_index, value)"></singleLine>
+                            <!-- 多行文本 -->
+                            <multiLine v-else-if="fieId_item.fieIdType == 4 && fieId_item.show" :base_data="fieId_item" @updateValue="(value) => updateGroupValue(fieId_item, group_index, fieId_index, value)"></multiLine>
+                            <!-- 富文本 -->
+                            <richText v-else-if="fieId_item.fieIdType == 5 && fieId_item.show" :base_data="fieId_item" @updateValue="(value) => updateGroupValue(fieId_item, group_index, fieId_index, value)"></richText>
+                            <!-- 整数 -->
+                            <integer v-else-if="fieId_item.fieIdType == 6 && fieId_item.show" :base_data="fieId_item" @updateValue="(value) => updateGroupValue(fieId_item, group_index, fieId_index, value)"></integer>
+                            <!-- 浮点数 -->
+                            <float v-else-if="fieId_item.fieIdType == 7 && fieId_item.show" :base_data="fieId_item" @updateValue="(value) => updateGroupValue(fieId_item, group_index, fieId_index, value)"></float>
+                            <!-- 上传附件 -->
+                            <uploadFile v-else-if="fieId_item.fieIdType == 8 && fieId_item.show" :base_data="fieId_item" @updateValue="(value) => updateGroupValue(fieId_item, group_index, fieId_index, value)"></uploadFile>
+                            <!-- 数字范围 -->
+                            <range v-else-if="fieId_item.fieIdType == 9 && fieId_item.show" :base_data="fieId_item" @updateValue="(value) => updateGroupValue(fieId_item, group_index, fieId_index, value)"></range>
+                            <!-- 元素周期表 -->
+                            <periodic v-else-if="fieId_item.fieIdType == 10 && fieId_item.show" :base_data="fieId_item" @updateValue="(value) => updateGroupValue(fieId_item, group_index, fieId_index, value)"></periodic>
+                            <!-- 附件下载 -->
+                            <downloadFile v-else-if="fieId_item.fieIdType == 11 && fieId_item.show" :base_data="fieId_item"></downloadFile>
+                            <!-- 字段组 -->
+                            <fieIdGroup v-else-if="fieId_item.fieIdType == 12 && fieId_item.show" :base_data="fieId_item" @updateValue="(value) => updateGroupValue(fieId_item, group_index, fieId_index, value)"></fieIdGroup>
+                            <!-- 时间 -->
+                            <timer v-else-if="fieId_item.fieIdType == 14 && fieId_item.show" :base_data="fieId_item" @updateValue="(value) => updateGroupValue(fieId_item, group_index, fieId_index, value)"></timer>
+                        </div>
+                    </div>
+                </el-collapse-transition>
+            </div>
+        </div>
     </div>
+
+    <!-- 下单第二步 -->
+    <serviceOrder ref="ref_service_order" v-show="order_steps == 2">
+        
+    </serviceOrder>
+
+    <!-- 下单第三步 -->
+    <div v-show="order_steps == 3">
+        
+    </div>
+
     <!-- 其他实验信息 -->
     <div class="profile">
         <div class="profile-head flex-center">
@@ -535,28 +627,32 @@ function nextStep() {
         </div>
         <div class="other-info-box">
             <div class="other-info">
-                <div class="fieId-box">
-                    <div class="fieId-label">实验留言</div>
-                    <div class="fieId-content">
-                        <el-input type="textarea" resize="none" :rows="4" placeholder="请输入实验留言" v-model="appoint_data.message"/>
+                <div class="fieId-style">
+                    <div class="fieId-box">
+                        <div class="fieId-label">实验留言</div>
+                        <div class="fieId-content">
+                            <el-input type="textarea" resize="none" :rows="4" placeholder="请输入实验留言" v-model="appoint_data.message"/>
+                        </div>
                     </div>
                 </div>
-                <div class="fieId-box">
-                    <div class="fieId-label">订单备注</div>
-                    <div class="fieId-content">
-                        <el-input type="textarea" resize="none" :rows="4" placeholder="请输入订单备注(可输入结算项目名称)" v-model="appoint_data.customRemark"/>
+                <div class="fieId-style">
+                    <div class="fieId-box">
+                        <div class="fieId-label">订单备注</div>
+                        <div class="fieId-content">
+                            <el-input type="textarea" resize="none" :rows="4" placeholder="请输入订单备注(可输入结算项目名称)" v-model="appoint_data.customRemark"/>
+                        </div>
                     </div>
                 </div>
             </div>
             <div class="button-box">
-                <div class="flex-center-col price">
+                <div class="flex-center-col price" @click="openFeeDetail">
                     <div class="flex-center">
                         <span class="font-5D5D5D">合计费用： </span>
                         <span v-if="bargain_status">待议价</span>
                         <span class="font-FF4A2B font-middle" v-else>￥{{ appoint_data.totalCost }}</span>
                         <img class="gold" src="@/assets/svg/money.svg" alt="">
                     </div>
-                    <div class="font-mini font-5D5D5D desc" @click="openFeeDetail">点击查看费用详情</div>
+                    <div class="font-mini font-5D5D5D desc" v-if="Number(appoint_data.totalCost)">点击查看费用详情</div>
                 </div>
                 <div class="default-button" v-if="show_groups_box" @click="addGroup">添加样品</div>
                 <div class="custom-button" @click="nextStep">下一步</div>
@@ -716,6 +812,11 @@ function nextStep() {
             transform: scale(2);
             margin-right: 15px;
         }
+    }
+    .instruction {
+        overflow: auto;
+        max-height: 350px;
+        padding: 15px;
     }
     .profile-content {
         display: flex;

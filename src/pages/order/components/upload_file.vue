@@ -148,26 +148,28 @@ function updateValue() {
 </script>
 
 <template>
-    <div class="fieId-box" :class="{'fieId-box-warning': !props.base_data.validate}">
-        <div class="fieId-label">
-            <span><span class="font-FF4A2B" v-if="props.base_data.isRequired">*</span>{{ props.base_data.fieIdName }}</span>
-        </div>
-        <div class="fieId-content">
-            <el-upload
-                class="upload-box"
-                style="display: flex;"
-                :action="action"
-                :before-upload="handleBeforeUpload"
-                :file-list="value_data.fileList"
-                :limit="5"
-                :on-exceed="handleExceed"
-                :headers="headers"
-                :http-request="upload"
-                with-credentials
-                :on-remove="handleRemove">
-                <el-button type="primary" plain><el-icon><MostlyCloudy /></el-icon>上传附件</el-button>
-            </el-upload>
-            <el-progress :stroke-width="2" v-if="uploading" :percentage="percentage"></el-progress>
+    <div class="fieId-style">
+        <div :id="props.base_data.fieIdId" class="fieId-box" :class="{'fieId-box-warning': !props.base_data.validate}">
+            <div class="fieId-label">
+                <span><span class="font-FF4A2B" v-if="props.base_data.isRequired">*</span>{{ props.base_data.fieIdName }}</span>
+            </div>
+            <div class="fieId-content">
+                <el-upload
+                    class="upload-box"
+                    style="display: flex;"
+                    :action="action"
+                    :before-upload="handleBeforeUpload"
+                    :file-list="value_data.fileList"
+                    :limit="5"
+                    :on-exceed="handleExceed"
+                    :headers="headers"
+                    :http-request="upload"
+                    with-credentials
+                    :on-remove="handleRemove">
+                    <el-button type="primary" plain><el-icon><MostlyCloudy /></el-icon>上传附件</el-button>
+                </el-upload>
+                <el-progress :stroke-width="2" v-if="uploading" :percentage="percentage"></el-progress>
+            </div>
         </div>
     </div>
 </template>

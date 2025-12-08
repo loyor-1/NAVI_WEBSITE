@@ -12,14 +12,15 @@ export function useGetDownLoadUrl(query) {
 // 客服二维码
 export function useGetCustomerServiceQrcode() {
     return service({
-        url: '/system/dict/data/type/customer_service_qrcode',
         method: 'get',
+        url: '/system/dict/data/type/customer_service_qrcode',
     })
 }
 
 //首页轮播图
 export function useGetCarouselList(params) {
     return service({
+        method: 'get',
         url: '/system/carousel/list',
         params,
     })
@@ -28,7 +29,8 @@ export function useGetCarouselList(params) {
 //获取主页活动弹窗图片
 export function useGetActives(categoryId) {
     return service({
-        url: `/coupon/activity/config/category/${categoryId}`
+        method: 'get',
+        url: `/coupon/activity/config/category/${categoryId}`,
     })
 }
 
@@ -358,6 +360,15 @@ export function useEmailSend(params) {
 export function useExportInvoiceResult(params) {
     return service({
         url: '/equipment/order/exportStandingBook',
+        method: 'get',
+        params,
+    })
+}
+
+//根据客户id查询订单
+export function useGetUserOrderList(params) {
+    return service({
+        url: '/equipment/order/clientOrderList',
         method: 'get',
         params,
     })

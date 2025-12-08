@@ -12,7 +12,7 @@ const emit = defineEmits(['emitChangeShowPage'])
 
 const loading = ref(false)
 const apply_success_dialog = ref(false)//申请成功弹框
-const user_info = ref(JSON.parse(getUserInfo()))
+const user_info = ref(getUserInfo())
 const form = ref(null)//表单实例
 //申请预存数据表单
 const form_data = ref({
