@@ -141,8 +141,6 @@ async function getFieIdList() {
         } else {
             show_groups_box.value = false
         }
-        // appoint_data.value.groups[0].fieIdList = initFieIdList(res_groups.data)// 处理样品组字段
-        
     }
     finally{
         loading.value = false
@@ -400,6 +398,17 @@ function nextStep() {
         console.log(err)
     }
 }
+
+//上一步
+function lastStep() {
+    order_steps.value = 1
+}
+
+// 确认预约
+function conformAppoint() {
+
+}
+
 </script>
 
 <template>
@@ -441,13 +450,6 @@ function nextStep() {
             <div class="multi-line-ellipsis-1 font-mini">{{ equipment_info.technicalAdvisorTextPrompts }}</div>
         </div>
     </div>
-
-    <div>还有：</div>
-    <div>选项---鼠标悬浮时有提示文本</div>
-    <div>字段的提示开关和文本</div>
-
-
-
     <!-- 下单第一步 -->
     <div v-show="order_steps == 1">
         <div class="profile">
@@ -654,8 +656,10 @@ function nextStep() {
                     </div>
                     <div class="font-mini font-5D5D5D desc" v-if="Number(appoint_data.totalCost)">点击查看费用详情</div>
                 </div>
-                <div class="default-button" v-if="show_groups_box" @click="addGroup">添加样品</div>
-                <div class="custom-button" @click="nextStep">下一步</div>
+                <div class="default-button" v-if="order_steps == 1 && show_groups_box" @click="addGroup">添加样品</div>
+                <div class="custom-button" v-if="order_steps == 1" @click="nextStep">下一步</div>
+                <div class="default-button" v-if="order_steps == 2" @click="lastStep">上一步</div>
+                <div class="custom-button" v-if="order_steps == 2" @click="conformAppoint">确认预约</div>
             </div>
         </div>
     </div>

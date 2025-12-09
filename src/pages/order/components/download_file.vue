@@ -22,6 +22,7 @@ function download() {
                 <el-button v-else type="info" plain disabled><el-icon><MostlyCloudy /></el-icon>无可下载附件</el-button>
             </div>
         </div>
+        <div class="fieId-tips">{{ props.base_data.fieIdRemark }}</div>
     </div>
 </template>
 

@@ -44,6 +44,7 @@ function updateValue() {
                 <el-input-number :min="props.base_data.detectionRangeMin" :max="props.base_data.detectionRangeMax" :precision="2" :step="0.01" step-strictly v-model="value_data.fieldValueRange" @change="updateValue"/>
             </div>
         </div>
+        <div class="fieId-tips">{{ props.base_data.fieIdRemark }}</div>
     </div>
 </template>
 

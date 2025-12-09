@@ -23,6 +23,7 @@ function updateValue() {
                 <el-input type="textarea" resize="none" :rows="4" placeholder="请输入" v-model="value_data.fieIdValue" @input="updateValue"/>
             </div>
         </div>
+        <div class="fieId-tips">{{ props.base_data.fieIdRemark }}</div>
     </div>
 </template>
 

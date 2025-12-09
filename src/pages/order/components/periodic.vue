@@ -35,6 +35,7 @@ function openPeriodicTable() {
                 <div class="custom-button" @click="openPeriodicTable">选择元素</div>
             </div>
         </div>
+        <div class="fieId-tips">{{ props.base_data.fieIdRemark }}</div>
     </div>
 
     <periodicTable style="margin-top: 180px;" ref="periodicTableRef" :data="base_data" @updatePeriodic="updatePeriodic"></periodicTable>

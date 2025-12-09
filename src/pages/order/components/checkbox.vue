@@ -4,6 +4,7 @@ import { defineProps, defineEmits, ref } from 'vue';
 const props = defineProps(['base_data'])
 const emit = defineEmits(['updateValue']);
 
+const show_tips = ref(undefined)
 const fieIdValue_list = ref([])
 const value_data = ref({
     fieIdValue: props.base_data.fieIdValue || '',
@@ -32,6 +33,18 @@ function changeCheckbox(data) {
 function updateValue() {
     emit('updateValue', value_data.value)
 }
+
+function showTips(data) {
+    if(data.optionExplain) {
+        show_tips.value = data.optionId
+    } else {
+        show_tips.value = undefined
+    }
+}
+
+function hideTips() {
+    show_tips.value = undefined
+}
 </script>
 
 <template>
@@ -41,9 +54,14 @@ function updateValue() {
                 <span><span class="font-FF4A2B" v-if="props.base_data.isRequired">*</span>{{ props.base_data.fieIdName }}</span>
             </div>
             <div class="fieId-content">
-                <div class="radio" :class="{'radio-active': value_data.optionId.includes(item.optionId)}" v-for="item in props.base_data.options" :key="item.optionId" @click="changeCheckbox(item)">{{ item.optionName }}</div>
+                <div class="radio" :class="{'radio-active': value_data.optionId.includes(item.optionId)}" v-for="item in props.base_data.options" :key="item.optionId" @click="changeCheckbox(item)" @mouseenter="showTips(item)" @mouseleave="hideTips">
+                    <div>{{ item.optionName }}</div>
+                    <div class="option-tips" v-show="show_tips == item.optionId">{{ item.optionExplain }}</div>
+                    <div class="tips-icon" v-show="show_tips == item.optionId"></div>
+                </div>
             </div>
         </div>
+        <div class="fieId-tips">{{ props.base_data.fieIdRemark }}</div>
     </div>
 </template>
 

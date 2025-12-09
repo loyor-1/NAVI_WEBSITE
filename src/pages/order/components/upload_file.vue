@@ -47,15 +47,7 @@ function handleExceed() {
 async function upload(options) {
     uploading.value = true
     let file = options.file
-    let chunkSize = 10 * 1024 * 1024 // 每个块的大小为 100MB
-    let size = file.size
-    if (size <= 10 * 1024 * 1024) {
-        chunkSize = 1 * 1024 * 1024
-    } else if (size <= 50 * 1024 * 1024) {
-        chunkSize = 5 * 1024 * 1024
-    } else {
-        chunkSize = 10 * 1024 * 1024
-    }
+    const chunkSize = 0.8 * 1024 * 1024 // 每个块的大小为 100MB
     const chunks = []
     let startPos = 0
     let percentage = 0
@@ -171,6 +163,7 @@ function updateValue() {
                 <el-progress :stroke-width="2" v-if="uploading" :percentage="percentage"></el-progress>
             </div>
         </div>
+        <div class="fieId-tips">{{ props.base_data.fieIdRemark }}</div>
     </div>
 </template>
 

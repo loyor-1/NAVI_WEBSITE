@@ -189,7 +189,7 @@ html {
     height: 100%;
 }
 
-@keyframes fieIdBoxShow {
+@keyframes boxShow {
     0% {
         transform: scale(0.5);
         opacity: 0.5;
@@ -204,8 +204,7 @@ html {
     width: 100%;
     margin-bottom: 10px;
     .fieId-box {
-        animation: fieIdBoxShow 0.3s linear forwards;
-        overflow: hidden;
+        animation: boxShow 0.2s linear forwards;
         position: relative;
         display: flex;
         width: 100%;
@@ -219,9 +218,11 @@ html {
             padding: 10px;
             font-weight: 600;
             border-right: 1px solid #E8E8E8;
+            border-radius: 10px 0 0 10px;
             background-color: #F4F7FA;
         }
         .fieId-content {
+            position: relative;
             display: flex;
             flex-wrap: wrap;
             align-items: center;
@@ -231,7 +232,7 @@ html {
         }
     }
     .fieId-tips {
-        animation: fieIdBoxShow 0.1s linear forwards;
+        animation: boxShow 0.1s linear forwards;
         width: 100%;
         text-align: right;
         color: #F0A74A;
@@ -243,6 +244,42 @@ html {
             background-color: #FF4A2B50;
         }
     }
+}
+
+.radio {
+    position: relative;
+    cursor: default;
+    min-width: 150px;
+    height: fit-content;
+    padding: 8px;
+    text-align: center;
+    border-radius: 10px;
+    border: 1px solid #E8E8E8;
+    .option-tips {
+        position: absolute;
+        top: -5px;
+        transform: translateY(-100%);
+        left: 0;
+        white-space: nowrap;
+        padding: 5px;
+        border: 1px solid #5CC300;
+        border-radius: 5px;
+        background: linear-gradient(to right, #9FFFD7,#BAFF75);
+    }
+    .tips-icon {
+        position: absolute;
+        top: -5px;
+        left: 5%;
+        width: 10px;
+        height: 10px;
+        border: 5px solid transparent;
+        border-top: 5px solid #5CC300;
+    }
+}
+.radio-active {
+    color: #5CC300;
+    border-color: #5CC300;
+    background-color: #5CC30030;
 }
 
 
@@ -263,3 +300,42 @@ html {
     text-decoration: underline;
     color: #FF5000;
 }
+
+.info-card {
+    animation: boxShow 0.2s linear forwards;
+    display: flex;
+    flex-direction: column;
+    row-gap: 15px;
+    width: 100%;
+    margin-bottom: 10px;
+    padding: 15px;
+    border: 1px solid #94C9FF;
+    border-radius: 15px;
+    background-color: #94C9FF30;
+    .card-line {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        border: 1px solid #94C9FF;
+        border-radius: 5px;
+        .line-title {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            width: 15%;
+            min-height: 30px;
+            color: #FFFFFF;
+            background-color: #94C9FF;
+        }
+        .line-content {
+            display: flex;
+            align-items: center;
+            width: 85%;
+            min-height: 30px;
+            padding-left: 15px;
+            border-radius: 0 5px 5px 0;
+            background-color: #FFFFFF;
+        }
+    }
+}
+

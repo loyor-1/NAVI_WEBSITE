@@ -77,6 +77,7 @@ onBeforeUnmount(async () => {
                 </div>
             </div>
         </div>
+        <div class="fieId-tips">{{ props.base_data.fieIdRemark }}</div>
     </div>
 </template>
 

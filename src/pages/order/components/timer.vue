@@ -25,6 +25,7 @@ function updateValue() {
                 <el-input-number :min="0" :precision="1" :step="0.5" step-strictly v-model="value_data.duration" @change="updateValue"/>
             </div>
         </div>
+        <div class="fieId-tips">{{ props.base_data.fieIdRemark }}</div>
     </div>
 </template>
 

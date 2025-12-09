@@ -373,3 +373,20 @@ export function useGetUserOrderList(params) {
         params,
     })
 }
+
+//区域列表
+export function useGetUnitList(params) {
+    return service({
+        url: '/system/unit/list',
+        method: 'get',
+        params,
+    })
+}
+
+//查询用户其他信息
+export function useGetUserOtherInfo(id) {
+    return service({
+        url: '/system/clientInfo/' + id,
+        method: 'get'
+    })
+}
