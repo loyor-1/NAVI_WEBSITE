@@ -4,6 +4,7 @@ import { useGetEquipmentInfo, useGetActives, useGetFieIdList } from '@/api'
 import { nextTick, reactive, ref, watch } from 'vue'
 import { initFieIdList, changeRelevance, reduceTotalMoney, validateField } from '@/utils/order'
 import { ElMessage, ElMessageBox } from 'element-plus'
+import { getUserInfo } from '@/utils/auth'
 import serviceOrder from './service_order.vue'
 import radio from './components/radio.vue'
 import checkbox from './components/checkbox.vue'
@@ -21,9 +22,11 @@ import timer from './components/timer.vue'
 import feeDetail from './components/dialog/fee_detail.vue'
 import mitt_bus from '@/utils/mitt_bus'
 
+
 const route = useRoute()
 const router = useRouter()
 
+const user_info = getUserInfo()//用户信息
 const ref_fee_detail = ref(null)
 const ref_service_order = ref(null)
 const loading = ref(true)
@@ -66,6 +69,8 @@ const appoint_data = ref({
     originalPrice: 0,//预约单原价
     totalCost: '',//订单总金额
 })
+//服务费用展示data
+const service_price_data = ref(null)
 
 watch(
     () => appoint_data.value.groups.length,
@@ -295,18 +300,34 @@ function confirmSplitGroups() {
 
 //计算订单金额
 function reduceOrderPrice() {
-    const global_money = reduceTotalMoney(appoint_data.value, 'global').total_cost
-    const groups_money = reduceTotalMoney(appoint_data.value, 'groups').total_cost
+    //全局字段价格
+    const global_money = Number(reduceTotalMoney(appoint_data.value, 'global').total_cost)
+    //样品组价格
+    const groups_money = Number(reduceTotalMoney(appoint_data.value, 'groups').total_cost)
+    //议价状态
     const global_bargain_status = reduceTotalMoney(appoint_data.value, 'groups').bargain_status
     const groups_bargain_status = reduceTotalMoney(appoint_data.value, 'groups').bargain_status
     bargain_status.value = global_bargain_status || groups_bargain_status
-    appoint_data.value.originalPrice = Number(global_money) + Number(groups_money)
-    appoint_data.value.totalCost = (Number(global_money) + Number(groups_money)).toFixed(2)
+    //订单原价
+    appoint_data.value.originalPrice = global_money + groups_money
+    // 服务费用
+    let service_money = 0
+    if(appoint_data.value.ifUrgent == 1) {
+        service_money += ((global_money + groups_money) * 0.5)
+    }
+    if(appoint_data.value.ifRecycle == 1 && user_info.whiteFlag == 1 && user_info.recoveryFree == 1) {
+        service_money += 50
+    }
+    if(appoint_data.value.postPayment == 1)  {
+        service_money += 12
+    }
+    //统计总价格
+    appoint_data.value.totalCost = (global_money + groups_money).toFixed(2)
 }
 
 //打开费用明细弹框
 function openFeeDetail() {
-    if(Number(appoint_data.value.totalCost)) ref_fee_detail.value.init(appoint_data.value)
+    if(Number(appoint_data.value.totalCost)) ref_fee_detail.value.init(appoint_data.value, service_price_data.value)
 }
 
 // 滚动到指定id的div
@@ -402,6 +423,16 @@ function nextStep() {
 //上一步
 function lastStep() {
     order_steps.value = 1
+}
+
+//更新服务费用信息
+function updateServiceOrder(service_data, service_price) {
+    appoint_data.value = {
+        ...appoint_data.value,
+        ...service_data,
+    }
+    service_price_data.value = service_price
+    reduceOrderPrice()
 }
 
 // 确认预约
@@ -607,9 +638,7 @@ function conformAppoint() {
     </div>
 
     <!-- 下单第二步 -->
-    <serviceOrder ref="ref_service_order" v-show="order_steps == 2">
-        
-    </serviceOrder>
+    <serviceOrder v-show="order_steps == 2" ref="ref_service_order" :original_price="appoint_data.originalPrice" :user_info="user_info" @updateServiceOrder="updateServiceOrder"></serviceOrder>
 
     <!-- 下单第三步 -->
     <div v-show="order_steps == 3">

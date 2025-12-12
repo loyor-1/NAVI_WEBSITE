@@ -1,15 +1,16 @@
 <script setup>
 import dayjs from 'dayjs'
-import { ref } from 'vue'
+import { computed, ref, watch } from 'vue'
 import { useGetActives, useGetUserOrderList, useGetUnitList, useGetUserOtherInfo } from '@/api'
-import { getUserInfo } from '@/utils/auth'
 import { regionData, codeToText } from "element-china-area-data"
+
+const props = defineProps(['original_price', 'user_info'])
+const emits = defineEmits(['updateServiceOrder'])
 
 const loading = ref(true)
 const order_list_loading = ref(false)
 const actvie_flag = ref(false)
-const user_info = getUserInfo()//用户信息
-const user_other_info = getUserInfo()//用户其他信息
+const user_other_info = ref({})//用户其他信息
 const order_list = ref([])//做过检测的订单
 const unit_list = ref([])//区域列表
 
@@ -27,9 +28,9 @@ const service_data = ref({
     contactPhone: '',
     ifTestEquipment: 0,
     relevanceOrderCode: '',
-    postMethod: '1',
+    postMethod: 1,
     addressId: '',
-    postPayment: '1',
+    postPayment: 1,
     homeSamplingAddress: '',
     detailedAddress: '',
     samplingContact: '',
@@ -38,6 +39,17 @@ const service_data = ref({
     onSiteSamplingTime: '',
     onSiteSamplingRemark: ''
 })
+const service_price = ref([
+    {
+        sample_name: '服务费用',
+        price: '',
+        detail_list: [
+            { label: '是否加急', value: '0' },
+            { label: '是否回收', value: '0' },
+            { label: '邮寄运费', value: '0' },
+        ],
+    }
+])
 
 //加急费选项
 const urgent_options = [
@@ -60,11 +72,17 @@ const test_equipment_options = [
     { label: '不需要/未在【纳微创新】做过检测', value: 0 },
 ]
 //邮寄方式
-const post_method_options = [
-    { label: '自行邮寄', value: '1' },
-    { label: '上门取样', value: '2' },
-    { label: '自己送样', value: '3' },
-]
+const post_method_options = computed(() => {
+    const list = [
+        { label: '自行邮寄', value: 1 },
+        { label: '自己送样', value: 3 },
+    ]
+    if(props.user_info.whiteFlag == 1 && props.user_info.samplingFree == 1) {
+        list.splice(1, 0, { label: '上门取样', value: 2 })
+    }
+    return list
+})
+
 //运费支付方式
 const post_payment_options = [
     { label: '运费到付', value: 1 },
@@ -75,6 +93,35 @@ const time_options = [
     { label: '9:00 ~ 12:00', value: '9:00 ~ 12:00' },
     { label: '14:00 ~ 18:00', value: '14:00 ~ 18:00' },
 ]
+
+watch(
+    () => service_data.value.postPayment,
+    (newValue) => {
+        service_price.value[0].detail_list[2].value = newValue == 1 ? '运费到付(￥12)' : '运费自付/自己送样(￥0)'
+    }
+)
+
+watch(
+    () => service_data.value,
+    (newValue) => {
+        let price = 0
+        if(newValue.ifUrgent == 1) {
+            price += (props.original_price * 0.5)
+        }
+        if(newValue.ifRecycle == 1 && props.user_info.whiteFlag == 1 && props.user_info.recoveryFree == 1) {
+            price += 50
+        }
+        if(newValue.postPayment == 1)  {
+            price += 12
+        }
+        service_price.value[0].price = price ? `￥${price.toFixed(2)}` : ''
+        emits('updateServiceOrder', newValue, service_price.value)
+    },
+    {
+        deep: true,
+        immediate: true,
+    }
+)
 
 //初始化页面数据
 async function init() {
@@ -99,7 +146,7 @@ async function getActives() {
 //获取用户其他信息
 async function getUserOtherInfo() {
     try {
-        const res = await useGetUserOtherInfo(user_info.clientId)
+        const res = await useGetUserOtherInfo(props.user_info.clientId)
         user_other_info.value = res.data
     }
     catch(err) {
@@ -115,7 +162,7 @@ async function getUnitList() {
         }
         const res = await useGetUnitList(params)
         if(res.data) {
-            unit_list.value = res.data.filter(item => item.unitId == user_info.unitId)
+            unit_list.value = res.data.filter(item => item.unitId == props.user_info.unitId)
             service_data.value.addressId = service_data.value.addressId ? service_data.value.addressId : unit_list.value[0].unitId
         } else {
             service_data.value.addressId = ''
@@ -127,23 +174,37 @@ async function getUnitList() {
     }
 }
 
+//是否加急
+function changeUrgent(value) {
+    if(service_data.value.ifUrgent == value) return
+    service_data.value.ifUrgent = value
+    const price = props.original_price * value * 0.5
+    service_price.value[0].detail_list[0].value = price ? `加急(￥${price.toFixed(2)})` : '不加急'
+}
+
 //是否回收
 function changeRecycle(value) {
     if(service_data.value.ifRecycle == value) return
     service_data.value.ifRecycle = value
     if (value == 1) {
-        service_data.value.provinceCode = user_info.provinceCode
-        service_data.value.provinceValue = user_info.provinceCode.split(",")
+        service_data.value.provinceCode = props.user_info.provinceCode
+        service_data.value.provinceValue = props.user_info.provinceCode.split(",")
         service_data.value.recycleProvince = getCodeToText(service_data.value.provinceValue)
-        service_data.value.recycleAddress = user_info.address
-        service_data.value.recycleContact = user_info.clientName
-        service_data.value.recycleContactPhone = user_info.phoneNumber
+        service_data.value.recycleAddress = props.user_info.address
+        service_data.value.recycleContact = props.user_info.clientName
+        service_data.value.recycleContactPhone = props.user_info.phoneNumber
+        if (props.user_info.whiteFlag == 1 && props.user_info.recoveryFree == 1) {
+            service_price.value[0].detail_list[1].value = '客户优惠(￥0)'
+        } else {
+            service_price.value[0].detail_list[1].value = '回收(￥50)'
+        }
     } else {
         service_data.value.provinceCode = ''
         service_data.value.recycleProvince = ''
         service_data.value.recycleAddress = ''
         service_data.value.recycleContact = ''
         service_data.value.recycleContactPhone = ''
+        service_price.value[0].detail_list[1].value = '不回收'
     }
 }
 //把区域码转成汉字
@@ -160,20 +221,26 @@ function changeProvince(e) {
     service_data.value.recycleProvince = e ? getCodeToText(e) : ''
 }
 
+//有问题联系谁
+function changeContactType(value) {
+    if(service_data.value.contactType == value) return
+    service_data.value.contactType = value
+    service_data.value.contact = ''
+    service_data.value.contactPhone = ''
+}
+
 //是否与之前同设备
 function changeTestEquipment(value) {
     if(service_data.value.ifTestEquipment == value) return
     service_data.value.ifTestEquipment = value
-    if(value == 0) {
-        service_data.value.relevanceOrderCode = ''
-    }
+    service_data.value.relevanceOrderCode = ''
 }
 
 //远程搜索订单列表
 async function getOrderList(e) {
     order_list_loading.value = true
     const params = {
-        clientId: user_info.clientId,
+        clientId: props.user_info.clientId,
         equipmentName: e,
         pageSize: 30,
         pageNum: 1,
@@ -204,7 +271,7 @@ function changePostMethod(value) {
         service_data.value.onSiteSamplingRemark = ''
     } else if(value == 2) {
         service_data.value.addressId = ''
-        service_data.value.postPayment = ''
+        service_data.value.postPayment = undefined
         service_data.value.homeSamplingAddress = user_other_info.value.lastHomeSamplingAddress
         service_data.value.detailedAddress = user_other_info.value.lastDetailedAddress
         service_data.value.samplingContact = user_other_info.value.lastSamplingContact
@@ -214,7 +281,7 @@ function changePostMethod(value) {
         service_data.value.onSiteSamplingRemark = user_other_info.value.lastOnSiteSamplingRemark
     } else if(value == 3) {
         service_data.value.addressId = unit_list.value.length ? unit_list.value[0].unitId : ''
-        service_data.value.postPayment = ''
+        service_data.value.postPayment = undefined
         service_data.value.homeSamplingAddress = ''
         service_data.value.detailedAddress = ''
         service_data.value.samplingContact = ''
@@ -244,7 +311,7 @@ defineExpose({init})
                             <span><span class="font-FF4A2B">*</span>是否加急</span>
                         </div>
                         <div class="fieId-content">
-                            <div class="radio" :class="{'radio-active': item.value == service_data.ifUrgent}" v-for="item in urgent_options" :key="item.value" @click="service_data.ifUrgent = item.value">{{ item.label }}</div>
+                            <div class="radio" :class="{'radio-active': item.value == service_data.ifUrgent}" v-for="item in urgent_options" :key="item.value" @click="changeUrgent(item.value)">{{ item.label }}</div>
                         </div>
                     </div>
                     <div class="fieId-tips" v-show="service_data.ifUrgent">请务必与技术顾问确认能否加急！如确认加急，测试费用加收50%</div>
@@ -305,7 +372,7 @@ defineExpose({init})
                             <span><span class="font-FF4A2B">*</span>实验有问题联系谁</span>
                         </div>
                         <div class="fieId-content">
-                            <div class="radio" :class="{'radio-active': item.value == service_data.contactType}" v-for="item in contact_type_options" :key="item.value" @click="service_data.contactType = item.value">{{ item.label }}</div>
+                            <div class="radio" :class="{'radio-active': item.value == service_data.contactType}" v-for="item in contact_type_options" :key="item.value" @click="changeContactType(item.value)">{{ item.label }}</div>
                         </div>
                     </div>
                 </div>
@@ -505,7 +572,6 @@ defineExpose({init})
     width: 80vw;
     min-width: 1440px;
     margin: 10px auto 0;
-    background-color: #ffffff90;
     .service-box-head {
         justify-content: flex-start;
         padding: 15px;

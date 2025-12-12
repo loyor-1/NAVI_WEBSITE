@@ -8,27 +8,34 @@ const fee_detail = ref([])
 const bargain_status = ref(false)
 const total_cost = ref('0.00')
 
-function init(data) {
-    const global_detail = reduceTotalMoney(data, 'global').fee_detail
-    const groups_detail = reduceTotalMoney(data, 'groups').fee_detail
-    const global_bargain_status = reduceTotalMoney(data, 'groups').bargain_status
-    const groups_bargain_status = reduceTotalMoney(data, 'groups').bargain_status
-    bargain_status.value = global_bargain_status || groups_bargain_status
-    // 【服务费用】【优惠费用】数组的字段需要与 reduceTotalMoney 函数内定义的 fee_detail 的字段一致，且格式一致
-    const service_detail = [
-        {
-            sample_name: '服务费用',
-            price: '',
-            detail_list: [],
-        }
-    ]
-    const discount_detail = [
-        {
-            sample_name: '优惠费用',
-            price: '',
-            detail_list: [],
-        }
-    ]
+function init(appoint_data, service_price_data, discount_data) {
+    // 【字段费用】【服务费用】【优惠费用】数组的字段需要与 reduceTotalMoney 函数内定义的 fee_detail 的字段一致，且格式一致,如下：
+    // [
+    //     {
+    //         sample_name: '服务费用',
+    //         price: '',
+    //         detail_list: [],
+    //     }
+    // ]
+
+    let global_detail = []
+    let groups_detail = []
+    let service_detail = []
+    let discount_detail = []
+
+    if(appoint_data) {
+        global_detail = reduceTotalMoney(data, 'global').fee_detail
+        groups_detail = reduceTotalMoney(data, 'groups').fee_detail
+        const global_bargain_status = reduceTotalMoney(data, 'groups').bargain_status
+        const groups_bargain_status = reduceTotalMoney(data, 'groups').bargain_status
+        bargain_status.value = global_bargain_status || groups_bargain_status
+    }
+    if(service_price_data) {
+        service_detail = service_price_data
+    }
+    if(discount_data) {
+        discount_detail = discount_data
+    }
     fee_detail.value = [...global_detail, ...groups_detail, ...service_detail, ...discount_detail]
     total_cost.value = data.totalCost
     console.log('fee_detail.value', fee_detail.value)
