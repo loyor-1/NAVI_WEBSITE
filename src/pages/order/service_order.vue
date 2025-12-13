@@ -1,6 +1,6 @@
 <script setup>
 import dayjs from 'dayjs'
-import { computed, ref, watch } from 'vue'
+import { computed, nextTick, ref, watch } from 'vue'
 import { useGetActives, useGetUserOrderList, useGetUnitList, useGetUserOtherInfo } from '@/api'
 import { regionData, codeToText } from "element-china-area-data"
 
@@ -15,8 +15,8 @@ const order_list = ref([])//做过检测的订单
 const unit_list = ref([])//区域列表
 
 const service_data = ref({
-    ifUrgent: 0,
-    ifRecycle: 0,
+    ifUrgent: undefined,
+    ifRecycle: undefined,
     provinceCode: '',
     provinceValue: [],
     recycleProvince: '',
@@ -28,9 +28,9 @@ const service_data = ref({
     contactPhone: '',
     ifTestEquipment: 0,
     relevanceOrderCode: '',
-    postMethod: 1,
+    postMethod: undefined,
     addressId: '',
-    postPayment: 1,
+    postPayment: undefined,
     homeSamplingAddress: '',
     detailedAddress: '',
     samplingContact: '',
@@ -44,9 +44,9 @@ const service_price = ref([
         sample_name: '服务费用',
         price: '',
         detail_list: [
-            { label: '是否加急', value: '0' },
-            { label: '是否回收', value: '0' },
-            { label: '邮寄运费', value: '0' },
+            { label: '是否加急', value: '不加急' },
+            { label: '是否回收', value: '不回收' },
+            { label: '邮寄运费', value: '' },
         ],
     }
 ])
@@ -95,41 +95,61 @@ const time_options = [
 ]
 
 watch(
-    () => service_data.value.postPayment,
-    (newValue) => {
-        service_price.value[0].detail_list[2].value = newValue == 1 ? '运费到付(￥12)' : '运费自付/自己送样(￥0)'
-    }
-)
-
-watch(
-    () => service_data.value,
-    (newValue) => {
-        let price = 0
-        if(newValue.ifUrgent == 1) {
-            price += (props.original_price * 0.5)
-        }
-        if(newValue.ifRecycle == 1 && props.user_info.whiteFlag == 1 && props.user_info.recoveryFree == 1) {
-            price += 50
-        }
-        if(newValue.postPayment == 1)  {
-            price += 12
-        }
-        service_price.value[0].price = price ? `￥${price.toFixed(2)}` : ''
-        emits('updateServiceOrder', newValue, service_price.value)
+    [
+        () => service_data.value,
+        () => props.original_price,
+    ],
+    () => {
+        reduceServicePrice()
     },
     {
         deep: true,
-        immediate: true,
     }
 )
 
 //初始化页面数据
-async function init() {
+async function init(appoint_data) {
     loading.value = true
     await getActives()
     await getUserOtherInfo()
     await getUnitList()
+    nextTick(() => {
+        if(appoint_data.ifUrgent != undefined && appoint_data.ifUrgent != null) {
+            changePostMethod(appoint_data.ifUrgent)
+        } else {
+            changePostMethod(1)
+        }
+        if(appoint_data.ifRecycle != undefined && appoint_data.ifRecycle != null) {
+            changeUrgent(appoint_data.ifRecycle)
+        } else {
+            changeUrgent(0)
+        }
+        if(appoint_data.postMethod != undefined && appoint_data.postMethod != null) {
+            changeRecycle(appoint_data.postMethod)
+        } else {
+            changeRecycle(0)
+        }
+        reduceServicePrice()
+    })
     loading.value = false
+}
+
+//计算服务费用
+function reduceServicePrice() {
+    let price = 0
+    if(service_data.value.ifUrgent == 1) {
+        const money = props.original_price * 0.5
+        price += money
+        service_price.value[0].detail_list[0].value = money ? `加急(￥${money.toFixed(2)})` : '不加急'
+    }
+    if(service_data.value.ifRecycle == 1 && !(props.user_info.whiteFlag == 1 && props.user_info.recoveryFree == 1)) {
+        price += 50
+    }
+    if(service_data.value.postPayment == 1)  {
+        price += 12
+    }
+    service_price.value[0].price = price ? `￥${price.toFixed(2)}` : ''
+    emits('updateServiceOrder', service_data.value, service_price.value)
 }
 
 //判断是否可参与下单返现活动
@@ -261,7 +281,6 @@ function changePostMethod(value) {
     service_data.value.postMethod = value
     if(value == 1) {
         service_data.value.addressId = unit_list.value.length ? unit_list.value[0].unitId : ''
-        service_data.value.postPayment = 1
         service_data.value.homeSamplingAddress = ''
         service_data.value.detailedAddress = ''
         service_data.value.samplingContact = ''
@@ -269,9 +288,9 @@ function changePostMethod(value) {
         service_data.value.onSiteSamplingDate = ''
         service_data.value.onSiteSamplingTime = ''
         service_data.value.onSiteSamplingRemark = ''
+        changePostPayment(1)
     } else if(value == 2) {
         service_data.value.addressId = ''
-        service_data.value.postPayment = undefined
         service_data.value.homeSamplingAddress = user_other_info.value.lastHomeSamplingAddress
         service_data.value.detailedAddress = user_other_info.value.lastDetailedAddress
         service_data.value.samplingContact = user_other_info.value.lastSamplingContact
@@ -279,9 +298,9 @@ function changePostMethod(value) {
         service_data.value.onSiteSamplingDate = dayjs().format('YYYY-MM-DD')
         service_data.value.onSiteSamplingTime = user_other_info.value.lastOnSiteSamplingTime || '9:00 ~ 12:00'
         service_data.value.onSiteSamplingRemark = user_other_info.value.lastOnSiteSamplingRemark
+        changePostPayment(3)//postPayment后端未定义3的值，仅作为前端标记使用，3为代表邮寄的方式与运费为上门取样
     } else if(value == 3) {
         service_data.value.addressId = unit_list.value.length ? unit_list.value[0].unitId : ''
-        service_data.value.postPayment = undefined
         service_data.value.homeSamplingAddress = ''
         service_data.value.detailedAddress = ''
         service_data.value.samplingContact = ''
@@ -289,6 +308,30 @@ function changePostMethod(value) {
         service_data.value.onSiteSamplingDate = ''
         service_data.value.onSiteSamplingTime = ''
         service_data.value.onSiteSamplingRemark = ''
+        changePostPayment(4)//postPayment后端未定义4的值，仅作为前端标记使用，4为代表邮寄的方式与运费为自己送样
+    }
+}
+
+//更改【运费支付】
+function changePostPayment(value) {
+    if(service_data.value.postPayment == value) return
+    switch(value) {
+        case 1:
+            service_price.value[0].detail_list[2].value = '运费到付(￥12)'
+            service_data.value.postPayment = 1
+            break
+        case 2:
+            service_price.value[0].detail_list[2].value = '运费自付(￥0)'
+            service_data.value.postPayment = 2
+            break
+        case 3:
+            service_price.value[0].detail_list[2].value = '优质客户上门取样(￥0)'
+            service_data.value.postPayment = undefined
+            break
+        case 4:
+            service_price.value[0].detail_list[2].value = '自己送样(￥0)'
+            service_data.value.postPayment = undefined
+            break
     }
 }
 
@@ -459,15 +502,15 @@ defineExpose({init})
                 <div class="info-card" v-show="service_data.postMethod == 1 || service_data.postMethod == 3">
                     <div class="card-line">
                         <div class="line-title">寄送地址</div>
-                        <div class="line-content">{{ unit_list.find(i => i.unitId == service_data.addressId)?.deliveryAddress }}</div>    
+                        <div class="line-content">{{ unit_list.find(i => i.unitId == service_data.addressId)?.deliveryAddress }}</div>
                     </div>
                     <div class="card-line">
                         <div class="line-title">联系人</div>
-                        <div class="line-content">{{ unit_list.find(i => i.unitId == service_data.addressId)?.deliveryLeader }}</div>    
+                        <div class="line-content">{{ unit_list.find(i => i.unitId == service_data.addressId)?.deliveryLeader }}</div>
                     </div>
                     <div class="card-line">
                         <div class="line-title">联系方式</div>
-                        <div class="line-content">{{ unit_list.find(i => i.unitId == service_data.addressId)?.deliveryPhone }}</div>    
+                        <div class="line-content">{{ unit_list.find(i => i.unitId == service_data.addressId)?.deliveryPhone }}</div>
                     </div>
                 </div>
                 <div class="fieId-style" v-show="service_data.postMethod == 1">
@@ -476,7 +519,7 @@ defineExpose({init})
                             <span><span class="font-FF4A2B">*</span>运费支付</span>
                         </div>
                         <div class="fieId-content">
-                            <div class="radio" :class="{'radio-active': item.value == service_data.postPayment}" v-for="item in post_payment_options" :key="item.value" @click="service_data.postPayment = item.value">{{ item.label }}</div>
+                            <div class="radio" :class="{'radio-active': item.value == service_data.postPayment}" v-for="item in post_payment_options" :key="item.value" @click="changePostPayment(item.value)">{{ item.label }}</div>
                         </div>
                     </div>
                 </div>

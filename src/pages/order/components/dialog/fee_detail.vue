@@ -24,10 +24,10 @@ function init(appoint_data, service_price_data, discount_data) {
     let discount_detail = []
 
     if(appoint_data) {
-        global_detail = reduceTotalMoney(data, 'global').fee_detail
-        groups_detail = reduceTotalMoney(data, 'groups').fee_detail
-        const global_bargain_status = reduceTotalMoney(data, 'groups').bargain_status
-        const groups_bargain_status = reduceTotalMoney(data, 'groups').bargain_status
+        global_detail = reduceTotalMoney(appoint_data, 'global').fee_detail
+        groups_detail = reduceTotalMoney(appoint_data, 'groups').fee_detail
+        const global_bargain_status = reduceTotalMoney(appoint_data, 'groups').bargain_status
+        const groups_bargain_status = reduceTotalMoney(appoint_data, 'groups').bargain_status
         bargain_status.value = global_bargain_status || groups_bargain_status
     }
     if(service_price_data) {
@@ -37,7 +37,7 @@ function init(appoint_data, service_price_data, discount_data) {
         discount_detail = discount_data
     }
     fee_detail.value = [...global_detail, ...groups_detail, ...service_detail, ...discount_detail]
-    total_cost.value = data.totalCost
+    total_cost.value = appoint_data.totalCost || ''
     console.log('fee_detail.value', fee_detail.value)
     show.value = true
 }
@@ -71,7 +71,11 @@ defineExpose({init})
         <template #footer>
             <div class="dialog-footer">
                 <span v-if="bargain_status">当前订单包含待议价选项，具体金额请下单后联系客服</span>
-                <span v-else>订单总金额：￥{{ total_cost }}</span>
+                <span v-else>
+                    <span>订单总金额：</span>
+                    <span class="font-FF4A2B">￥{{ total_cost }}</span>
+                </span>
+
             </div>
         </template>
     </el-dialog>
@@ -98,10 +102,10 @@ defineExpose({init})
     padding: 5px 30px;
     .content-label {
         justify-content: flex-start;
-        width: 70%;
+        width: 60%;
     }
     .content-value {
-        width: 30%;
+        width: 40%;
         text-align: right;
     }
 }

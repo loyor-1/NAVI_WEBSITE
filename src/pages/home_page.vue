@@ -5,10 +5,8 @@ import { useGetCarouselList, useGetHotList } from '@/api'
 import { useRouter } from 'vue-router'
 import { left, right } from '@/utils/scroll_list.js'
 import chinaMap from '@/utils/china_map.json';
-import { useTabStore } from '@/stores/tab';
 
 const router = useRouter()
-const tab_store = useTabStore()
 
 const carousel_list = ref([])//轮播图列表
 const carousel = ref()//轮播图实例
@@ -163,7 +161,7 @@ const other_options = {
     callback: (isVisible, entry) => {
         if(isVisible) {
             entry.target.classList.add('service-show')
-            
+
         } else {
             entry.target.classList.remove('service-show')
         }
@@ -174,7 +172,7 @@ const other_options = {
 //获取轮播图
 async function getCarouselList() {
     const params = {
-        type: 1, 
+        type: 1,
         ifShow: 1,
         categoryType: 1
     }
@@ -351,9 +349,9 @@ function initChart() {
             }
         ]
     };
-    
+
     chart.value.setOption(option);
-    
+
     // 添加窗口调整大小事件监听
     window.addEventListener('resize', function() {
         if (chart.value) {
@@ -800,7 +798,7 @@ function toEquipmentDetail(equipment_id) {
                 border: 2px dashed transparent;
             }
         }
-        
+
     }
     .service-box {
         overflow: hidden;

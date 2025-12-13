@@ -31,6 +31,7 @@ const ref_fee_detail = ref(null)
 const ref_service_order = ref(null)
 const loading = ref(true)
 const actvie_flag = ref(false)
+const price_pop = ref(true)
 const show_groups_box = ref(true)
 const show_instructions = ref(true)
 const show_global = ref(true)
@@ -46,6 +47,14 @@ const specimen_code_text = ref('')//批量导入样品编号文本
 const split_groups_index = ref(undefined)//拆分样品组的样品组索引
 const split_groups_options = ref([])//被拆分的样品编号列表
 const split_groups_list = ref([])//存储选中的被拆分的样品编号
+
+//费用浮层显示配置
+const price_pop_options = {
+    options: {
+        threshold: 0.45,
+    },
+    callback: showPricePop,
+}
 
 //预约设备接口参数
 const appoint_data = ref({
@@ -153,6 +162,11 @@ async function getFieIdList() {
 }
 getFieIdList()
 
+//显示 隐藏费用详情浮层
+function showPricePop(isVisible) {
+    price_pop.value = !isVisible
+}
+
 //添加样品组
 function addGroup() {
     appoint_data.value.groups.push({
@@ -165,7 +179,7 @@ function addGroup() {
         specimen_code_validate: true,
         specimenIngredient: "", //样品成分
         specimenIngredient_validate: true,
-        fieIdList: groups_fieId_list.value, //配置字段列表,
+        fieIdList: JSON.parse(JSON.stringify(groups_fieId_list.value)), //配置字段列表，深拷贝防止引用导致页面显示异常,
     })
 }
 
@@ -315,14 +329,14 @@ function reduceOrderPrice() {
     if(appoint_data.value.ifUrgent == 1) {
         service_money += ((global_money + groups_money) * 0.5)
     }
-    if(appoint_data.value.ifRecycle == 1 && user_info.whiteFlag == 1 && user_info.recoveryFree == 1) {
+    if(appoint_data.value.ifRecycle == 1 && !(user_info.whiteFlag == 1 && user_info.recoveryFree == 1)) {
         service_money += 50
     }
     if(appoint_data.value.postPayment == 1)  {
         service_money += 12
     }
     //统计总价格
-    appoint_data.value.totalCost = (global_money + groups_money).toFixed(2)
+    appoint_data.value.totalCost = (global_money + groups_money + service_money).toFixed(2)
 }
 
 //打开费用明细弹框
@@ -332,15 +346,15 @@ function openFeeDetail() {
 
 // 滚动到指定id的div
 async function scrollToTargetById(target_id) {
-    await nextTick()  
+    await nextTick()
     // 根据变量中的 ID 获取目标元素
     const target_element = document.getElementById(target_id)
-    
+
     if (target_element) {
         // 计算修正后的滚动位置（避开导航栏）
         const target_rect = target_element.getBoundingClientRect();
         const scroll_top = target_rect.top + window.scrollY - 150;
-        
+
         // 执行滚动（手动控制位置更精准）
         window.scrollTo({
             top: scroll_top,
@@ -412,7 +426,11 @@ function nextStep() {
             }
         } else {
             order_steps.value = 2
-            ref_service_order.value.init()
+            ref_service_order.value.init(appoint_data.value)
+            window.scrollTo({
+                top: 0,
+                behavior: 'smooth', // 平滑滚动，可选值：auto（立即）/ smooth（平滑）
+            })
         }
     }
     catch(err) {
@@ -423,6 +441,10 @@ function nextStep() {
 //上一步
 function lastStep() {
     order_steps.value = 1
+    window.scrollTo({
+        top: 0,
+        behavior: 'smooth', // 平滑滚动，可选值：auto（立即）/ smooth（平滑）
+    })
 }
 
 //更新服务费用信息
@@ -642,11 +664,11 @@ function conformAppoint() {
 
     <!-- 下单第三步 -->
     <div v-show="order_steps == 3">
-        
+
     </div>
 
     <!-- 其他实验信息 -->
-    <div class="profile">
+    <div class="profile" v-intersection="price_pop_options">
         <div class="profile-head flex-center">
             <div class="flex-center">
                 <div class="slider"></div>
@@ -678,7 +700,7 @@ function conformAppoint() {
             <div class="button-box">
                 <div class="flex-center-col price" @click="openFeeDetail">
                     <div class="flex-center">
-                        <span class="font-5D5D5D">合计费用： </span>
+                        <span class="font-5D5D5D font-600">合计费用： </span>
                         <span v-if="bargain_status">待议价</span>
                         <span class="font-FF4A2B font-middle" v-else>￥{{ appoint_data.totalCost }}</span>
                         <img class="gold" src="@/assets/svg/money.svg" alt="">
@@ -690,6 +712,23 @@ function conformAppoint() {
                 <div class="default-button" v-if="order_steps == 2" @click="lastStep">上一步</div>
                 <div class="custom-button" v-if="order_steps == 2" @click="conformAppoint">确认预约</div>
             </div>
+        </div>
+    </div>
+
+    <!-- 总费用浮层 -->
+    <div v-show="price_pop" class="price-pop flex-center">
+        <div class="flex-center">
+            <span class="font-5D5D5D font-600">合计费用： </span>
+            <span v-if="bargain_status">待议价</span>
+            <span class="font-FF4A2B font-middle" v-else>￥{{ appoint_data.totalCost }}</span>
+            <img class="gold" src="@/assets/svg/money.svg" alt="">
+            <div class="font-5D5D5D desc" style="margin-left: 10px;" @click="openFeeDetail">点击查看费用详情</div>
+        </div>
+        <div class="pop-button flex-center">
+            <div class="default-button" v-if="order_steps == 1 && show_groups_box" @click="addGroup">添加样品</div>
+            <div class="custom-button" v-if="order_steps == 1" @click="nextStep">下一步</div>
+            <div class="default-button" v-if="order_steps == 2" @click="lastStep">上一步</div>
+            <div class="custom-button" v-if="order_steps == 2" @click="conformAppoint">确认预约</div>
         </div>
     </div>
 
@@ -746,6 +785,16 @@ function conformAppoint() {
 }
 :deep(.specimen-code .el-input__wrapper) {
     background-color: #94C9FF30 !important;
+}
+.gold {
+    width: 50px;
+    height: 50px;
+    margin-left: 5px;
+}
+.desc {
+    cursor: pointer;
+    user-select: none;
+    text-decoration: underline;
 }
 
 .euipment-box {
@@ -912,14 +961,6 @@ function conformAppoint() {
                 height: 80px;
                 border: 1px solid #C8C9CC;
                 border-radius: 5px;
-                .gold {
-                    width: 50px;
-                    height: 50px;
-                    margin-left: 5px;
-                }
-                .desc {
-                    text-decoration: underline;
-                }
             }
             .default-button {
                 height: 60px;
@@ -927,6 +968,31 @@ function conformAppoint() {
             .custom-button {
                 height: 60px;
             }
+        }
+    }
+}
+
+.price-pop {
+    position: fixed;
+    bottom: 30px;
+    left: 50%;
+    transform: translateX(-50%);
+    justify-content: space-between;
+    width: 80vw;
+    min-width: 1440px;
+    padding: 10px 20px;
+    border: 1px solid #cccccc;
+    border-radius: 10px;
+    background-color: #FFFFFF;
+    .pop-button {
+        column-gap: 20px;
+        .default-button {
+            width: 100px;
+            height: 40px;
+        }
+        .custom-button {
+            width: 100px;
+            height: 40px;
         }
     }
 }

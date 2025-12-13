@@ -134,7 +134,6 @@ function resetData() {
 
 function login() {
     form.value.validate(async valid => {
-        console.log(valid)
         if(valid) {
             login_loading.value = true
             let data = {}
