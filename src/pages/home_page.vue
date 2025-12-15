@@ -177,6 +177,9 @@ async function getCarouselList() {
         categoryType: 1
     }
     const res = await useGetCarouselList(params)
+    res.rows.forEach(item => {
+        item.carousel_path = import.meta.env.VITE_POET + item.picUrl
+    })
     carousel_list.value = res.rows
 }
 getCarouselList()
@@ -384,8 +387,10 @@ function toEquipmentDetail(equipment_id) {
         <div class="carousel-pic">
             <el-carousel v-if="carousel_list.length" ref="carousel" height="auto" :interval="2000">
                 <el-carousel-item class="carousel-pic" v-for="item in carousel_list" :key="item.carouselId" @click="toPage(item)">
-                    <div class="carousel-pic" :style="{'backgroundImage': `url(${item.picUrl})`}" v-if="item.picUrl"></div>
-                    <div class="carousel-pic-default" v-else></div>
+                    <el-image class="carousel-pic" v-if="item.picUrl" :src="item.carousel_path" />
+                    <el-image class="carousel-pic-default" v-else src="@/assets/img/default_carousel.jpeg" />
+                    <!-- <div class="carousel-pic" :style="{'backgroundImage': `url(${item.carousel_path})`}" v-if="item.carousel_path"></div>
+                    <div class="carousel-pic-default" v-else></div> -->
                 </el-carousel-item>
             </el-carousel>
             <div class="carousel-pic" v-else>
@@ -586,16 +591,12 @@ function toEquipmentDetail(equipment_id) {
         min-width: 1224px;
         height: 18vw;
         min-height: 320px;
-        background-position: center;
-        background-size: cover;
     }
     .carousel-pic-default {
         width: 68vw;
         min-width: 1224px;
         height: 18vw;
         min-height: 320px;
-        background: url('@/assets/img/default_carousel.jpeg');
-        background-size: cover;
     }
 }
 

@@ -4,7 +4,7 @@ import { computed, nextTick, ref, watch } from 'vue'
 import { useGetActives, useGetUserOrderList, useGetUnitList, useGetUserOtherInfo } from '@/api'
 import { regionData, codeToText } from "element-china-area-data"
 
-const props = defineProps(['original_price', 'user_info'])
+const props = defineProps(['original_price', 'user_info', 'no_validate_list'])
 const emits = defineEmits(['updateServiceOrder'])
 
 const loading = ref(true)
@@ -115,23 +115,23 @@ async function init(appoint_data) {
     await getUnitList()
     nextTick(() => {
         if(appoint_data.ifUrgent != undefined && appoint_data.ifUrgent != null) {
-            changePostMethod(appoint_data.ifUrgent)
-        } else {
-            changePostMethod(1)
-        }
-        if(appoint_data.ifRecycle != undefined && appoint_data.ifRecycle != null) {
-            changeUrgent(appoint_data.ifRecycle)
+            changeUrgent(appoint_data.ifUrgent)
         } else {
             changeUrgent(0)
         }
-        if(appoint_data.postMethod != undefined && appoint_data.postMethod != null) {
-            changeRecycle(appoint_data.postMethod)
+        if(appoint_data.ifRecycle != undefined && appoint_data.ifRecycle != null) {
+            changeRecycle(appoint_data.ifRecycle)
         } else {
             changeRecycle(0)
         }
+        if(appoint_data.postMethod != undefined && appoint_data.postMethod != null) {
+            changePostMethod(appoint_data.postMethod)
+        } else {
+            changePostMethod(1)
+        }
         reduceServicePrice()
+        loading.value = false
     })
-    loading.value = false
 }
 
 //计算服务费用
@@ -369,8 +369,8 @@ defineExpose({init})
                         </div>
                     </div>
                 </div>
-                <div class="fieId-style" v-show="service_data.ifRecycle == 1">
-                    <div class="fieId-box">
+                <div id="provinceValue" class="fieId-style" v-show="service_data.ifRecycle == 1">
+                    <div class="fieId-box" :class="{'fieId-box-warning': props.no_validate_list.includes('provinceValue')}">
                         <div class="fieId-label">
                             <span><span class="font-FF4A2B">*</span>所在省市</span>
                         </div>
@@ -379,8 +379,8 @@ defineExpose({init})
                         </div>
                     </div>
                 </div>
-                <div class="fieId-style" v-show="service_data.ifRecycle == 1">
-                    <div class="fieId-box">
+                <div id="recycleAddress" class="fieId-style" v-show="service_data.ifRecycle == 1">
+                    <div class="fieId-box" :class="{'fieId-box-warning': props.no_validate_list.includes('recycleAddress')}">
                         <div class="fieId-label">
                             <span><span class="font-FF4A2B">*</span>回收详细地址</span>
                         </div>
@@ -389,8 +389,8 @@ defineExpose({init})
                         </div>
                     </div>
                 </div>
-                <div class="fieId-style" v-show="service_data.ifRecycle == 1">
-                    <div class="fieId-box">
+                <div id="recycleContact" class="fieId-style" v-show="service_data.ifRecycle == 1">
+                    <div class="fieId-box" :class="{'fieId-box-warning': props.no_validate_list.includes('recycleContact')}">
                         <div class="fieId-label">
                             <span><span class="font-FF4A2B">*</span>回收取样联系人</span>
                         </div>
@@ -399,8 +399,8 @@ defineExpose({init})
                         </div>
                     </div>
                 </div>
-                <div class="fieId-style" v-show="service_data.ifRecycle == 1">
-                    <div class="fieId-box">
+                <div id="recycleContactPhone" class="fieId-style" v-show="service_data.ifRecycle == 1">
+                    <div class="fieId-box" :class="{'fieId-box-warning': props.no_validate_list.includes('recycleContactPhone')}">
                         <div class="fieId-label">
                             <span><span class="font-FF4A2B">*</span>回收取样联系人电话</span>
                         </div>
@@ -419,8 +419,8 @@ defineExpose({init})
                         </div>
                     </div>
                 </div>
-                <div class="fieId-style" v-show="service_data.contactType == 2">
-                    <div class="fieId-box">
+                <div id="contact" class="fieId-style" v-show="service_data.contactType == 2">
+                    <div class="fieId-box" :class="{'fieId-box-warning': props.no_validate_list.includes('contact')}">
                         <div class="fieId-label">
                             <span><span class="font-FF4A2B">*</span>实验问题联系人</span>
                         </div>
@@ -429,8 +429,8 @@ defineExpose({init})
                         </div>
                     </div>
                 </div>
-                <div class="fieId-style" v-show="service_data.contactType == 2">
-                    <div class="fieId-box">
+                <div id="contactPhone" class="fieId-style" v-show="service_data.contactType == 2">
+                    <div class="fieId-box" :class="{'fieId-box-warning': props.no_validate_list.includes('contactPhone')}">
                         <div class="fieId-label">
                             <span><span class="font-FF4A2B">*</span>联系人电话号码</span>
                         </div>
@@ -449,8 +449,8 @@ defineExpose({init})
                         </div>
                     </div>
                 </div>
-                <div class="fieId-style" v-show="service_data.ifTestEquipment == 1">
-                    <div class="fieId-box">
+                <div id="relevanceOrderCode" class="fieId-style" v-show="service_data.ifTestEquipment == 1">
+                    <div class="fieId-box" :class="{'fieId-box-warning': props.no_validate_list.includes('relevanceOrderCode')}">
                         <div class="fieId-label">
                             <span><span class="font-FF4A2B">*</span>选择意向设备的订单</span>
                         </div>
@@ -523,8 +523,8 @@ defineExpose({init})
                         </div>
                     </div>
                 </div>
-                <div class="fieId-style" v-show="service_data.postMethod == 2">
-                    <div class="fieId-box">
+                <div id="homeSamplingAddress" class="fieId-style" v-show="service_data.postMethod == 2">
+                    <div class="fieId-box" :class="{'fieId-box-warning': props.no_validate_list.includes('homeSamplingAddress')}">
                         <div class="fieId-label">
                             <span><span class="font-FF4A2B">*</span>上门取样地址</span>
                         </div>
@@ -533,8 +533,8 @@ defineExpose({init})
                         </div>
                     </div>
                 </div>
-                <div class="fieId-style" v-show="service_data.postMethod == 2">
-                    <div class="fieId-box">
+                <div id="detailedAddress" class="fieId-style" v-show="service_data.postMethod == 2">
+                    <div class="fieId-box" :class="{'fieId-box-warning': props.no_validate_list.includes('detailedAddress')}">
                         <div class="fieId-label">
                             <span><span class="font-FF4A2B">*</span>详细地址</span>
                         </div>
@@ -543,8 +543,8 @@ defineExpose({init})
                         </div>
                     </div>
                 </div>
-                <div class="fieId-style" v-show="service_data.postMethod == 2">
-                    <div class="fieId-box">
+                <div id="samplingContact" class="fieId-style" v-show="service_data.postMethod == 2">
+                    <div class="fieId-box" :class="{'fieId-box-warning': props.no_validate_list.includes('samplingContact')}">
                         <div class="fieId-label">
                             <span><span class="font-FF4A2B">*</span>上门取样联系人</span>
                         </div>
@@ -553,8 +553,8 @@ defineExpose({init})
                         </div>
                     </div>
                 </div>
-                <div class="fieId-style" v-show="service_data.postMethod == 2">
-                    <div class="fieId-box">
+                <div id="samplingContactPhone" class="fieId-style" v-show="service_data.postMethod == 2">
+                    <div class="fieId-box" :class="{'fieId-box-warning': props.no_validate_list.includes('samplingContactPhone')}">
                         <div class="fieId-label">
                             <span><span class="font-FF4A2B">*</span>取样联系人电话</span>
                         </div>
@@ -563,8 +563,8 @@ defineExpose({init})
                         </div>
                     </div>
                 </div>
-                <div class="fieId-style" v-show="service_data.postMethod == 2">
-                    <div class="fieId-box">
+                <div id="onSiteSamplingDate" class="fieId-style" v-show="service_data.postMethod == 2">
+                    <div class="fieId-box" :class="{'fieId-box-warning': props.no_validate_list.includes('onSiteSamplingDate')}">
                         <div class="fieId-label">
                             <span><span class="font-FF4A2B">*</span>上门取样时间</span>
                         </div>
@@ -573,8 +573,8 @@ defineExpose({init})
                         </div>
                     </div>
                 </div>
-                <div class="fieId-style" v-show="service_data.postMethod == 2">
-                    <div class="fieId-box">
+                <div id="onSiteSamplingTime" class="fieId-style" v-show="service_data.postMethod == 2">
+                    <div class="fieId-box" :class="{'fieId-box-warning': props.no_validate_list.includes('onSiteSamplingTime')}">
                         <div class="fieId-label">
                             <span><span class="font-FF4A2B">*</span>选择时间段</span>
                         </div>

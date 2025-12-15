@@ -34,10 +34,6 @@ function toPageByIndex(index) {
 onMounted(() => {
     mitt_bus.on('changeUserActiveIndex', toPageByIndex)
 })
-
-onUnmounted(() => {
-    mitt_bus.off('changeUserActiveIndex')
-})
 </script>
 
 <template>

@@ -1,10 +1,11 @@
 <script setup>
 import { useRoute, useRouter } from 'vue-router'
-import { useGetEquipmentInfo, useGetActives, useGetFieIdList } from '@/api'
-import { nextTick, reactive, ref, watch } from 'vue'
+import { useGetEquipmentInfo, useGetActives, useGetFieIdList, useAddOrder } from '@/api'
+import { nextTick, reactive, ref, toRaw, watch } from 'vue'
 import { initFieIdList, changeRelevance, reduceTotalMoney, validateField } from '@/utils/order'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { getUserInfo } from '@/utils/auth'
+import { validPhone } from '@/utils/validate'
 import serviceOrder from './service_order.vue'
 import radio from './components/radio.vue'
 import checkbox from './components/checkbox.vue'
@@ -20,6 +21,7 @@ import downloadFile from './components/download_file.vue'
 import fieIdGroup from './components/fieId_group.vue'
 import timer from './components/timer.vue'
 import feeDetail from './components/dialog/fee_detail.vue'
+import appointSuccess from './components/dialog/appoint_success.vue'
 import mitt_bus from '@/utils/mitt_bus'
 
 
@@ -29,6 +31,7 @@ const router = useRouter()
 const user_info = getUserInfo()//用户信息
 const ref_fee_detail = ref(null)
 const ref_service_order = ref(null)
+const appoint_success = ref(null)
 const loading = ref(true)
 const actvie_flag = ref(false)
 const price_pop = ref(true)
@@ -38,6 +41,7 @@ const show_global = ref(true)
 const upload_code_dialog = ref(false)
 const split_groups_dialog = ref(false)
 const bargain_status = ref(false)
+const submit_loading = ref(false)
 const order_steps = ref(1)//下单步骤 1 下单字段填写页面  2 服务费用页面  3  支付页面
 const equipment_info = ref({})//设备详情
 const groups_fieId_list = ref([])//用于添加样品组的初始化字段
@@ -47,6 +51,7 @@ const specimen_code_text = ref('')//批量导入样品编号文本
 const split_groups_index = ref(undefined)//拆分样品组的样品组索引
 const split_groups_options = ref([])//被拆分的样品编号列表
 const split_groups_list = ref([])//存储选中的被拆分的样品编号
+const no_validate_list = ref([])//服务费用 --- 未通过校验的字段
 
 //费用浮层显示配置
 const price_pop_options = {
@@ -458,8 +463,71 @@ function updateServiceOrder(service_data, service_price) {
 }
 
 // 确认预约
-function conformAppoint() {
+async function submitAppoint() {
+    if(submit_loading.value) return
+    submit_loading.value = true
+    //校验服务费用表单，并映射未填写的字段
+    const result_list = []
+    if(appoint_data.value.ifRecycle == 1 && !(appoint_data.value.provinceValue && appoint_data.value.provinceCode && appoint_data.value.recycleProvince)) result_list.push('provinceValue')
+    if(appoint_data.value.ifRecycle == 1 && !appoint_data.value.recycleAddress) result_list.push('recycleAddress')
+    if(appoint_data.value.ifRecycle == 1 && !appoint_data.value.recycleContact) result_list.push('recycleContact')
+    if(appoint_data.value.ifRecycle == 1 && !(appoint_data.value.recycleContactPhone && validPhone(appoint_data.value.recycleContactPhone))) result_list.push('recycleContactPhone')
+    if(appoint_data.value.contactType == 2 && !appoint_data.value.contact) result_list.push('contact')
+    if(appoint_data.value.contactType == 2 && !(appoint_data.value.contactPhone && validPhone(appoint_data.value.contactPhone))) result_list.push('contactPhone')
+    if(appoint_data.value.ifTestEquipment == 1 && !appoint_data.value.relevanceOrderCode) result_list.push('relevanceOrderCode')
+    if(appoint_data.value.postMethod == 2 && !appoint_data.value.homeSamplingAddress) result_list.push('homeSamplingAddress')
+    if(appoint_data.value.postMethod == 2 && !appoint_data.value.detailedAddress) result_list.push('detailedAddress')
+    if(appoint_data.value.postMethod == 2 && !appoint_data.value.samplingContact) result_list.push('samplingContact')
+    if(appoint_data.value.postMethod == 2 && !(appoint_data.value.samplingContactPhone && validPhone(appoint_data.value.samplingContactPhone))) result_list.push('samplingContactPhone')
+    if(appoint_data.value.postMethod == 2 && !appoint_data.value.onSiteSamplingDate) result_list.push('onSiteSamplingDate')
+    if(appoint_data.value.postMethod == 2 && !appoint_data.value.onSiteSamplingTime) result_list.push('onSiteSamplingTime')
+    const translate = {
+        provinceValue: '所在省市',
+        recycleAddress: '回收详细地址',
+        recycleContact: '回收取样联系人',
+        recycleContactPhone: '回收取样联系人电话',
+        contact: '实验问题联系人',
+        contactPhone: '联系人电话号码',
+        relevanceOrderCode: '选择意向设备的订单',
+        homeSamplingAddress: '上门取样地址',
+        detailedAddress: '详细地址',
+        samplingContact: '上门取样联系人',
+        samplingContactPhone: '取样联系人电话',
+        onSiteSamplingDate: '上门取样时间',
+        onSiteSamplingTime: '选择时间段',
+    }
+    no_validate_list.value = result_list
+    // 校验服务费用表单是否通过
+    if(no_validate_list.value.length) {
+        ElMessage.error(`${translate[no_validate_list.value[0]]}填写不规范`)
+        scrollToTargetById(no_validate_list.value[0])
+        submit_loading.value = false
+        return
+    }
 
+    const order_data = JSON.parse(JSON.stringify(appoint_data.value))
+    order_data.globalFieldValues = order_data.globalFieldValues.filter(item => item.show)
+    order_data.groups.forEach(item => {
+        item.values = item.fieIdList.filter(i => i.show)
+        delete item.fieIdList
+        delete item.show_groups
+        delete item.specimenIngredient_validate
+        delete item.specimenNum_validate
+        delete item.specimen_code_validate
+        delete item.specimen_code_list
+    })
+    try {
+        order_data.orderType = equipment_info.value.isCloudScene,
+        order_data.equipmentId = equipment_info.value.id,
+        order_data.status = 1
+        await useAddOrder(order_data)
+        submit_loading.value = false
+        appoint_success.value.showAppointSuccess()
+    }
+    catch(err) {
+        console.log(err)
+        submit_loading.value = false
+    }
 }
 
 </script>
@@ -660,7 +728,7 @@ function conformAppoint() {
     </div>
 
     <!-- 下单第二步 -->
-    <serviceOrder v-show="order_steps == 2" ref="ref_service_order" :original_price="appoint_data.originalPrice" :user_info="user_info" @updateServiceOrder="updateServiceOrder"></serviceOrder>
+    <serviceOrder v-show="order_steps == 2" ref="ref_service_order" :original_price="appoint_data.originalPrice" :user_info="user_info" :no_validate_list="no_validate_list" @updateServiceOrder="updateServiceOrder"></serviceOrder>
 
     <!-- 下单第三步 -->
     <div v-show="order_steps == 3">
@@ -707,10 +775,10 @@ function conformAppoint() {
                     </div>
                     <div class="font-mini font-5D5D5D desc" v-if="Number(appoint_data.totalCost)">点击查看费用详情</div>
                 </div>
-                <div class="default-button" v-if="order_steps == 1 && show_groups_box" @click="addGroup">添加样品</div>
-                <div class="custom-button" v-if="order_steps == 1" @click="nextStep">下一步</div>
-                <div class="default-button" v-if="order_steps == 2" @click="lastStep">上一步</div>
-                <div class="custom-button" v-if="order_steps == 2" @click="conformAppoint">确认预约</div>
+                <div v-loading="submit_loading" class="default-button" v-if="order_steps == 1 && show_groups_box" @click="addGroup">添加样品</div>
+                <div v-loading="submit_loading" class="custom-button" v-if="order_steps == 1" @click="nextStep">下一步</div>
+                <div v-loading="submit_loading" class="default-button" v-if="order_steps == 2" @click="lastStep">上一步</div>
+                <div v-loading="submit_loading" class="custom-button" v-if="order_steps == 2" @click="submitAppoint">确认预约</div>
             </div>
         </div>
     </div>
@@ -725,10 +793,10 @@ function conformAppoint() {
             <div class="font-5D5D5D desc" style="margin-left: 10px;" @click="openFeeDetail">点击查看费用详情</div>
         </div>
         <div class="pop-button flex-center">
-            <div class="default-button" v-if="order_steps == 1 && show_groups_box" @click="addGroup">添加样品</div>
-            <div class="custom-button" v-if="order_steps == 1" @click="nextStep">下一步</div>
-            <div class="default-button" v-if="order_steps == 2" @click="lastStep">上一步</div>
-            <div class="custom-button" v-if="order_steps == 2" @click="conformAppoint">确认预约</div>
+            <div v-loading="submit_loading" class="default-button" v-if="order_steps == 1 && show_groups_box" @click="addGroup">添加样品</div>
+            <div v-loading="submit_loading" class="custom-button" v-if="order_steps == 1" @click="nextStep">下一步</div>
+            <div v-loading="submit_loading" class="default-button" v-if="order_steps == 2" @click="lastStep">上一步</div>
+            <div v-loading="submit_loading" class="custom-button" v-if="order_steps == 2" @click="submitAppoint">确认预约</div>
         </div>
     </div>
 
@@ -755,7 +823,6 @@ function conformAppoint() {
             <el-button type="success" :disabled="!specimen_code_text" @click="confirmUploadCode">确 定 导 入</el-button>
         </template>
     </el-dialog>
-
     <!-- 拆分样品组弹框 -->
     <el-dialog
       title="拆分样品组"
@@ -777,6 +844,8 @@ function conformAppoint() {
             <el-button type="success" :disabled="!split_groups_list.length || (split_groups_list.length == split_groups_options.length)" @click="confirmSplitGroups">确 定 拆 分</el-button>
         </template>
     </el-dialog>
+    <!-- 预约成功弹框 -->
+    <appointSuccess ref="appoint_success" :appoint_data="appoint_data"></appointSuccess>
 </template>
 
 <style lang="scss" scoped>

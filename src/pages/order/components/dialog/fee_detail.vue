@@ -38,7 +38,6 @@ function init(appoint_data, service_price_data, discount_data) {
     }
     fee_detail.value = [...global_detail, ...groups_detail, ...service_detail, ...discount_detail]
     total_cost.value = appoint_data.totalCost || ''
-    console.log('fee_detail.value', fee_detail.value)
     show.value = true
 }
 

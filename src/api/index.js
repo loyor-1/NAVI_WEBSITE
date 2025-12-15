@@ -390,3 +390,12 @@ export function useGetUserOtherInfo(id) {
         method: 'get'
     })
 }
+
+//预约下单
+export function useAddOrder(data) {
+    return service({
+        method: 'post',
+        url: '/equipment/equipmentSubscribe/add',
+        data,
+    });
+}
