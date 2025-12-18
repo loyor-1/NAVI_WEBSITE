@@ -48,10 +48,12 @@ function logout() {
 }
 
 // 前往子页面
-function toPage(index) {
+async function toPage(index, type) {
   // index对应的页面根据@/pages/user/menu_list.js查看
-  router.push('/user')
-  mitt_bus.emit('changeUserActiveIndex', index)
+  // type 为所需对应子页面的附加操作
+  const data = {index, type}
+  await router.push('/user')
+  mitt_bus.emit('changeUserActiveIndex', data)
 }
 
 </script>
@@ -86,7 +88,7 @@ function toPage(index) {
             <img class="avatar" src="@/assets/img/default_avatar.png" alt="">
             <div class="user-name multi-line-ellipsis-1" @click="router.push('/login')">登录/注册</div>
           </div>
-          <img class="pre_active" src="@/assets/img/pre_active.png" alt="">
+          <img class="pre_active" src="@/assets/img/pre_active.png" alt="" @click="toPage('1-1', 'applyPrepayment')">
           <ul class="user-menu" :class="{'user-menu-show': menu_switch == 'show', 'user-menu-hide': menu_switch == 'hide'}" @mouseenter="changeMenuSwitch('show')" @mouseleave="changeMenuSwitch('hide')">
             <li class="menu-li" @click="toPage('1-1')">个人中心</li>
             <li class="menu-li" @click="toPage('2-1')">我的订单</li>

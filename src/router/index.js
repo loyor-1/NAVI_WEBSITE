@@ -53,6 +53,14 @@ const router = createRouter({
             require_token: true
           },
           component: () => import('@/pages/order/service_order.vue'),
+        },
+        {
+          path: '/pay_order',
+          name: 'pay_order',//订单支付页面
+          meta: {
+            require_token: true
+          },
+          component: () => import('@/pages/order/pay_order.vue'),
         }
       ]
     },

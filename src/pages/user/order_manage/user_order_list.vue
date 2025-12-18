@@ -1,8 +1,9 @@
 <script setup>
-import { ref, reactive, watch } from 'vue';
+import { ref, reactive, watch } from 'vue'
 import { useGetOrderList } from '@/api'
-import { moneyKey, orderStatus } from '@/utils/order';
-import { ElMessage } from 'element-plus';
+import { moneyKey, orderStatus } from '@/utils/order'
+import { ElMessage } from 'element-plus'
+import mitt_bus from '@/utils/mitt_bus'
 
 const loading = ref(false)
 const total = ref(0)
@@ -200,12 +201,23 @@ async function changeStatus(value) {
 function copyOrderCode(orderCode) {
     try {
         // 写入剪贴板
-        navigator.clipboard.writeText(orderCode);
+        navigator.clipboard.writeText(orderCode)
         ElMessage.success('复制成功！')
     } catch (err) {
         ElMessage.error('复制失败，请稍后重试！')
         console.log(err)
     }
+}
+
+// 前往支付订单
+async function toPayOrder(data) {
+    await router.push({
+        path: '/pay_order',
+        query: {
+            equipment_id: data.subEquipmentId
+        }
+    })
+    mitt_bus.emit('payOrder', { from: 'order_list', data: data.orderId })
 }
 
 </script>
@@ -270,13 +282,13 @@ function copyOrderCode(orderCode) {
                                 <span>订单金额：</span>
                                 <span v-if="orderStatus(item) == '待议价'">订单未完成议价</span>
                                 <span class="font-FF4A2B font-600" v-else>￥{{ item[moneyKey(item)] }}</span>
-                                <span style="margin-left: 5px;" v-if="item.prepaidPayment">{{ getDictLabel('prepaid_payment', item.prepaidPayment) }}</span>
+                                <span style="margin-left: 5px" v-if="item.prepaidPayment">{{ getDictLabel('prepaid_payment', item.prepaidPayment) }}</span>
                             </div>
                             <div class="invoice flex-center" v-if="orderStatus(item) == '已完成'">
                                 <span>发票状态：</span>
                                 <span>{{ getDictLabel('bill_status', item.billStatus) }}</span>
                                 <el-tooltip content="无需开票：预存支付的订单，包括团队预存和个人预存" placement="top">
-                                    <el-icon style="margin-left: 5px; vertical-align: middle;"><QuestionFilled /></el-icon>
+                                    <el-icon style="margin-left: 5px; vertical-align: middle"><QuestionFilled /></el-icon>
                                 </el-tooltip>
                             </div>
                             <div v-if="item.clientManager">客户经理：{{ item.clientManager || '--' }}({{ item.clientManagerPhoneNumber || '--' }})</div>
@@ -284,7 +296,7 @@ function copyOrderCode(orderCode) {
                         </div>
                     </div>
                     <div class="button-box flex-center">
-                        <div class="custom-button" v-if="pay_order(item)" @click.stop="">立即支付</div>
+                        <div class="custom-button" v-if="pay_order(item)" @click.stop="toPayOrder(item)">立即支付</div>
                         <div class="default-button" v-if="upload_pack(item)" @click.stop="">上传包裹信息</div>
                         <div class="default-button" v-if="cancel_order(item)" @click.stop="">取消订单</div>
                         <div class="default-button" v-if="price_objection(item)" @click.stop="">价格疑异</div>
@@ -314,7 +326,7 @@ function copyOrderCode(orderCode) {
             <el-tooltip effect="dark" :content="`个人累计检测金额： ￥${ total_cost.client } / 团队累计检测金额： ￥${ total_cost.team } `" placement="top">
                 <el-icon><WarningFilled /></el-icon>
             </el-tooltip>
-            <span style="margin-left: 5px;">累计检测金额： </span>
+            <span style="margin-left: 5px">累计检测金额： </span>
             <span class="font-FF4A2B">￥{{ total_cost.total }} </span>
         </div>
         <el-pagination

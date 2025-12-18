@@ -1,7 +1,7 @@
 <script setup>
 import { useRoute, useRouter } from 'vue-router'
-import { useGetEquipmentInfo, useGetActives, useGetFieIdList, useAddOrder } from '@/api'
-import { nextTick, reactive, ref, toRaw, watch } from 'vue'
+import { useGetEquipmentInfo, useGetFieIdList, useAddOrder } from '@/api'
+import { nextTick, reactive, ref, watch } from 'vue'
 import { initFieIdList, changeRelevance, reduceTotalMoney, validateField } from '@/utils/order'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { getUserInfo } from '@/utils/auth'
@@ -33,7 +33,6 @@ const ref_fee_detail = ref(null)
 const ref_service_order = ref(null)
 const appoint_success = ref(null)
 const loading = ref(true)
-const actvie_flag = ref(false)
 const price_pop = ref(true)
 const show_groups_box = ref(true)
 const show_instructions = ref(true)
@@ -83,8 +82,6 @@ const appoint_data = ref({
     originalPrice: 0,//预约单原价
     totalCost: '',//订单总金额
 })
-//服务费用展示data
-const service_price_data = ref(null)
 
 watch(
     () => appoint_data.value.groups.length,
@@ -115,6 +112,7 @@ watch(
 //获取设备详情
 async function getEquipentInfo() {
     try {
+        loading.value = true
         const res = await useGetEquipmentInfo(route.query.equipment_id)
         res.data.quipment_pic = import.meta.env.VITE_FILE_API + res.data.fileList[0].url
         res.data.QRCode_pic = import.meta.env.VITE_FILE_API + res.data.qrCodeFileList[0].url
@@ -126,21 +124,8 @@ async function getEquipentInfo() {
 }
 getEquipentInfo()
 
-//判断是否可参与下单返现活动
-async function getActives() {
-    try {
-        const res = await useGetActives(2)
-        actvie_flag.value = res.data.activityStatusEnum == 2 ? true : false
-    }
-    catch(err) {
-        console.log(err)
-    }
-}
-getActives()
-
 // 获取设备字段信息
 async function getFieIdList() {
-    loading.value = true
     const global_params = {
         equipmentId: route.query.equipment_id,
         type: 1,
@@ -346,7 +331,7 @@ function reduceOrderPrice() {
 
 //打开费用明细弹框
 function openFeeDetail() {
-    if(Number(appoint_data.value.totalCost)) ref_fee_detail.value.init(appoint_data.value, service_price_data.value)
+    if(Number(appoint_data.value.totalCost)) ref_fee_detail.value.init(appoint_data.value)
 }
 
 // 滚动到指定id的div
@@ -372,6 +357,7 @@ async function scrollToTargetById(target_id) {
 
 // 下一步
 function nextStep() {
+    // mitt_bus.emit('updateFieldGroupValues') 是因为字段组的信息是单独用字段组id获取的，他的数据与appoint_data隔离开了
     try{
         const result = validateField(appoint_data.value)
         const scroll_list = []
@@ -453,12 +439,11 @@ function lastStep() {
 }
 
 //更新服务费用信息
-function updateServiceOrder(service_data, service_price) {
+function updateServiceOrder(service_data) {
     appoint_data.value = {
         ...appoint_data.value,
         ...service_data,
     }
-    service_price_data.value = service_price
     reduceOrderPrice()
 }
 
@@ -522,7 +507,17 @@ async function submitAppoint() {
         order_data.status = 1
         await useAddOrder(order_data)
         submit_loading.value = false
-        appoint_success.value.showAppointSuccess()
+        if(bargain_status.value) {
+            appoint_success.value.showAppointSuccess()
+        } else {
+            await router.push({
+                path: '/pay_order',
+                query: {
+                    equipment_id: order_data.equipmentId
+                }
+            })
+            mitt_bus.emit('payOrder', { from: 'appoint_order', data: order_data })
+        }
     }
     catch(err) {
         console.log(err)
@@ -559,7 +554,6 @@ async function submitAppoint() {
                 <span class="item-title">实验员</span>
                 <span class="font-5D5D5D">{{ equipment_info.testerName }}</span>
             </div>
-            <div class="info-item flex-center font-FF4A2B" v-if="actvie_flag"> * 完成订单即可参与下单返现活动返现 * </div>
         </div>
         <div style="flex: 1"></div>
         <div class="tips flex-center">

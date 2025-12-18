@@ -1,14 +1,15 @@
 <script setup>
 import { ref } from 'vue'
 import { reduceTotalMoney } from '@/utils/order'
-
+import { getUserInfo } from '@/utils/auth'
 
 const show = ref(false)
 const fee_detail = ref([])
 const bargain_status = ref(false)
 const total_cost = ref('0.00')
+const user_info = getUserInfo()//用户信息
 
-function init(appoint_data, service_price_data, discount_data) {
+function init(appoint_data, discount_data) {
     // 【字段费用】【服务费用】【优惠费用】数组的字段需要与 reduceTotalMoney 函数内定义的 fee_detail 的字段一致，且格式一致,如下：
     // [
     //     {
@@ -20,18 +21,54 @@ function init(appoint_data, service_price_data, discount_data) {
 
     let global_detail = []
     let groups_detail = []
-    let service_detail = []
+    let service_detail = [
+        {
+            sample_name: '服务费用',
+            price: '',
+            detail_list: [
+                { label: '是否加急', value: '不加急' },
+                { label: '是否回收', value: '不回收' },
+                { label: '邮寄运费', value: '' },
+            ],
+        }
+    ]
     let discount_detail = []
 
     if(appoint_data) {
+        //字段费用
         global_detail = reduceTotalMoney(appoint_data, 'global').fee_detail
         groups_detail = reduceTotalMoney(appoint_data, 'groups').fee_detail
         const global_bargain_status = reduceTotalMoney(appoint_data, 'groups').bargain_status
         const groups_bargain_status = reduceTotalMoney(appoint_data, 'groups').bargain_status
         bargain_status.value = global_bargain_status || groups_bargain_status
-    }
-    if(service_price_data) {
-        service_detail = service_price_data
+        //服务费用
+        let price = 0
+        if(appoint_data.ifUrgent == 1) {
+            const money = appoint_data.originalPrice * 0.5
+            price += money
+            service_detail[0].detail_list[0].value = `加急(￥${money.toFixed(2)})`
+        }
+        if(appoint_data.ifRecycle == 1) {
+            if(user_info.whiteFlag != 1 || user_info.recoveryFree != 1) {
+                price += 50
+                service_detail[0].detail_list[1].value = '回收(￥50)'
+            } else {
+                service_detail[0].detail_list[1].value = '客户优惠(￥0)'
+            }
+        }
+        if(appoint_data.postMethod == 1) {
+            if(appoint_data.postPayment == 1) {
+                price += 12
+                service_detail[0].detail_list[2].value = '运费到付(￥12)'
+            } else if(appoint_data.postPayment == 2) {
+                service_detail[0].detail_list[2].value = '运费自付(￥0)'
+            }
+        } else if(appoint_data.postMethod == 2) {
+            service_detail[0].detail_list[2].value = '优质客户上门取样(￥0)'
+        } else if(appoint_data.postMethod == 3) {
+            service_detail[0].detail_list[2].value = '自己送样(￥0)'
+        }
+        service_detail[0].price = price ? `￥${price.toFixed(2)}` : ''
     }
     if(discount_data) {
         discount_detail = discount_data

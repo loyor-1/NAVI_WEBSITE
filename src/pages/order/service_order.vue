@@ -39,17 +39,6 @@ const service_data = ref({
     onSiteSamplingTime: '',
     onSiteSamplingRemark: ''
 })
-const service_price = ref([
-    {
-        sample_name: '服务费用',
-        price: '',
-        detail_list: [
-            { label: '是否加急', value: '不加急' },
-            { label: '是否回收', value: '不回收' },
-            { label: '邮寄运费', value: '' },
-        ],
-    }
-])
 
 //加急费选项
 const urgent_options = [
@@ -100,7 +89,7 @@ watch(
         () => props.original_price,
     ],
     () => {
-        reduceServicePrice()
+        emits('updateServiceOrder', service_data.value)
     },
     {
         deep: true,
@@ -129,27 +118,9 @@ async function init(appoint_data) {
         } else {
             changePostMethod(1)
         }
-        reduceServicePrice()
+        emits('updateServiceOrder', service_data.value)
         loading.value = false
     })
-}
-
-//计算服务费用
-function reduceServicePrice() {
-    let price = 0
-    if(service_data.value.ifUrgent == 1) {
-        const money = props.original_price * 0.5
-        price += money
-        service_price.value[0].detail_list[0].value = money ? `加急(￥${money.toFixed(2)})` : '不加急'
-    }
-    if(service_data.value.ifRecycle == 1 && !(props.user_info.whiteFlag == 1 && props.user_info.recoveryFree == 1)) {
-        price += 50
-    }
-    if(service_data.value.postPayment == 1)  {
-        price += 12
-    }
-    service_price.value[0].price = price ? `￥${price.toFixed(2)}` : ''
-    emits('updateServiceOrder', service_data.value, service_price.value)
 }
 
 //判断是否可参与下单返现活动
@@ -198,8 +169,6 @@ async function getUnitList() {
 function changeUrgent(value) {
     if(service_data.value.ifUrgent == value) return
     service_data.value.ifUrgent = value
-    const price = props.original_price * value * 0.5
-    service_price.value[0].detail_list[0].value = price ? `加急(￥${price.toFixed(2)})` : '不加急'
 }
 
 //是否回收
@@ -213,18 +182,12 @@ function changeRecycle(value) {
         service_data.value.recycleAddress = props.user_info.address
         service_data.value.recycleContact = props.user_info.clientName
         service_data.value.recycleContactPhone = props.user_info.phoneNumber
-        if (props.user_info.whiteFlag == 1 && props.user_info.recoveryFree == 1) {
-            service_price.value[0].detail_list[1].value = '客户优惠(￥0)'
-        } else {
-            service_price.value[0].detail_list[1].value = '回收(￥50)'
-        }
     } else {
         service_data.value.provinceCode = ''
         service_data.value.recycleProvince = ''
         service_data.value.recycleAddress = ''
         service_data.value.recycleContact = ''
         service_data.value.recycleContactPhone = ''
-        service_price.value[0].detail_list[1].value = '不回收'
     }
 }
 //把区域码转成汉字
@@ -280,6 +243,7 @@ function changePostMethod(value) {
     if(service_data.value.postMethod == value) return
     service_data.value.postMethod = value
     if(value == 1) {
+        service_data.value.postPayment = 1
         service_data.value.addressId = unit_list.value.length ? unit_list.value[0].unitId : ''
         service_data.value.homeSamplingAddress = ''
         service_data.value.detailedAddress = ''
@@ -288,8 +252,8 @@ function changePostMethod(value) {
         service_data.value.onSiteSamplingDate = ''
         service_data.value.onSiteSamplingTime = ''
         service_data.value.onSiteSamplingRemark = ''
-        changePostPayment(1)
     } else if(value == 2) {
+        service_data.value.postPayment = undefined
         service_data.value.addressId = ''
         service_data.value.homeSamplingAddress = user_other_info.value.lastHomeSamplingAddress
         service_data.value.detailedAddress = user_other_info.value.lastDetailedAddress
@@ -298,8 +262,8 @@ function changePostMethod(value) {
         service_data.value.onSiteSamplingDate = dayjs().format('YYYY-MM-DD')
         service_data.value.onSiteSamplingTime = user_other_info.value.lastOnSiteSamplingTime || '9:00 ~ 12:00'
         service_data.value.onSiteSamplingRemark = user_other_info.value.lastOnSiteSamplingRemark
-        changePostPayment(3)//postPayment后端未定义3的值，仅作为前端标记使用，3为代表邮寄的方式与运费为上门取样
     } else if(value == 3) {
+        service_data.value.postPayment = undefined
         service_data.value.addressId = unit_list.value.length ? unit_list.value[0].unitId : ''
         service_data.value.homeSamplingAddress = ''
         service_data.value.detailedAddress = ''
@@ -308,31 +272,13 @@ function changePostMethod(value) {
         service_data.value.onSiteSamplingDate = ''
         service_data.value.onSiteSamplingTime = ''
         service_data.value.onSiteSamplingRemark = ''
-        changePostPayment(4)//postPayment后端未定义4的值，仅作为前端标记使用，4为代表邮寄的方式与运费为自己送样
     }
 }
 
 //更改【运费支付】
 function changePostPayment(value) {
     if(service_data.value.postPayment == value) return
-    switch(value) {
-        case 1:
-            service_price.value[0].detail_list[2].value = '运费到付(￥12)'
-            service_data.value.postPayment = 1
-            break
-        case 2:
-            service_price.value[0].detail_list[2].value = '运费自付(￥0)'
-            service_data.value.postPayment = 2
-            break
-        case 3:
-            service_price.value[0].detail_list[2].value = '优质客户上门取样(￥0)'
-            service_data.value.postPayment = undefined
-            break
-        case 4:
-            service_price.value[0].detail_list[2].value = '自己送样(￥0)'
-            service_data.value.postPayment = undefined
-            break
-    }
+    service_data.value.postPayment =  value
 }
 
 defineExpose({init})
@@ -636,5 +582,4 @@ defineExpose({init})
         background-color: #FFFFFF;
     }
 }
-
 </style>

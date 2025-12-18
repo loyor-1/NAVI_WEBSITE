@@ -1,7 +1,7 @@
 <script setup>
 import { useRouter } from 'vue-router'
 import { menu_list } from './menu_list'
-import { onMounted, onUnmounted, ref } from 'vue'
+import { nextTick, onMounted, onUnmounted, ref } from 'vue'
 import mitt_bus from '@/utils/mitt_bus'
 
 const router = useRouter()
@@ -19,13 +19,18 @@ function toPage(i) {
     router.push(i.path || '/')
 }
 
-function toPageByIndex(index) {
-    const menu = menu_list.find(item => item.index == index[0])
-    const page_data = menu.child.find(item => item.index == index)
+function toPageByIndex(data) {
+    const menu = menu_list.find(item => item.index == data.index[0])
+    const page_data = menu.child.find(item => item.index == data.index)
     if(page_data && page_data.path) {
         active_index.value = page_data.index
         localStorage.setItem('active_index', page_data.index)
-        router.push(page_data.path)
+        router.push({
+            path: page_data.path,
+            query: {
+                type: data.type
+            }
+        })
     } else {
         router.push('/404')
     }

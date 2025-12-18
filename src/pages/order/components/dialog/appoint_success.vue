@@ -46,8 +46,8 @@ defineExpose({showAppointSuccess})
         </div>
         <template #footer>
             <div class="footerButton">
-                <div class="button default-button" @click="toIndex()">返回首页</div>
-                <div class="button custom-button" @click="toGoods()">查看订单</div>
+                <div class="button default-button" @click="toIndex">返回首页</div>
+                <div class="button custom-button" @click="toGoods">查看订单</div>
             </div>
         </template>
     </el-dialog>

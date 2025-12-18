@@ -2,7 +2,7 @@
 import dayjs from 'dayjs'
 import relativeTime from 'dayjs/plugin/relativeTime'// 引入相对时间插件（用于更友好的描述，如“1天前”）
 import { ElMessageBox, ElMessage } from 'element-plus'
-import { reactive, ref, nextTick } from 'vue'
+import { reactive, ref, nextTick, onMounted, watch } from 'vue'
 import { getUserInfo } from '@/utils/auth'
 import { useGetCoupon, useGetMyAssets, useGetDownLoadUrl } from '@/api'
 import orderList from '../components/order_list.vue'
@@ -10,8 +10,10 @@ import orderDetail from '../components/order_detail.vue'
 import applyPrepayment from '../components/apply_prepayment.vue'
 import prepaymentLog from '../components/prepayment_log.vue'
 import mitt_bus from '@/utils/mitt_bus'
+import { useRoute } from 'vue-router'
 
 dayjs.extend(relativeTime);
+const route = useRoute()
 
 const coupon_loading = ref(true)
 const assets_loading = ref(true)
@@ -47,6 +49,20 @@ const team_coupon_data = ref({
     number: '',//可用折扣卷张数
 })
 
+watch(
+    route,
+    (to, from) => {
+        switch(to.query.type) {
+            case 'applyPrepayment':
+                changeShowPage(2)
+                break
+        }
+    },
+    {
+        deep: true,
+        immediate: true,
+    }
+)
 
 async function getCoupon() {
     coupon_loading.value = true

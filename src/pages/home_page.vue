@@ -3,7 +3,7 @@ import * as echarts from 'echarts';
 import { onMounted, ref } from 'vue'
 import { useGetCarouselList, useGetHotList } from '@/api'
 import { useRouter } from 'vue-router'
-import { left, right } from '@/utils/scroll_list.js'
+import { left, right } from '@/utils/scroll_list';
 import chinaMap from '@/utils/china_map.json';
 
 const router = useRouter()
@@ -178,6 +178,8 @@ async function getCarouselList() {
     }
     const res = await useGetCarouselList(params)
     res.rows.forEach(item => {
+        item.active = false
+        item.carousel_icon = import.meta.env.VITE_POET + item.realtePic
         item.carousel_path = import.meta.env.VITE_POET + item.picUrl
     })
     carousel_list.value = res.rows
@@ -187,6 +189,12 @@ getCarouselList()
 //更改轮播图显示状态
 function changeActive(index) {
     carousel.value.setActiveItem(index)
+}
+
+//检测轮播图滚动
+function carouselChange(new_index, old_index) {
+    carousel_list.value[new_index].active = true
+    carousel_list.value[old_index].active = false
 }
 
 //跳转页面
@@ -378,14 +386,19 @@ function toEquipmentDetail(equipment_id) {
 
 <template>
     <div class="carousel-box">
-        <div class="carousel-list">
-            <div class="list-item" :class="{'list-item-active': item.active, 'list-item-1': carousel_list.length <= 5, 'list-item-2': carousel_list.length > 5}" v-for="(item, index) in carousel_list" :key="item.carouselId" @mouseenter="changeActive(index)" @mouseleave="changeActive(item ,false)">
-                <span class="multi-line-ellipsis-1">{{ item.realteTitle }}</span>
-                <span class="multi-line-ellipsis-1 font-5D5D5D">{{ item.realteDesc }}</span>
+        <el-scrollbar>
+            <div class="carousel-list">
+                <div class="list-item flex-center" :class="{'list-item-active': item.active}" v-for="(item, index) in carousel_list" :key="item.carouselId" @mouseenter="changeActive(index)" @mouseleave="changeActive(item ,false)">
+                    <img class="carousel-icon" :src="item.carousel_icon" alt="">
+                    <div class="carousel-text">
+                        <div class="multi-line-ellipsis-1">{{ item.realteTitle }}</div>
+                        <div class="multi-line-ellipsis-1 font-5D5D5D">{{ item.realteDesc }}</div>
+                    </div>
+                </div>
             </div>
-        </div>
+        </el-scrollbar>
         <div class="carousel-pic">
-            <el-carousel v-if="carousel_list.length" ref="carousel" height="auto" :interval="2000">
+            <el-carousel v-if="carousel_list.length" ref="carousel" height="auto" :interval="2000" @change="carouselChange">
                 <el-carousel-item class="carousel-pic" v-for="item in carousel_list" :key="item.carouselId" @click="toPage(item)">
                     <el-image class="carousel-pic" v-if="item.picUrl" :src="item.carousel_path" />
                     <el-image class="carousel-pic-default" v-else src="@/assets/img/default_carousel.jpeg" />
@@ -558,26 +571,30 @@ function toEquipmentDetail(equipment_id) {
     display: flex;
     width: 80vw;
     min-width: 1440px;
+    height: calc(18vw + 2px);
+    min-height: 326px;
     margin: 10px auto 0;
     border: 1px solid #94C9FF;
     .carousel-list {
-        display: flex;
-        flex-direction: column;
-        width: 15%;
+        width: 12vw;
+        min-width: 214px;
+        height: 18vw;
+        min-height: 324px;
         background-color: #FFFFFF50;
         .list-item {
             cursor: default;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            width: 100%;
+            column-gap: 5px;
+            justify-content: flex-start;
+            height: 3.6vw;
+            min-height: 64px;
             padding: 0 20px;
-        }
-        .list-item-1 {
-            height: 20%;
-        }
-        .list-item-2 {
-            flex: 1;
+            .carousel-icon {
+                width: 40px;
+                height: 40px;
+            }
+            .carousel-text {
+                width: calc(100% - 40px);
+            }
         }
         .list-item:hover {
             background-color: #94C9FF50;
@@ -590,13 +607,13 @@ function toEquipmentDetail(equipment_id) {
         width: 68vw;
         min-width: 1224px;
         height: 18vw;
-        min-height: 320px;
+        min-height: 324px;
     }
     .carousel-pic-default {
         width: 68vw;
         min-width: 1224px;
         height: 18vw;
-        min-height: 320px;
+        min-height: 324px;
     }
 }
 
