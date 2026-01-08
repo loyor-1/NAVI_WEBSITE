@@ -10,10 +10,10 @@ const total_cost = ref('0.00')
 const user_info = getUserInfo()//用户信息
 
 function init(appoint_data, discount_data) {
-    // 【字段费用】【服务费用】【优惠费用】数组的字段需要与 reduceTotalMoney 函数内定义的 fee_detail 的字段一致，且格式一致,如下：
+    // 【优惠费用】数组的字段需要与 reduceTotalMoney 函数内定义的 fee_detail 的字段一致，且格式一致,如下：
     // [
     //     {
-    //         sample_name: '服务费用',
+    //         sample_name: '优惠费用',
     //         price: '',
     //         detail_list: [],
     //     }
@@ -32,7 +32,17 @@ function init(appoint_data, discount_data) {
             ],
         }
     ]
-    let discount_detail = []
+    let discount_detail = [
+        {
+            sample_name: '优惠费用',
+            price: '',
+            detail_list: [
+                { label: '订单折扣', value: '' },
+                { label: '优惠券', value: '' },
+                { label: '赠送金', value: '' },
+            ],
+        }
+    ]
 
     if(appoint_data) {
         //字段费用

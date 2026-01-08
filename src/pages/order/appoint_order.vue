@@ -516,7 +516,7 @@ async function submitAppoint() {
                     equipment_id: order_data.equipmentId
                 }
             })
-            mitt_bus.emit('payOrder', { from: 'appoint_order', data: order_data })
+            mitt_bus.emit('payOrder', order_data)
         }
     }
     catch(err) {

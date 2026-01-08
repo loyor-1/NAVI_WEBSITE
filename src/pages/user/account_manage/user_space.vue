@@ -2,18 +2,21 @@
 import dayjs from 'dayjs'
 import relativeTime from 'dayjs/plugin/relativeTime'// 引入相对时间插件（用于更友好的描述，如“1天前”）
 import { ElMessageBox, ElMessage } from 'element-plus'
-import { reactive, ref, nextTick, onMounted, watch } from 'vue'
+import { reactive, ref, nextTick, watch } from 'vue'
 import { getUserInfo } from '@/utils/auth'
-import { useGetCoupon, useGetMyAssets, useGetDownLoadUrl } from '@/api'
+import { useGetCoupon, useGetMyAssets, useGetDownLoadUrl, useGetApplyCertLog } from '@/api'
 import orderList from '../components/order_list.vue'
 import orderDetail from '../components/order_detail.vue'
 import applyPrepayment from '../components/apply_prepayment.vue'
 import prepaymentLog from '../components/prepayment_log.vue'
 import mitt_bus from '@/utils/mitt_bus'
-import { useRoute } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
+import { useUserStore } from '@/stores/user'
 
 dayjs.extend(relativeTime);
 const route = useRoute()
+const router = useRouter()
+const user_store = useUserStore()
 
 const coupon_loading = ref(true)
 const assets_loading = ref(true)
@@ -21,6 +24,7 @@ const download_file_list_dialog = ref(false)
 const child_ref = ref(null)//动态改变的子组件的实例
 const carousel_list = ref([])//轮播图列表
 const user_info = reactive(getUserInfo())//用户信息
+const user_cert_info = ref(null)//用户身份认证记录
 const user_assets = ref({})//用户资产数据
 const download_file_list = ref([])//下载实验结果列表
 
@@ -63,6 +67,21 @@ watch(
         immediate: true,
     }
 )
+
+//退出登录
+function logout() {
+    ElMessageBox.confirm('是否确认退出登录？', '温馨提示',
+        {
+            confirmButtonText: '确认',
+            cancelButtonText: '取消',
+            type: 'warning',
+        }
+    ).then(async () => {
+        await user_store.logout()
+        router.push('/')
+        window.location.reload()
+    })
+}
 
 async function getCoupon() {
     coupon_loading.value = true
@@ -174,6 +193,13 @@ async function getMyAssets() {
 }
 getMyAssets()
 
+async function getApplyCertLog() {
+    if(!user_info.certStatus) {
+        const res = await useGetApplyCertLog(user_info.clientId)
+        user_cert_info.value = res.data
+    }
+}
+getApplyCertLog()
 
 //更改显示的二级子界面
 function emitChangeShowPage(data) {
@@ -203,6 +229,9 @@ function changeShowPage(index) {
                     // 检查方法是否存在，避免报错
                     if (typeof child_ref.value.initHandle == 'function') {
                         child_ref.value.initHandle()
+                        if(route.query.type == 'applyPrepayment' && route.query.prestored_type) {
+                            child_ref.value.initPrestoredType(Number(route.query.prestored_type))
+                        }
                     } else {
                         console.warn('orderDetail 组件未暴露 initHandle 方法')
                     }
@@ -230,12 +259,10 @@ async function downloadResult(data) {
             '确认是否下载实验数据？',
             '温馨提示',
             {
-                confirmButtonText: '确定',
-                cancelButtonText: '取消',
-                type: 'warning',
+                type: 'success',
             }
         ).then(() => {
-            window.open('_blank' ,download_file_list.value[0])
+            window.open(download_file_list.value[0], '_blank')
         })
     } else if (download_file_list.value.length > 1) {
         download_file_list_dialog.value = true
@@ -273,9 +300,26 @@ function gopage(index) {
 <template>
     <div class="user-card flex-center">
         <div class="info-box flex-center">
-            <img class="user-avatar" :src="user_info.avatar_path" alt="">
+            <div class="flex-center" style="border: 1px solid #5D5D5D; border-radius: 50%;">
+                <el-image class="user-avatar" :src="user_info.avatar_path">
+                    <template #error>
+                        <img class="user-avatar" src="@/assets/img/avatar.png" alt="">
+                    </template>
+                </el-image>
+            </div>
             <div class="info flex-center">
-                <div class="font-middle">{{ user_info.clientName }}</div>
+                <div class="flex-center">
+                    <div class="edit-user-info flex-center">
+                        <span>{{ user_info.clientName }}</span>
+                        <el-icon class="font-middle"><Edit /></el-icon>
+                    </div>
+                    <el-tag class="cert" v-if="user_info.certStatus" :disable-transitions="true" effect="dark" type="success">已认证</el-tag>
+                    <el-tag class="cert cert-no" v-else-if="!user_cert_info" :disable-transitions="true" effect="dark" type="info" @click="router.push('/user/account_manage/identity_authentication')">未认证,前往认证</el-tag>
+                    <el-tag class="cert" v-else-if="user_cert_info.auditStatus == 1" :disable-transitions="true" effect="dark" type="warning">认证审核中</el-tag>
+                    <el-tag class="cert" v-else-if="user_cert_info.auditStatus == 2" :disable-transitions="true" effect="dark" type="success">已认证</el-tag>
+                    <el-tag class="cert cert-no" v-else-if="user_cert_info.auditStatus == 3" :disable-transitions="true" effect="dark" type="danger" @click="router.push('/user/account_manage/identity_authentication')">审核未通过，重新认证认证</el-tag>
+                    <div class="logout-button default-button font-mini" @click="logout">退出登录</div>
+                </div>
                 <div>TEL：{{ user_info.phoneNumber }}</div>
                 <div class="tips flex-center" @click="changeShowPage(2)">
                     <div class="pre-icon flex-center">申请预存</div>
@@ -288,27 +332,31 @@ function gopage(index) {
                 <div class="coupon flex-center" v-loading="coupon_loading">
                     <div>个人优惠券</div>
                     <div class="coupon-data flex-center">
-                        <div>
+                        <div v-if="user_coupon_data.money">
                             <span class="font-FF4A2B font-600">{{ user_coupon_data.money }}</span>
                             <span>元优惠券</span>
                         </div>
-                        <div>
+                        <div v-else>无定额优惠券</div>
+                        <div v-if="user_coupon_data.number">
                             <span class="font-FF4A2B font-600">{{ user_coupon_data.number }}</span>
                             <span>张折扣券</span>
                         </div>
+                        <div v-else>无折扣券</div>
                     </div>
                 </div>
                 <div class="coupon flex-center" v-loading="coupon_loading" v-if="user_info.teamId">
                     <div>团队优惠券</div>
                     <div class="coupon-data flex-center">
-                        <div>
+                        <div v-if="team_coupon_data.money">
                             <span class="font-FF4A2B font-600">{{ team_coupon_data.money }}</span>
                             <span>元优惠券</span>
                         </div>
-                        <div>
+                        <div v-else>无定额优惠券</div>
+                        <div v-if="team_coupon_data.number">
                             <span class="font-FF4A2B font-600">{{ team_coupon_data.number }}</span>
                             <span>张折扣券</span>
                         </div>
+                        <div v-else>无折扣券</div>
                     </div>
                 </div>
                 <div class="coupon flex-center" v-else>
@@ -319,8 +367,8 @@ function gopage(index) {
                     </div>
                 </div>
             </div>
-            <div class="scroll-box" v-loading="coupon_loading">
-                <el-carousel v-if="carousel_list.length" indicator-position="none" arrow="never" height="60px">
+            <div class="scroll-box" v-if="carousel_list.length" v-loading="coupon_loading">
+                <el-carousel indicator-position="none" arrow="never" height="60px">
                     <el-carousel-item v-for="item in carousel_list" :key="item.couponId">
                         <div class="red-packet-info">
                             <div class="flex-center">
@@ -439,6 +487,33 @@ function gopage(index) {
             justify-content: space-around;
             align-items: flex-start;
             height: 150px;
+            .edit-user-info  {
+                cursor: pointer;
+            }
+            .edit-user-info:hover {
+                color: #94C9FF;
+            }
+            .cert {
+                cursor: default;
+            }
+            .cert-no {
+                cursor: pointer;
+            }
+            .cert-no:hover {
+                color: #111111;
+                border-color: #111111;
+            }
+            .logout-button {
+                height: 100%;
+                margin-left: 5px;
+                padding: 0 10px;
+                font-weight: normal;
+            }
+            .logout-button:hover {
+                color: #FF4A2B;
+                border-color: #FF4A2B;
+                background-color: #FF4A2B30;
+            }
             .tips {
                 cursor: pointer;
                 padding: 10px;

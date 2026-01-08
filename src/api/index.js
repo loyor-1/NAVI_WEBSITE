@@ -87,6 +87,14 @@ export function useGetUserInfoByToken() {
     });
 }
 
+// 团队信息
+export function useGetTeamInfo(team_id) {
+    return service({
+        method: 'get',
+        url: '/system/team/' + team_id,
+    });
+}
+
 //客户退出登录
 export function useLogout() {
     return service({
@@ -398,4 +406,84 @@ export function useAddOrder(data) {
         url: '/equipment/equipmentSubscribe/add',
         data,
     });
+}
+
+//支付宝支付下单
+export function ZFBPreorderAction(data) {
+    return service({
+        url: '/equipment/alipay/prePay',
+        method: 'post',
+        data,
+    })
+}
+
+//支付宝支付订单查询
+export function queryAliOrderByOutTradeNo(params) {
+    return service({
+        url: '/equipment/alipay/queryOrderByOutTradeNo',
+        method: 'get',
+        params,
+    })
+}
+
+//pc端生成微信支付二维码
+export function createWXOrder(data) {
+    return service({
+        url: '/equipment/weChatNativePay/createOrder',
+        method: 'post',
+        data,
+    })
+}
+
+//微信根据订单号查询订单支付状态
+export function queryOrderByOutTradeNo(params) {
+    return service({
+        url: '/equipment/weChatNativePay/queryOrderByCode',
+        method: 'get',
+        params,
+    })
+}
+
+//微信根据预约id关闭订单
+export function closeByWxOutTradeNo(params) {
+    return service({
+        url: '/equipment/weChatNativePay/closeByOutTradeNo',
+        method: 'get',
+        params,
+    })
+}
+
+//订单取消
+export function cancelOrder(data) {
+    return service({
+        url: '/equipment/order/cancelOrder',
+        method: 'put',
+        data
+    })
+}
+
+//省市-学院接口
+export function useGetSchoolList(params) {
+    return service({
+        url: 'system/school/list',
+        method: 'get',
+        params,
+    })
+}
+
+//客户身份认证
+export function useApplyCert(data) {
+    return service({
+        url: '/system/clientCertApply',
+        method: 'post',
+        data,
+    })
+}
+
+//获取客户认证记录
+export function useGetApplyCertLog(id) {
+    return service({
+        url: '/system/clientCertApply/' + id,
+        method: 'get'
+    })
 }

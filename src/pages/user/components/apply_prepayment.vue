@@ -288,6 +288,10 @@ async function initHandle(apply_type, invoice_order_list, invoice_amount) {
     loading.value = false
 }
 
+function initPrestoredType(prestored_type) {
+    form_data.value.prestoredType = prestored_type
+}
+
 //选择【预存有礼】
 function setStoredCourtesy(e) {
     if(e.length >= 2) {
@@ -517,7 +521,7 @@ function openExample() {
     window.open(url, '_blank')
 }
 
-defineExpose({ initHandle })
+defineExpose({ initHandle, initPrestoredType })
 </script>
 
 <template>

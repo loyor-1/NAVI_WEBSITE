@@ -83,6 +83,14 @@ const router = createRouter({
           component: () => import('@/pages/user/account_manage/user_space.vue'),
         },
         {
+          path: 'account_manage/identity_authentication',
+          name: 'identity_authentication',//身份认证
+          meta: {
+            require_token: true
+          },
+          component: () => import('@/pages/user/account_manage/identity_authentication.vue'),
+        },
+        {
           path: 'order_manage/user_order_list',
           name: 'user_order_list',//个人订单
           meta: {

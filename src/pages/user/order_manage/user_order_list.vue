@@ -4,6 +4,9 @@ import { useGetOrderList } from '@/api'
 import { moneyKey, orderStatus } from '@/utils/order'
 import { ElMessage } from 'element-plus'
 import mitt_bus from '@/utils/mitt_bus'
+import { useRouter } from 'vue-router'
+
+const router = useRouter()
 
 const loading = ref(false)
 const total = ref(0)
@@ -210,14 +213,14 @@ function copyOrderCode(orderCode) {
 }
 
 // 前往支付订单
-async function toPayOrder(data) {
-    await router.push({
+function toPayOrder(data) {
+    router.push({
         path: '/pay_order',
         query: {
-            equipment_id: data.subEquipmentId
+            equipment_id: data.subEquipmentId,
+            order_id: data.orderId,
         }
     })
-    mitt_bus.emit('payOrder', { from: 'order_list', data: data.orderId })
 }
 
 </script>
@@ -449,7 +452,7 @@ async function toPayOrder(data) {
                 font-size: clamp(10px, 0.6vw, 24px);
                 .new-icon {
                     position: absolute;
-                    top: -50%;
+                    top: -35%;
                     right: 0;
                     width: 25%;
                 }

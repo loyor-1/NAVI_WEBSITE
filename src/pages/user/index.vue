@@ -28,7 +28,7 @@ function toPageByIndex(data) {
         router.push({
             path: page_data.path,
             query: {
-                type: data.type
+                ...data
             }
         })
     } else {

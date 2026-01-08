@@ -218,7 +218,7 @@ export function reduceTotalMoney(list, type) {
                 }
             } else if([12].includes(item.fieIdType)) {
                 // 【字段组】
-                if(item.formulaDetailList) {
+                if(item.fieldGroupValues && item.formulaDetailList && item.reservePointMethod) {
                     const field_groups_result = reduceFieldGroupsTotalMoney(item.fieldGroupValues, item.formulaDetailList, item.reservePointMethod)
                     total = field_groups_result.field_groups_bargain_status ? '待议价' : Number(field_groups_result.field_groups_price) * Number(item.elementPrice)
                 } else {
@@ -348,7 +348,7 @@ export function reduceTotalMoney(list, type) {
                     }
                 } else if([12].includes(i.fieIdType)) {
                     // 【字段组】
-                    if(i.formulaDetailList) {
+                    if(i.fieldGroupValues && i.formulaDetailList && i.reservePointMethod) {
                         const field_groups_result = reduceFieldGroupsTotalMoney(i.fieldGroupValues, i.formulaDetailList, i.reservePointMethod)
                         total = field_groups_result.field_groups_bargain_status ? '待议价' : Number(field_groups_result.field_groups_price) * Number(i.elementPrice)
                     } else {
@@ -451,27 +451,47 @@ function reduceFieldGroupsTotalMoney(field_list, formula_list, reserve_point_met
     })
 
     if(!bargain_status) {
-        const abs_regex = /\|([^|]+)\|/g // 使用正则表达式找到所有绝对值部分
-        let match;
-        let processed_expression = JSON.parse(JSON.stringify(formula))
-	    // 遍历所有匹配的绝对值表达式
-	    while ((match = abs_regex.exec(formula)) !== null) {
-            const abs_expression = match[1]; // 绝对值内部的表达式
-            // 计算绝对值内部表达式
-            const inner_result = math.evaluate(abs_expression)
-            // 计算绝对值
-            const abs_result = Math.abs(inner_result)
-            // 替换原表达式中的绝对值部分
-            processed_expression = processed_expression.replace(`|${abs_expression}|`, abs_result.toString())
-        }
-	    // 计算最终结果
-        let result = math.evaluate(processed_expression)
-        //reservePointMethod 1 保留两位 2向上取整
-	    if(reserve_point_method == 1){
-	    	result = math.format(result, { notation: 'fixed', precision: 2 });
-	    } else {
-	    	result = math.ceil(result);
-	    }
+        // 使用正则表达式找到所有绝对值部分
+		const abs_regex = /\|([^|]+)\|/g 
+		const abs_matches = []
+		let match
+		// 重置 lastIndex 确保从头匹配
+		abs_regex.lastIndex = 0
+		while ((match = abs_regex.exec(formula)) !== null) {
+		    abs_matches.push({
+		        fullMatch: match[0],    // 完整的绝对值片段（如 |0|）
+		        innerExpr: match[1],    // 绝对值内部表达式（如 0）
+		        start: match.index,     // 匹配起始位置
+		        end: match.index + match[0].length // 匹配结束位置
+		    })
+		}
+		abs_matches.reverse().forEach(item => {
+		    // 计算绝对值内部表达式
+		    const inner_result = math.evaluate(item.innerExpr)
+		    // 计算绝对值
+		    const abs_result = math.abs(inner_result)
+		    // 精准替换：按位置截取字符串（避免全局替换）
+		    formula = formula.substring(0, item.start) + abs_result + formula.substring(item.end)
+		})
+
+		// 若最终是空字符串，设为 "0"（避免 evaluate 解析空值）
+		if (!formula) formula = '0'
+		// 5. 用 try/catch 包裹 evaluate，避免解析失败崩溃
+		let result = 0
+		try {
+		  result = math.evaluate(formula)
+		  // 处理 NaN 或 Infinity
+		  if (isNaN(result) || result === Infinity) result = 0
+		} catch (err) {
+		  console.error('表达式解析失败！', '错误信息：', err, '非法表达式：', formula)
+		  result = 0
+		}
+		//reservePointMethod 1 保留两位 2向上取整
+		if(reserve_point_method == 1){
+			result = math.format(result, { notation: 'fixed', precision: 2 })
+		}else{
+			result = math.ceil(result)
+		}
         return {
             field_groups_price: (result !== NaN && result !== undefined && result !== 'Infinity') ? result : 0,
             field_groups_bargain_status: false,
@@ -512,23 +532,25 @@ export function validateField(list) {
                 if(i.isRequired != 1 || [2, 10, 11, 12, 13].includes(i.fieIdType)) {
                     i.validate = true
                 } else {
+                    const boolean_number = [6].includes(i.fieIdType) && (i.fieIdValue == undefined || i.fieIdValue == null)
                     const boolean_range = [9].includes(i.fieIdType) && (i.fieIdValue == undefined || i.fieIdValue == null || i.fieldValueRange == undefined || i.fieldValueRange == null || (i.fieIdValue == i.fieldValueRange))
-                    const boolean_other = ![9].includes(i.fieIdType) && !i.fieIdValue
-                    if(boolean_range || boolean_other) {
+                    const boolean_other = ![6, 9].includes(i.fieIdType) && !i.fieIdValue
+                    if(boolean_number || boolean_range || boolean_other) {
                         global_valid = false
                         message = message ? message : `【全局字段】 ${i.fieIdName} 填写不规范`
                     }
-                    i.validate = !(boolean_range || boolean_other)
+                    i.validate = !(boolean_number || boolean_range || boolean_other)
                 }
             })
         } else if(item.isRequired == 1 && item.fieIdType != 12){
+            const boolean_number = [6].includes(item.fieIdType) && (item.fieIdValue == undefined || item.fieIdValue == null)
             const boolean_range = [9].includes(item.fieIdType) && (item.fieIdValue == undefined || item.fieIdValue == null || item.fieldValueRange == undefined || item.fieldValueRange == null || (item.fieIdValue == item.fieldValueRange))
-            const boolean_other = ![9].includes(item.fieIdType) && !item.fieIdValue
-            if(boolean_range || boolean_other) {
+            const boolean_other = ![6, 9].includes(item.fieIdType) && !item.fieIdValue
+            if(boolean_number || boolean_range || boolean_other) {
                 global_valid = false
                 message = message ? message : `【全局字段】 ${item.fieIdName} 填写不规范`
             }
-            item.validate = !(boolean_range || boolean_other)
+            item.validate = !(boolean_number || boolean_range || boolean_other)
         }
     })
 
@@ -558,23 +580,25 @@ export function validateField(list) {
                     if(field_group_i.isRequired != 1 || [2, 10, 11, 12, 13].includes(field_group_i.fieIdType)) {
                         field_group_i.validate = true
                     } else {
+                        const boolean_number = [6].includes(field_group_i.fieIdType) && (field_group_i.fieIdValue == undefined || field_group_i.fieIdValue == null)
                         const boolean_range = [9].includes(field_group_i.fieIdType) && (field_group_i.fieIdValue == undefined || field_group_i.fieIdValue == null || field_group_i.fieldValueRange == undefined || field_group_i.fieldValueRange == null || (field_group_i.fieIdValue == field_group_i.fieldValueRange))
-                        const boolean_other = ![9].includes(field_group_i.fieIdType) && !field_group_i.fieIdValue
-                        if(boolean_range || boolean_other) {
+                        const boolean_other = ![6, 9].includes(field_group_i.fieIdType) && !field_group_i.fieIdValue
+                        if(boolean_number || boolean_range || boolean_other) {
                             groups_valid = false
                             message = message ? message : `【${item.sample_name}组样品】 ${field_group_i.fieIdName} 填写不规范`
                         }
-                        field_group_i.validate = !(boolean_range || boolean_other)
+                        field_group_i.validate = !(boolean_number || boolean_range || boolean_other)
                     }
                 })
             } else if(list_i.isRequired == 1 && list_i.fieIdType != 12){
+                const boolean_number = [6].includes(list_i.fieIdType) && (list_i.fieIdValue == undefined || list_i.fieIdValue == null)
                 const boolean_range = [9].includes(list_i.fieIdType) && (list_i.fieIdValue == undefined || list_i.fieIdValue == null || list_i.fieldValueRange == undefined || list_i.fieldValueRange == null || (list_i.fieIdValue == list_i.fieldValueRange))
-                const boolean_other = ![9].includes(list_i.fieIdType) && !list_i.fieIdValue
-                if(boolean_range || boolean_other) {
+                const boolean_other = ![6, 9].includes(list_i.fieIdType) && !list_i.fieIdValue
+                if(boolean_number || boolean_range || boolean_other) {
                     groups_valid = false
                     message = message ? message : `【${item.sample_name}组样品】 ${list_i.fieIdName} 填写不规范`
                 }
-                list_i.validate = !(boolean_range || boolean_other)
+                list_i.validate = !(boolean_number || boolean_range || boolean_other)
             }
         })
     })

@@ -204,7 +204,7 @@ async function downloadFile(data) {
         }
         const res = await useGetDownLoadUrl(obj)
         const url = res.msg
-        window.open('_blank', url)
+        window.open(url, '_blank')
     }
 }
 

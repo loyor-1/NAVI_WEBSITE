@@ -80,8 +80,13 @@ async function toPage(index, type) {
         <div class="slider"></div>
         <div class="user-box">
           <div class="user-box-main" v-if="user_info" @mouseenter="changeMenuSwitch('show')" @mouseleave="changeMenuSwitch('hide')">
-            <img class="avatar" v-if="user_info.avatar" :src="user_info.avatar_path" alt="">
-            <img class="avatar" v-else src="@/assets/img/default_avatar.png" alt="">
+            <div class="flex-center" style="border: 1px solid #cccccc; border-radius: 50%;">
+              <el-image class="avatar" :src="user_info.avatar_path">
+                <template #error>
+                  <img class="avatar" src="@/assets/img/avatar.png" alt="">
+                </template>
+              </el-image>
+            </div>
             <div class="user-name multi-line-ellipsis-1">{{ user_info.clientName }}</div>
           </div>
           <div class="user-box-main" v-else>
@@ -233,7 +238,6 @@ async function toPage(index, type) {
         .avatar {
           width: 50px;
           height: 50px;
-          border: 1px solid #cccccc;
           border-radius: 50%;
         }
         .user-name {
