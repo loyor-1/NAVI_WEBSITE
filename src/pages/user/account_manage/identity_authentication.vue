@@ -356,7 +356,7 @@ function validateFormDate() {
                 </div>
             </el-form-item>
             <el-form-item :label="form_data.certType === 1 ? '校园卡正面:' : form_data.certType === 2 ? '学生证正面:' : form_data.certType === 3 ? '学习网截图' : ''" prop="upList">
-                <uploadImage ref="upload_image_upload" fileType="jpg,png,jpeg,JPG,PNG,JPEG" @updateValue="updateUpList"></uploadImage>
+                <uploadImage ref="upload_image_upload" @updateValue="updateUpList"></uploadImage>
             </el-form-item>
             <el-form-item v-if="form_data.certType !== 3 && form_data.certType !== 4" :label="form_data.certType === 1 ? '校园卡反面:' : form_data.certType === 2 ? '学生证反面:' : ''" prop="downList">
                 <uploadImage ref="upload_image_download" @updateValue="updateDownList"></uploadImage>

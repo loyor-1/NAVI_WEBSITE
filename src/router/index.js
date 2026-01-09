@@ -4,14 +4,6 @@ import { getToken } from '@/utils/auth'
 const router = createRouter({
   history: createWebHistory(),
   routes: [
-    {
-      path: '/login',
-      name: 'login',
-      meta: {
-        require_token: false
-      },
-      component: () => import('@/pages/login.vue')
-    },
     // 首页板块
     {
       path: '/',
@@ -90,6 +82,15 @@ const router = createRouter({
           },
           component: () => import('@/pages/user/account_manage/identity_authentication.vue'),
         },
+        
+        {
+          path: 'account_manage/edit_user_info',
+          name: 'edit_user_info',//编辑个人信息
+          meta: {
+            require_token: true
+          },
+          component: () => import('@/pages/user/account_manage/edit_user_info.vue'),
+        },
         {
           path: 'order_manage/user_order_list',
           name: 'user_order_list',//个人订单
@@ -123,6 +124,15 @@ const router = createRouter({
           component: () => import('@/pages/user/invoice_manage/invoice_list.vue'),
         },
       ]
+    },
+    //登录页
+    {
+      path: '/login',
+      name: 'login',
+      meta: {
+        require_token: false
+      },
+      component: () => import('@/pages/login.vue')
     },
     // 404 路由配置 - 必须放在最后！
     {

@@ -5,8 +5,10 @@ import { getDictLabel } from '@/api/dict'
 import { ElMessage } from 'element-plus'
 import applyPrepayment from '../components/apply_prepayment.vue'
 import { getUserInfo } from '@/utils/auth'
+import { useRoute } from 'vue-router'
 
 const instance = getCurrentInstance()
+const route = useRoute()
 
 const loading = ref(false)
 const ref_apply_invoice = ref(null)
@@ -103,6 +105,24 @@ watch(
         getOrderList()
     },
     { 
+        deep: true,
+    }
+)
+
+watch(
+    () => route.query,
+    (newValue) => {
+        switch(newValue.type) {
+            case '立即还款':
+                changeOperate(0)
+                break
+            case '开发票':
+                changeOperate(1)
+                break
+        }
+    },
+    {
+        immediate: true,
         deep: true,
     }
 )

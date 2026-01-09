@@ -1,7 +1,7 @@
 <script setup>
 import axios from 'axios'
 import { ElMessage } from 'element-plus'
-import { defineProps, defineEmits, ref } from 'vue'
+import { defineProps, defineEmits, ref, onMounted } from 'vue'
 import { getToken } from '@/utils/auth'
 import { useGetFileUUID, useBlockUploadSuccess } from '@/api'
 

@@ -8,7 +8,7 @@ const props = defineProps({
     limit: {
         typeof: [Number],
         default: 1,
-    }
+    },
 })
 const emits = defineEmits(['updateValue'])
 
@@ -16,6 +16,8 @@ const action = import.meta.env.VITE_BASE_API + '/file/upload'
 const headers = {
     Authorization: "Bearer " + getToken()
 }
+
+const upload_dom = ref(null)
 
 const file_list = ref([])
 
@@ -41,7 +43,6 @@ function handleUploadError(err) {
 
 // 上传成功回调
 function handleUploadSuccess(res, file, fileList) {
-    ElMessage.success("上传成功")
     file_list.value = []
     file_list.value.push({ name: res.data.name, url: import.meta.env.VITE_FILE_API + res.data.url })
     const result_list = file_list.value.map(item => {
@@ -59,6 +60,7 @@ function handleRemove(file, fileList) {
 
 function cleanList() {
     file_list.value = []
+    upload_dom.value.clearFiles()
 }
 
 defineExpose({ cleanList })
@@ -67,6 +69,8 @@ defineExpose({ cleanList })
 
 <template>
     <el-upload
+      ref="upload_dom"
+      v-model="file_list"
       :action="action"
       :limit="props.limit"
       :headers="headers"
@@ -78,7 +82,6 @@ defineExpose({ cleanList })
       multiple
       list-type="picture-card"
     >
-        
         <el-icon class="el-icon--upload"><upload-filled /></el-icon>
     </el-upload>
 </template>

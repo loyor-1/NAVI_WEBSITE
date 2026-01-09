@@ -1,5 +1,5 @@
 <script setup>
-import { queryOrderByOutTradeNo , cancelOrder , closeByWxOutTradeNo } from "@/api"
+import { queryOrderByOutTradeNo , useCancelOrder , closeByWxOutTradeNo } from "@/api"
 import { ElMessage } from "element-plus"
 import { nextTick, ref } from "vue"
 
@@ -40,7 +40,7 @@ function init() {
                             emits("closeWxPay", false)
                         }else{
                             if(props.WX_pay_order.orderId){
-                                cancelOrder({ orderId: props.WX_pay_order.orderId, cancelFlag: 1 }).then(() => {
+                                useCancelOrder({ orderId: props.WX_pay_order.orderId, cancelFlag: 1 }).then(() => {
                                     emits("closeWxPay", true)
                                 })
                             }else{

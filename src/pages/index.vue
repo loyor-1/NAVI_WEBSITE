@@ -42,8 +42,6 @@ function logout() {
     }
   ).then(async () => {
     await user_store.logout()
-    router.push('/')
-    window.location.reload()
   })
 }
 

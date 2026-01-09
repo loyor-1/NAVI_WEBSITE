@@ -177,7 +177,8 @@ export function useGetFieldGroupList(id) {
 export function useGetFileUUID() {
     return service({
         url: '/file/uuid',
-        method: 'get'
+        method: 'get',
+        no_debounce: true,
     })
 }
 
@@ -453,15 +454,6 @@ export function closeByWxOutTradeNo(params) {
     })
 }
 
-//订单取消
-export function cancelOrder(data) {
-    return service({
-        url: '/equipment/order/cancelOrder',
-        method: 'put',
-        data
-    })
-}
-
 //省市-学院接口
 export function useGetSchoolList(params) {
     return service({
@@ -469,6 +461,15 @@ export function useGetSchoolList(params) {
         method: 'get',
         params,
     })
+}
+
+//客户编辑个人信息
+export function useUpdateUserInfo(data) {
+    return service({
+        method: 'put',
+        url: '/system/client',
+        data,
+    });
 }
 
 //客户身份认证
@@ -486,4 +487,75 @@ export function useGetApplyCertLog(id) {
         url: '/system/clientCertApply/' + id,
         method: 'get'
     })
+}
+
+//修改手机号---验证码
+export function useGetPhoneSMSCode(params) {
+    return service({
+        method: 'get',
+        url: '/system/client/send',
+        params,
+    });
+}
+
+//修改登录密码---验证码
+export function useGetPasswordSMSCode(params) {
+    return service({
+        url: '/system/client/sendPwdCode',
+        method: 'get',
+        params,
+    })
+}
+
+//更改手机号
+export function useUpdatePhone(params) {
+    return service({
+        method: 'get',
+        url: '/system/client/updatePhone',
+        params,
+    });
+}
+
+//设置/修改密码
+export function useSetPassword(data) {
+    return service({
+        url: '/system/client/setPwdOrEdit',
+        method: 'post',
+        data,
+    })
+}
+
+//上传包裹
+export function useUploadPackage(data) {
+    return service({
+        url: '/equipment/order/uploadPackage',
+        method: 'put',
+        data,
+    })
+}
+
+//取消订单
+export function useCancelOrder(data) {
+    return service({
+        url: '/equipment/order/cancelOrder',
+        method: 'put',
+        data
+    })
+}
+
+//申请售后
+export function useAfterSale(data) {
+    return service({
+        url: '/equipment/order/clientSubmitAfterSafes',
+        method: 'post',
+        data
+    })
+}
+
+//再来一单
+export function useAgainOrder(id) {
+    return service({
+        method: 'get',
+        url: `/equipment/order/againOrder/${id}`,
+    });
 }

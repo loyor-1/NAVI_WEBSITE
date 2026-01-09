@@ -1,14 +1,21 @@
 <script setup>
+import uploadImage from '@/components/upload_image.vue'
 import { ref, reactive, watch } from 'vue'
-import { useGetOrderList } from '@/api'
+import { useGetOrderList, useUploadPackage, useCancelOrder, useAfterSale } from '@/api'
 import { moneyKey, orderStatus } from '@/utils/order'
-import { ElMessage } from 'element-plus'
+import { ElMessage, ElMessageBox } from 'element-plus'
 import { useRouter } from 'vue-router'
 
 const emit = defineEmits(['emitChangeShowPage'])
 const router = useRouter()
 
+
+
+const upload_image = ref(null)
+const package_form = ref(null)
 const loading = ref(false)
+const package_dialog = ref(false)
+const package_loading = ref(false)
 const total = ref(0)
 const status_value = ref(0)
 const order_list = ref([])//订单列表
@@ -53,6 +60,24 @@ const status_list = reactive([
 	{ label: '已完成',  value: -4 },
 	{ label: '申请开票', value: 9},
 ])
+
+//上传包裹接口参数
+const package_data = ref({
+    orderId: undefined,
+    packageTransportDocument: '',
+    packageTransportList: []
+})
+const package_rules = ref({
+    packageTransportDocument: [
+        { required: true, trigger: "blur", message: "请输入包裹运单号" }
+    ]
+})
+
+//售后相关
+const after_sale_data = ref({
+    orderId: undefined,
+    afterSalesDesc: ''
+})
 
 watch(
     params,
@@ -205,6 +230,93 @@ function toPayOrder(data) {
     })
 }
 
+//打开上传包裹信息弹框
+function uploadPackage(data) {
+    package_data.value.orderId = data.orderId
+    package_dialog.value = true
+}
+
+//关闭上传包裹信息弹框
+function closePackageDialog() {
+    package_form.value.resetFields()
+    upload_image.value.cleanList()
+}
+
+//上传包裹照片
+function updatePackageTransport(list) {
+    package_data.value.packageTransportList = list
+}
+
+// 确认上传包裹
+function submitPackage() {
+    package_form.value.validate(async valid => {
+        if(valid) {
+            try {
+                package_loading.value = true
+                await useUploadPackage(package_data.value)
+                package_dialog.value = false
+                package_loading.value = false
+                ElMessage.success('包裹信息上传成功！')
+                await getOrderList()
+            }
+            catch(err) {
+                console.log(err)
+                package_loading.value = false
+            }
+        }
+    })
+}
+
+//取消订单
+function cancelOrder(data) {
+    ElMessageBox.confirm('是否确认取消该订单？', '温馨提示', { type: 'warning' }).then(async () => {
+        try {
+            loading.value = true
+            const cancel_data = {
+                orderId: data.orderId
+            }
+            await useCancelOrder(cancel_data)
+            await getOrderList()
+            ElMessage.success('取消订单成功！')
+        }
+        catch(err) {
+            console.log(err)
+            loading.value = false
+        }
+    })
+}
+
+//价格疑异
+function priceIssue(data) {
+    ElMessageBox.confirm('是否确认提交价格疑异？', '温馨提示', { type: 'warning' }).then(async () => {
+        try {
+            loading.value = true
+            const price_issue_data = {
+                orderId: data.orderId,
+                afterSalesDesc: '价格疑异',
+            }
+            await useAfterSale(price_issue_data)
+            await getOrderList()
+            ElMessage.success('取消订单成功！')
+        }
+        catch(err) {
+            console.log(err)
+            loading.value = false
+        }
+    })
+}
+
+//再来一单
+function againOrder(data) {
+    router.push({
+        path: '/appoint_order',
+        query: {
+            order_id: data.orderId,
+            equipment_id: data.subEquipmentId
+        }
+    })
+}
+
 </script>
 
 <template>
@@ -269,10 +381,10 @@ function toPayOrder(data) {
                         </div>
                         <div class="button-box flex-center">
                             <div class="custom-button" v-if="pay_order(item)" @click.stop="toPayOrder(item)">立即支付</div>
-                            <div class="default-button" v-if="upload_pack(item)" @click.stop="">上传包裹信息</div>
-                            <div class="default-button" v-if="cancel_order(item)" @click.stop="">取消订单</div>
-                            <div class="default-button" v-if="price_objection(item)" @click.stop="">价格疑异</div>
-                            <div class="custom-button" v-if="again_order(item)" @click.stop="">再来一单</div>
+                            <div class="default-button" v-if="upload_pack(item)" @click.stop="uploadPackage(item)">上传包裹信息</div>
+                            <div class="default-button" v-if="cancel_order(item)" @click.stop="cancelOrder(item)">取消订单</div>
+                            <div class="default-button" v-if="price_objection(item)" @click.stop="priceIssue(item)">价格疑异</div>
+                            <div class="custom-button" v-if="again_order(item)" @click.stop="againOrder(item)">再来一单</div>
                             <div class="default-button" v-if="show_invoice(item)" @click.stop="">查看发票</div>
                             <!-- 弹出确认结果弹框 -->
                             <div class="custom-button" v-if="confirm_result(item)" @click.stop="">
@@ -310,6 +422,29 @@ function toPayOrder(data) {
               :total="total"
             />
         </div>
+
+        <!-- 上传包裹信息 -->
+        <el-dialog
+          v-model="package_dialog"
+          title="上传包裹信息"
+          width="700px"
+          :close-on-click-modal="false"
+          :close-on-press-escape="false"
+          @close="closePackageDialog"
+        >
+            <el-form ref="package_form" :model="package_data" :rules="package_rules" label-width="120px">
+                <el-form-item label="包裹运单号" prop="packageTransportDocument">
+                    <el-input v-model="package_data.packageTransportDocument" placeholder="请输入包裹运单号"></el-input>
+                </el-form-item>
+                <el-form-item label="包裹照片" prop="packageTransportList">
+                    <uploadImage ref="upload_image" :limit="3" @updateValue="updatePackageTransport"></uploadImage>
+                </el-form-item>
+            </el-form>
+            <template #footer>
+                <el-button :loading="package_loading" type="primary" plain @click="package_dialog = false">取消</el-button>
+                <el-button :loading="package_loading" type="primary" @click="submitPackage">提交</el-button>
+            </template>
+        </el-dialog>
     </div>
 </template>
 

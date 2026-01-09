@@ -1,6 +1,6 @@
 <script setup>
 import { useRoute, useRouter } from 'vue-router'
-import { useGetEquipmentInfo, useGetFieIdList, useAddOrder } from '@/api'
+import { useGetEquipmentInfo, useGetFieIdList, useAddOrder, useAgainOrder } from '@/api'
 import { nextTick, reactive, ref, watch } from 'vue'
 import { initFieIdList, changeRelevance, reduceTotalMoney, validateField } from '@/utils/order'
 import { ElMessage, ElMessageBox } from 'element-plus'
@@ -141,7 +141,11 @@ async function getFieIdList() {
         if(res_groups.data && res_groups.data.length) {
             show_groups_box.value = true
             groups_fieId_list.value = initFieIdList(res_groups.data)
-            addGroup()
+            if(route.query.order_id) {
+                againOrder(route.query.order_id)
+            } else {
+                addGroup()
+            }
         } else {
             show_groups_box.value = false
         }
@@ -151,6 +155,47 @@ async function getFieIdList() {
     }
 }
 getFieIdList()
+
+// 再来一单
+async function againOrder(order_id) {
+    const res = await useAgainOrder(order_id)
+    const again_globalFieldValues = res.data.globalFieldValues
+    const again_groups = res.data.groups
+
+    appoint_data.value.globalFieldValues.map(item => {
+        const data = again_globalFieldValues.find(i => i.fieIdId == item.fieIdId)
+        if(data) {
+            const new_item = JSON.parse(JSON.stringify(item))
+            const new_data = JSON.parse(JSON.stringify(data))
+            const result = {...new_item, ...new_data}
+            console.log('全局的', item)
+            switch(data.fieIdType) {
+                case 1:
+                    result.optionId = data.valueId.split(',').forEach(option_i => option_i = Number(option_i))
+                    break
+                case 2:
+                    result.optionId = data.valueId.split(',').forEach(option_i => option_i = Number(option_i))
+                    break
+                case 8:
+                    result.fieIdValue = ''
+                case 9:
+                    result.fieldValueRange = data.fieldValueRange
+                    break
+                case 14:
+                    result.duration = Number(data.fieIdValue)
+                    break
+            }
+            return result
+        } else {
+            return item
+        }
+    })
+
+    again_groups.forEach((item, index) => {
+        addGroup()
+        
+    })
+}
 
 //显示 隐藏费用详情浮层
 function showPricePop(isVisible) {
@@ -505,7 +550,10 @@ async function submitAppoint() {
         order_data.orderType = equipment_info.value.isCloudScene,
         order_data.equipmentId = equipment_info.value.id,
         order_data.status = 1
-        await useAddOrder(order_data)
+        const res = await useAddOrder(order_data)
+        //订单预约后需要变更status字段值为2
+        order_data.status = 2
+        order_data.subscribeId = res.data
         submit_loading.value = false
         if(bargain_status.value) {
             appoint_success.value.showAppointSuccess()

@@ -52,8 +52,6 @@ service.interceptors.response.use(
     if (code === 401) {
       removeToken()
       removeUserInfo()
-      ElMessage.error('身份信息过期，请重新登录！')
-      window.location.href = '/login'
       return Promise.reject(response.data)
     } else if (code == 400 || code == 410 || code == 411 || code == 412) {
       return Promise.reject(msg)

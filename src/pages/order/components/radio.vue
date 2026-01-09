@@ -1,5 +1,5 @@
 <script setup>
-import { defineProps, defineEmits, ref, watch, nextTick } from 'vue';
+import { defineProps, defineEmits, ref, watch } from 'vue';
 
 const props = defineProps(['base_data'])
 const emit = defineEmits(['updateValue']);
@@ -11,6 +11,20 @@ const value_data = ref({
     optionId: props.base_data.optionId || [],
     valueId: props.base_data.valueId || '',
 })
+
+watch(
+    () => props.base_data,
+    (newValue) => {
+        console.log('newValue', newValue)
+        value_data.value.fieIdValue = newValue.fieIdValue
+        value_data.value.optionId = newValue.optionId
+        value_data.value.valueId = newValue.valueId
+    },
+    {
+        immediate: true,
+        deep: true,
+    }
+)
 
 function changeRadio(data) {
     value_data.value.fieIdValue = data.optionName

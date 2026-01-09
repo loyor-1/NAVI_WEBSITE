@@ -2,8 +2,12 @@ import { defineStore } from 'pinia'
 import { useLogin, useLogout, useGetUserInfoByToken, useQRCodeLogin } from '@/api'
 import { setToken, removeToken, setUserInfo, removeUserInfo } from '@/utils/auth'
 import { ElMessage } from 'element-plus'
+import { useRoute, useRouter } from 'vue-router'
 
 export const useUserStore = defineStore('user', () => {
+
+  const router = useRouter()
+
   // 登录
   async function login(data) {
     try {
@@ -42,15 +46,14 @@ export const useUserStore = defineStore('user', () => {
     }
   }
 
-  // 更新个人信息
-  // async 
-
   //登出
   async function logout() {
     try {
       await useLogout()
       removeToken()
       removeUserInfo()
+      await router.push('/home_page')
+      window.location.reload()
       ElMessage.success('退出登录成功！')
     }
     catch(err) {

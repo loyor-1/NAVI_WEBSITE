@@ -1,5 +1,5 @@
 <script setup>
-import { queryAliOrderByOutTradeNo , cancelOrder } from "@/api"
+import { queryAliOrderByOutTradeNo , useCancelOrder } from "@/api"
 import { ElMessage } from "element-plus"
 import { nextTick, ref } from "vue"
 
@@ -202,7 +202,7 @@ function init(data){
 async function cancelAliPayOrder() {
     //如果从订单列表进来会有orderId 下单正常流程没有orderId 这个时候提示用户更换支付方式活或者去订单列表取消订单
     if(props.ZFB_pay_order.orderId) {
-        await cancelOrder({ orderId: props.ZFB_pay_order.orderId, cancelFlag: 1 })
+        await useCancelOrder({ orderId: props.ZFB_pay_order.orderId, cancelFlag: 1 })
         show.value = false
         ElMessage.success('订单已取消，请重新下单')
         nextTick(() => {

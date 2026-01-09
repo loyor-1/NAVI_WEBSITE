@@ -78,8 +78,6 @@ function logout() {
         }
     ).then(async () => {
         await user_store.logout()
-        router.push('/')
-        window.location.reload()
     })
 }
 
@@ -290,9 +288,10 @@ async function copyLink(url) {
     }
 }
 
-function gopage(index) {
+function gopage(index, type) {
     // index对应的页面根据@/pages/user/menu_list.js查看
-    mitt_bus.emit('changeUserActiveIndex', index)
+    const data = {index, type}
+    mitt_bus.emit('changeUserActiveIndex', data)
 }
 
 </script>
@@ -309,7 +308,7 @@ function gopage(index) {
             </div>
             <div class="info flex-center">
                 <div class="flex-center">
-                    <div class="edit-user-info flex-center">
+                    <div class="edit-user-info flex-center" @click="router.push('/user/account_manage/edit_user_info')">
                         <span>{{ user_info.clientName }}</span>
                         <el-icon class="font-middle"><Edit /></el-icon>
                     </div>
@@ -426,7 +425,7 @@ function gopage(index) {
                         <span class="font-5CC300 font-600">￥ {{ assets_loading ? '...' : (user_assets.clientCreditBalance || 0).toFixed(2) }} </span>
                     </div>
                     <div class="button-box flex-center">
-                        <div class="assets-button font-mini custom-button">立即还款</div>
+                        <div class="assets-button font-mini custom-button" @click="gopage('2-2', '立即还款')">立即还款</div>
                     </div>
                 </div>
                 <div class="info-item">
@@ -435,7 +434,7 @@ function gopage(index) {
                         <span class="font-5CC300 font-600">￥ {{ assets_loading ? '...' : (user_assets.demandInvoiceMoney || 0).toFixed(2) }} </span>
                     </div>
                     <div class="button-box flex-center">
-                        <div class="assets-button font-mini custom-button">去开票</div>
+                        <div class="assets-button font-mini custom-button" @click="gopage('2-2', '开发票')">去开票</div>
                     </div>
                 </div>
             </div>
