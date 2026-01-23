@@ -244,7 +244,7 @@ defineExpose({ show, init })
     v-model="show"
     title="支付宝扫码支付"
     width="600px"
-    @close="cancelOrderPay"
+    @close="cancelOrderPay()"
     center
     append-to-body
     :close-on-click-modal="false"
@@ -281,7 +281,7 @@ defineExpose({ show, init })
     </div>
     <template #footer>
         <div class="dialog-footer">
-            <el-button @click="cancelOrderPay(true)">取消支付</el-button>
+            <el-button @click="cancelOrderPay()">取消支付</el-button>
         </div>
     </template>
   </el-dialog>

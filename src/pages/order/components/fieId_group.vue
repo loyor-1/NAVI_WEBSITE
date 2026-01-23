@@ -34,6 +34,38 @@ async function getFieldGroupList() {
 		}
         return item
     })
+    //再来一单/草稿箱
+    if(props.base_data.fieldGroupValues && props.base_data.fieldGroupValues.length) {
+        const list = JSON.parse(JSON.stringify(props.base_data.fieldGroupValues))
+        value_data.value.fieldGroupValues = value_data.value.fieldGroupValues.map(item => {
+        const data = list.find(i => i.fieIdId == item.fieIdId)
+        if(data) {
+            const new_item = JSON.parse(JSON.stringify(item))
+            const new_data = JSON.parse(JSON.stringify(data))
+            const result = {
+                ...new_item, 
+                ...new_data,
+                show: true,
+            }
+            switch(data.fieIdType) {
+                case 1:
+                    result.optionId = new_data.valueId.split(',').map(option_i => Number(option_i))
+                    break
+                case 8:
+                    result.fieIdValue = ''
+                case 9:
+                    result.fieldValueRange = new_data.fieldValueRange
+                    break
+                case 14:
+                    result.duration = Number(new_data.fieIdValue)
+                    break
+            }
+            return result
+        } else {
+            return item
+        }
+    })
+    }
 }
 getFieldGroupList()
 

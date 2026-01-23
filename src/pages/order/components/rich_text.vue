@@ -1,5 +1,5 @@
 <script setup>
-import { defineProps, defineEmits, ref, onBeforeUnmount, nextTick } from 'vue';
+import { defineProps, defineEmits, ref, onBeforeUnmount, nextTick, watch } from 'vue';
 import { Editor, Toolbar } from '@wangeditor/editor-for-vue';
 import '@wangeditor/editor/dist/css/style.css';  // 引入样式
 
@@ -24,6 +24,17 @@ const editorConfig = {
 const value_data = ref({
     fieIdValue: props.base_data.fieIdValue || '',
 })
+
+watch(
+    () => props.base_data,
+    (newValue) => {
+        value_data.value.fieIdValue = newValue.fieIdValue
+    },
+    {
+        immediate: true,
+        deep: true,
+    }
+)
 
 function updateValue() {
     emit('updateValue', value_data.value)

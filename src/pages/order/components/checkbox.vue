@@ -1,5 +1,5 @@
 <script setup>
-import { defineProps, defineEmits, ref } from 'vue';
+import { defineProps, defineEmits, ref, watch } from 'vue';
 
 const props = defineProps(['base_data'])
 const emit = defineEmits(['updateValue']);
@@ -11,6 +11,19 @@ const value_data = ref({
     optionId: props.base_data.optionId || [],
     valueId: props.base_data.valueId || '',
 })
+
+watch(
+    () => props.base_data,
+    (newValue) => {
+        value_data.value.fieIdValue = newValue.fieIdValue || ''
+        value_data.value.optionId = newValue.optionId || []
+        value_data.value.valueId = newValue.valueId || ''
+    },
+    {
+        immediate: true,
+        deep: true,
+    }
+)
 
 function changeCheckbox(data) {
     const index_optionId = value_data.value.optionId.findIndex(item => item == data.optionId)
@@ -54,7 +67,7 @@ function hideTips() {
                 <span><span class="font-FF4A2B" v-if="props.base_data.isRequired">*</span>{{ props.base_data.fieIdName }}</span>
             </div>
             <div class="fieId-content">
-                <div class="radio" :class="{'radio-active': value_data.optionId.includes(item.optionId)}" v-for="item in props.base_data.options" :key="item.optionId" @click="changeCheckbox(item)" @mouseenter="showTips(item)" @mouseleave="hideTips">
+                <div class="radio" :class="{'radio-active': value_data.optionId.some(i => i == item.optionId)}" v-for="item in props.base_data.options" :key="item.optionId" @click="changeCheckbox(item)" @mouseenter="showTips(item)" @mouseleave="hideTips">
                     <div>{{ item.optionName }}</div>
                     <div class="option-tips" v-show="show_tips == item.optionId">{{ item.optionExplain }}</div>
                     <div class="tips-icon" v-show="show_tips == item.optionId"></div>

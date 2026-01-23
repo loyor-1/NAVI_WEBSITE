@@ -162,27 +162,30 @@ async function againOrder(order_id) {
     const again_globalFieldValues = res.data.globalFieldValues
     const again_groups = res.data.groups
 
-    appoint_data.value.globalFieldValues.map(item => {
+    appoint_data.value.globalFieldValues = appoint_data.value.globalFieldValues.map(item => {
         const data = again_globalFieldValues.find(i => i.fieIdId == item.fieIdId)
         if(data) {
             const new_item = JSON.parse(JSON.stringify(item))
             const new_data = JSON.parse(JSON.stringify(data))
-            const result = {...new_item, ...new_data}
-            console.log('全局的', item)
+            const result = {
+                ...new_item, 
+                ...new_data,
+                show: true,
+            }
             switch(data.fieIdType) {
                 case 1:
-                    result.optionId = data.valueId.split(',').forEach(option_i => option_i = Number(option_i))
+                    result.optionId = new_data.valueId.split(',').map(option_i => Number(option_i))
                     break
                 case 2:
-                    result.optionId = data.valueId.split(',').forEach(option_i => option_i = Number(option_i))
+                    result.optionId = new_data.valueId.split(',').map(option_i => Number(option_i))
                     break
                 case 8:
                     result.fieIdValue = ''
                 case 9:
-                    result.fieldValueRange = data.fieldValueRange
+                    result.fieldValueRange = new_data.fieldValueRange
                     break
                 case 14:
-                    result.duration = Number(data.fieIdValue)
+                    result.duration = Number(new_data.fieIdValue)
                     break
             }
             return result
@@ -193,7 +196,40 @@ async function againOrder(order_id) {
 
     again_groups.forEach((item, index) => {
         addGroup()
-        
+        appoint_data.value.groups[index].specimenNum = item.specimenNum
+        changeNum(item.specimenNum, 0, index)
+        appoint_data.value.groups[index].specimenIngredient = item.specimenIngredient
+        appoint_data.value.groups[index].fieIdList = appoint_data.value.groups[index].fieIdList.map(i => {
+            const data = item.values.find(x => x.fieIdId == i.fieIdId)
+            if(data) {
+                const new_i = JSON.parse(JSON.stringify(i))
+                const new_data = JSON.parse(JSON.stringify(data))
+                const result = {
+                    ...new_i, 
+                    ...new_data,
+                    show: true,
+                }
+                switch(data.fieIdType) {
+                    case 1:
+                        result.optionId = new_data.valueId.split(',').map(option_i => Number(option_i))
+                        break
+                    case 2:
+                        result.optionId = new_data.valueId.split(',').map(option_i => Number(option_i))
+                        break
+                    case 8:
+                        result.fieIdValue = ''
+                    case 9:
+                        result.fieldValueRange = new_data.fieldValueRange
+                        break
+                    case 14:
+                        result.duration = Number(new_data.fieIdValue)
+                        break
+                }
+                return result
+            } else {
+                return i
+            }
+        })
     })
 }
 

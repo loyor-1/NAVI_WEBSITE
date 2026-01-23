@@ -335,7 +335,7 @@ function gopage(index, type) {
                             <span class="font-FF4A2B font-600">{{ user_coupon_data.money }}</span>
                             <span>元优惠券</span>
                         </div>
-                        <div v-else>无定额优惠券</div>
+                        <div v-else>无满减券</div>
                         <div v-if="user_coupon_data.number">
                             <span class="font-FF4A2B font-600">{{ user_coupon_data.number }}</span>
                             <span>张折扣券</span>
@@ -350,7 +350,7 @@ function gopage(index, type) {
                             <span class="font-FF4A2B font-600">{{ team_coupon_data.money }}</span>
                             <span>元优惠券</span>
                         </div>
-                        <div v-else>无定额优惠券</div>
+                        <div v-else>无满减券</div>
                         <div v-if="team_coupon_data.number">
                             <span class="font-FF4A2B font-600">{{ team_coupon_data.number }}</span>
                             <span>张折扣券</span>

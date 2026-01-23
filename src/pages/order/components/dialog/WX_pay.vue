@@ -60,12 +60,12 @@ function creatPay(){
     emits("creatWXPayOrder")
 }
 
-function canleOrder() {
+async function canleOrder() {
     clearInterval(get_pay_status.value)
     if(props.WX_pay_order.orderCode){
-        closeByWxOutTradeNo({outTradeNo: props.WX_pay_order.orderCode}).then(() => {
-            emits("closeWxPay", false)
-        })
+        await closeByWxOutTradeNo({outTradeNo: props.WX_pay_order.orderCode})
+        show.value = false
+        emits("closeWxPay", false)
     }else{
         ElMessage.warning("操作过快，请重试")
     }
@@ -90,7 +90,7 @@ defineExpose({init})
             <div class="qr_text">请使用微信“扫一扫”功能扫描下方二维码进行支付</div>
             <div class="qr_text">
                 <span>本次支付金额：</span>
-                <span class="font-FF5000 font-600">{{ WX_pay_order.totalCost }}</span>
+                <span class="font-FF5000 font-600">{{ WX_pay_order.totalCost || '0.00' }}</span>
                 <span>元</span>
             </div>
             <div class="qr_text">支付过程中请勿关闭或离开此页面</div>

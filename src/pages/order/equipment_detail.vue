@@ -60,7 +60,7 @@ getEquipentInfo()
                     <img class="fail-pic" src="@/assets/img/fail_pic.png" alt="">
                 </template>
              </el-image>
-            <div class="multi-line-ellipsis-1">与技术顾问{{ equipment_info.technicalAdvisorTextPrompts }}</div>
+            <div class="multi-line-ellipsis-1">{{ equipment_info.technicalAdvisorTextPrompts }}</div>
         </div>
         <div class="tips flex-center">
             <img class="tips-pic" src="@/assets/img/advantage.png" alt="">

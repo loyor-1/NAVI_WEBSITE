@@ -20,6 +20,7 @@ const headers = {
 const upload_dom = ref(null)
 
 const file_list = ref([])
+const result_list = ref([])
 
 // 上传前校检格式和大小
 function handleBeforeUpload(file) {
@@ -43,15 +44,23 @@ function handleUploadError(err) {
 
 // 上传成功回调
 function handleUploadSuccess(res, file, fileList) {
-    file_list.value = []
-    file_list.value.push({ name: res.data.name, url: import.meta.env.VITE_FILE_API + res.data.url })
-    const result_list = file_list.value.map(item => {
+    console.log('res', res)
+    console.log('file', file)
+    console.log('file_list.value', file_list.value)
+    file_list.value.push({ 
+        name: res.data.name, 
+        url: import.meta.env.VITE_FILE_API + res.data.url,
+        uid: file.uid,
+    })
+    result_list.value = file_list.value.map(item => {
         const target_prefix = import.meta.env.VITE_FILE_API.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); // 转义所有正则元字符
         const reg = new RegExp(`^${target_prefix}`)
         item.url = item.url.replace(reg, '')
         return item
     })
-    emits('updateValue', result_list)
+    console.log('result_list', result_list.value)
+    
+    emits('updateValue', result_list.value)
 }
 
 function handleRemove(file, fileList) {

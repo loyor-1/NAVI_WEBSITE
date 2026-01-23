@@ -9,6 +9,14 @@ export function useGetDownLoadUrl(query) {
     })
 }
 
+// 根据字典类型查询字典数据信息
+export function useGetDicts(dictType) {
+    return service({
+        url: '/system/dict/data/type/' + dictType,
+        method: 'get'
+    })
+}
+
 // 客服二维码
 export function useGetCustomerServiceQrcode() {
     return service({
@@ -445,6 +453,52 @@ export function queryOrderByOutTradeNo(params) {
     })
 }
 
+//确认结果
+export function useFinishOrder(data) {
+    return service({
+        url: '/equipment/order/finishOrder',
+        method: 'put',
+        data,
+    })
+}
+
+// 微信支付（补差价）
+export function useMakeUpMoneyWx(data) {
+    return service({
+        url: '/equipment/weChatNativePay/makeUpMoneyPC',
+        method: 'post',
+        data,
+    })
+}
+
+// 支付宝支付（补差价）
+export function useMakeUpMoneyAli(data) {
+    return service({
+        url: '/equipment/alipay/makeUpMoney',
+        method: 'post',
+        data: data
+    })
+}
+
+// 确认结果补钱之后更新订单状态（补差价支付后调用）
+export function useEditOrderMoney(data) {
+    return service({
+        url: '/equipment/order/editOrderMoney',
+        method: 'put',
+        data,
+    })
+}
+
+//订单评价
+
+export function useEvaluation(data) {
+    return service({
+        url: '/equipment/order/orderEvaluation',
+        method: 'put',
+        data,
+    })
+}
+
 //微信根据预约id关闭订单
 export function closeByWxOutTradeNo(params) {
     return service({
@@ -558,4 +612,13 @@ export function useAgainOrder(id) {
         method: 'get',
         url: `/equipment/order/againOrder/${id}`,
     });
+}
+
+//查看订单发票
+export function useGetOrderInvoice(params) {
+    return service({
+        url: '/equipment/invoiceInformation/getOrderInvoiceInfo',
+        method: 'get',
+        params
+    })
 }

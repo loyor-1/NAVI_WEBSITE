@@ -1,24 +1,35 @@
 <script setup>
 import uploadImage from '@/components/upload_image.vue'
+import confirmResult from './confirm_result.vue'
+import evaluation from "./evaluation.vue"
+import afterSale from './after_sale.vue'
 import { ref, reactive, watch } from 'vue'
-import { useGetOrderList, useUploadPackage, useCancelOrder, useAfterSale } from '@/api'
+import { useGetOrderList, useUploadPackage, useCancelOrder, useAfterSale, useGetOrderInvoice, useGetOrderInfo, useGetDownLoadUrl } from '@/api'
 import { moneyKey, orderStatus } from '@/utils/order'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { useRouter } from 'vue-router'
+import { useCacheStore } from '@/stores/cache'
 
 const emit = defineEmits(['emitChangeShowPage'])
 const router = useRouter()
-
-
+const cache_store = useCacheStore()
+const kefu_QR_code = localStorage.getItem('kefu_QR_code')
 
 const upload_image = ref(null)
 const package_form = ref(null)
+const confirm_result_dom = ref(null)
+const evaluation_dom = ref(null)
+const after_sale_dom = ref(null)
+
 const loading = ref(false)
 const package_dialog = ref(false)
 const package_loading = ref(false)
+const result_dialog = ref(false)
 const total = ref(0)
 const status_value = ref(0)
 const order_list = ref([])//订单列表
+const result_file_list = ref([])//实验结果下载链接 列表
+
 
 //订单列表接口参数
 const order_code = ref('')//临时存储订单号
@@ -73,14 +84,8 @@ const package_rules = ref({
     ]
 })
 
-//售后相关
-const after_sale_data = ref({
-    orderId: undefined,
-    afterSalesDesc: ''
-})
-
 watch(
-    params,
+    () => params.value,
     () => {
         getOrderList()
     },
@@ -136,7 +141,17 @@ function connect_kefu(item) {
 async function getOrderList() {
     loading.value = true
     try {
-        const res = await useGetOrderList(params.value)
+        let new_params = params.value
+        if(cache_store.order_list_params) {
+            new_params = {
+                ...new_params,
+                ...cache_store.order_list_params,
+            }
+            status_value.value = Number(cache_store.status_value)
+            console.log(new_params, status_value.value)
+            cache_store.changeOrderListParams()//使用后清除
+        }
+        const res = await useGetOrderList(new_params)
         res.data.data.list.forEach(item => {
             item.equipment_pic = (item.fileList && item.fileList.length) ? import.meta.env.VITE_FILE_API + item.fileList[0].url : ''
         })
@@ -214,8 +229,14 @@ function emitChangeShowPage(order_id) {
     const data = {
         component: 'orderDetail',
         index: 1,
-        order_id
+        order_id,
     }
+    // 前往订单详情前，存储订单列表筛选条件，以便返回时，展示用户点击详情时的订单列表
+    console.log('开始', params.value, status_value.value)
+    cache_store.changeOrderListParams({
+        params: params.value,
+        status_value: status_value.value,
+    })
     emit('emitChangeShowPage', data)
 }
 
@@ -317,6 +338,82 @@ function againOrder(data) {
     })
 }
 
+//发票预览
+async function previewInvoice(data) {
+    const params = {
+        orderId: data.orderId,
+    }
+    const res = await useGetOrderInvoice(params)
+    const url = import.meta.env.VITE_FILE_API + res.data.invoiceFileList[0].url
+    window.open(url, '_blank')
+}
+
+// 确认结果
+function confirmOrderResult(data) {
+    confirm_result_dom.value.init(data)
+}
+
+//打开评价弹框
+function openEvaluation(data) {
+    evaluation_dom.value.init(data)
+}
+
+// 关闭配件弹框
+function closeEvaluation() {
+    getOrderList()
+    downloadResult()
+}
+
+// 打开下载实验结果弹框
+async function downloadResult(data) {
+    try {
+        loading.value = true
+        const res_order_info = await useGetOrderInfo(data.orderId)
+        const file_list = res_order_info.data.experimentalDataList.map(item => {
+            const obj = {
+                key: item.url,
+                attname: item.name
+            }
+            return useGetDownLoadUrl(obj)
+        })
+        const res_promise = await Promise.all(file_list)
+        loading.value = false
+        result_file_list.value = res_promise.map(item => {
+            return item.msg
+        })
+        if (result_file_list.value.length == 1) {
+            ElMessageBox.confirm('确认是否下载实验数据？','提示',{type: 'success'}).then(() => {
+                window.open(result_file_list.value[0])
+            })
+        } else if (result_file_list.value.length > 1) {
+            result_dialog.value = true
+        } else {
+            ElMessage.warning("暂无可下载实验数据")
+        }
+    }
+    catch(err) {
+        console.log(err)
+        loading.value = false
+    }
+}
+function copyLink(url) {
+    try {
+        navigator.clipboard.writeText(url)
+        ElMessage.success('复制成功！')
+    } catch {
+        ElMessage.error('写入剪贴板失败！')
+    }
+}
+
+// 申请售后
+function openApplyServiceDialog(data) {
+    const after_sale_data = {
+        orderId: data.orderId,
+        afterSalesDesc: '',
+    }
+    after_sale_dom.value.init(after_sale_data)
+}
+
 </script>
 
 <template>
@@ -385,18 +482,24 @@ function againOrder(data) {
                             <div class="default-button" v-if="cancel_order(item)" @click.stop="cancelOrder(item)">取消订单</div>
                             <div class="default-button" v-if="price_objection(item)" @click.stop="priceIssue(item)">价格疑异</div>
                             <div class="custom-button" v-if="again_order(item)" @click.stop="againOrder(item)">再来一单</div>
-                            <div class="default-button" v-if="show_invoice(item)" @click.stop="">查看发票</div>
+                            <div class="default-button" v-if="show_invoice(item)" @click.stop="previewInvoice(item)">查看发票</div>
                             <!-- 弹出确认结果弹框 -->
-                            <div class="custom-button" v-if="confirm_result(item)" @click.stop="">
+                            <div class="custom-button" v-if="confirm_result(item)" @click.stop="confirmOrderResult(item)">
                                 <span class="font-mini">下载实验数据</span>
                                 <img class="new-icon" src="@/assets/svg/new.svg" alt="">
                             </div>
                             <!-- 直接下载结果 -->
-                            <div class="custom-button" v-if="download_result(item)" @click.stop="">
+                            <div class="custom-button" v-if="download_result(item)" @click.stop="downloadResult(item)">
                                 <span class="font-mini">下载实验数据</span>
                                 <img class="new-icon" src="@/assets/svg/new.svg" alt="">
                             </div>
-                            <div class="default-button" v-if="apply_service(item)" @click.stop="">申请售后</div>
+                            <div class="default-button" v-if="apply_service(item)" @click.stop="openApplyServiceDialog(item)">申请售后</div>
+                            <el-popover v-if="connect_kefu(item)" placement="right" width="200" trigger="hover">
+                                <img style="width: 100%" :src="kefu_QR_code" alt="">
+                                <template #reference>
+                                    <div class="default-button">联系客服</div>
+                                </template>
+                            </el-popover>
                         </div>
                     </div>
                 </div>
@@ -423,6 +526,12 @@ function againOrder(data) {
             />
         </div>
 
+        <!-- 确认结果弹框 -->
+        <confirmResult ref="confirm_result_dom" @openEvaluation="openEvaluation"></confirmResult>
+        <!-- 确认评价 -->
+        <evaluation ref="evaluation_dom" @close="closeEvaluation"></evaluation>
+        <!-- 提交售后弹框 -->
+        <afterSale ref="after_sale_dom" @refresh="getOrderList"></afterSale>
         <!-- 上传包裹信息 -->
         <el-dialog
           v-model="package_dialog"
@@ -443,6 +552,14 @@ function againOrder(data) {
             <template #footer>
                 <el-button :loading="package_loading" type="primary" plain @click="package_dialog = false">取消</el-button>
                 <el-button :loading="package_loading" type="primary" @click="submitPackage">提交</el-button>
+            </template>
+        </el-dialog>
+        <!-- 复制实验结果链接弹框 -->
+        <el-dialog title="提示" v-model="result_dialog" width="700px">
+            <div class="downloadfile-title">存在多个实验结果的订单，下载实验数据时，需手动<span style="color: #FF4A2B; font-weight: 600;">点击</span>复制相应数据链接，前往浏览器粘贴打开以下载！</div>
+            <div class="file-link" v-for="(item, index) in result_file_list" :key="index" @click="copyLink(item)">{{ item }}</div>
+            <template #footer>
+                <el-button @click="result_dialog = false">关  闭</el-button>
             </template>
         </el-dialog>
     </div>
@@ -572,5 +689,21 @@ function againOrder(data) {
     height: 60px;
     padding: 0 15px;
     border-top: 1px solid #cccccc;
+}
+
+.downloadfile-title {
+  font-size: 14px;
+}
+
+.file-link {
+  cursor: pointer;
+  margin-top: 10px;
+  padding: 10px;
+  text-decoration: underline;
+  color: #5D5D5D;
+  border: 1px solid #E8E8E8;
+}
+.file-link:hover {
+  color: #5CC300;
 }
 </style>

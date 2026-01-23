@@ -1,5 +1,5 @@
 <script setup>
-import { defineProps, defineEmits, ref } from 'vue';
+import { defineProps, defineEmits, ref, watch } from 'vue';
 
 const props = defineProps(['base_data'])
 const emit = defineEmits(['updateValue']);
@@ -8,6 +8,31 @@ const value_data = ref({
     fieIdValue: 0,
     fieldValueRange: 0,
 })
+
+watch(
+    () => props.base_data,
+    (newValue) => {
+        if(newValue.fieIdValue != undefined && newValue.fieIdValue != null) {
+            value_data.value.fieIdValue = newValue.fieIdValue
+        } else if(newValue.defaultValue) {
+            value_data.value.fieIdValue = newValue.defaultValue
+        } else {
+            value_data.value.fieIdValue = null
+        }
+        if(newValue.fieldValueRange != undefined && newValue.fieldValueRange != null) {
+            value_data.value.fieldValueRange = newValue.fieldValueRange
+        } else if(newValue.defaultValue) {
+            value_data.value.fieldValueRange = newValue.defaultValue
+        } else {
+            value_data.value.fieldValueRange = null
+        }
+        value_data.value.fieldValueRange = newValue.fieldValueRange
+    },
+    {
+        immediate: true,
+        deep: true,
+    }
+)
 
 function initValueData() {
     if(props.base_data.fieIdValue) {

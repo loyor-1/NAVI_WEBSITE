@@ -1,8 +1,8 @@
 import { defineStore } from 'pinia'
-import { useLogin, useLogout, useGetUserInfoByToken, useQRCodeLogin } from '@/api'
-import { setToken, removeToken, setUserInfo, removeUserInfo } from '@/utils/auth'
+import { useLogin, useLogout, useGetUserInfoByToken, useQRCodeLogin, useGetDicts } from '@/api'
+import { setToken, removeToken, setUserInfo, getUserInfo, removeUserInfo } from '@/utils/auth'
 import { ElMessage } from 'element-plus'
-import { useRoute, useRouter } from 'vue-router'
+import { useRouter } from 'vue-router'
 
 export const useUserStore = defineStore('user', () => {
 
@@ -61,5 +61,15 @@ export const useUserStore = defineStore('user', () => {
     }
   }
 
-  return { login, logout, QRCode_login }
+  //设置客服二维码
+  async function setKefuQRCode() {
+    const res_user_info = await getUserInfo()
+    const res_dict = await useGetDicts('customer_service_qrcode')//获取区域客服二维码
+    const data = res_dict.data.find(item => item.dictLabel == res_user_info.unitId)
+    if(data) {
+      localStorage.setItem('kefu_QR_code', data.dictValue)
+    }
+  }
+
+  return { login, logout, QRCode_login, setKefuQRCode }
 })

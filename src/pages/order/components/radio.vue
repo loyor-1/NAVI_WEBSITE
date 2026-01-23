@@ -15,7 +15,6 @@ const value_data = ref({
 watch(
     () => props.base_data,
     (newValue) => {
-        console.log('newValue', newValue)
         value_data.value.fieIdValue = newValue.fieIdValue
         value_data.value.optionId = newValue.optionId
         value_data.value.valueId = newValue.valueId

@@ -1,5 +1,5 @@
 <script setup>
-import { defineProps, defineEmits, ref } from 'vue';
+import { defineProps, defineEmits, ref, watch } from 'vue';
 import periodicTable from './periodic_table.vue';
 
 const props = defineProps(['base_data'])
@@ -9,6 +9,17 @@ const periodicTableRef = ref('null')
 const value_data = ref({
     fieIdValue: '',
 })
+
+watch(
+    () => props.base_data,
+    (newValue) => {
+        value_data.value.fieIdValue = newValue.fieIdValue
+    },
+    {
+        immediate: true,
+        deep: true,
+    }
+)
 
 function updatePeriodic(list) {
     value_data.value.fieIdValue = list.join(',')

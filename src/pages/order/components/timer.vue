@@ -1,5 +1,5 @@
 <script setup>
-import { defineProps, defineEmits, ref } from 'vue';
+import { defineProps, defineEmits, ref, watch } from 'vue';
 
 const props = defineProps(['base_data'])
 const emit = defineEmits(['updateValue']);
@@ -8,6 +8,18 @@ const value_data = ref({
     duration: 0,
     fieIdValue: 0,
 })
+
+watch(
+    () => props.base_data,
+    (newValue) => {
+        value_data.value.duration = newValue.duration
+        value_data.value.fieIdValue = newValue.fieIdValue
+    },
+    {
+        immediate: true,
+        deep: true,
+    }
+)
 
 function updateValue() {
     value_data.value.fieIdValue = value_data.value.duration

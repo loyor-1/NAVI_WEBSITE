@@ -148,6 +148,7 @@ function login() {
             }
             const res = await userStore.login(data)
             if(res) {
+                userStore.setKefuQRCode()
                 resetData()
                 router.push('/')
             }

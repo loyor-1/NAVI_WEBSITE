@@ -604,7 +604,7 @@ export function validateField(list) {
     })
 
     return {
-        validate: groups_valid && groups_valid,
+        validate: global_valid && groups_valid,
         message: message,
         global_result: global_list,
         groups_result: groups_list,
