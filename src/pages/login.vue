@@ -1,7 +1,7 @@
 <script setup>
 import { ref, watch, reactive } from 'vue';
 import { useUserStore } from '@/stores/user';
-import { useRouter } from 'vue-router';
+import { useRoute, useRouter } from 'vue-router';
 import { useGetLoginQRCode, useGetLoginStatus } from '@/api'
 import { validPhone } from '@/utils/validate';
 
@@ -16,6 +16,7 @@ function validPhoneRule(rule, value, callback) {
 
 const userStore = useUserStore()
 const router = useRouter()
+const route = useRoute()
 
 const form = ref(null)//表单对象
 const login_type = ref(2)
@@ -145,6 +146,10 @@ function login() {
                     login_password.value.phoneNumber = login_password.value.loginAccount
                     data = login_password.value
                     break
+            }
+            if(route.query.inviter_phone_number) {
+                data.inviterType = route.query.inviter_type
+                data.inviterPhoneNumber = route.query.inviterPhoneNumber
             }
             const res = await userStore.login(data)
             if(res) {

@@ -1,11 +1,11 @@
 import service from '@/utils/request';
 
 //获取七牛云下载链接
-export function useGetDownLoadUrl(query) {
+export function useGetDownLoadUrl(params) {
     return service({
         url: '/equipment/uploadCenter/getDownLoadUrl',
         method: 'get',
-        params: query
+        params,
     })
 }
 
@@ -200,11 +200,11 @@ export function useBlockUploadSuccess(params) {
 }
 
 //发票抬头列表---全部
-export function useGetInvoiceHeadList(query) {
+export function useGetInvoiceHeadList(params) {
     return service({
         url: '/equipment/invoiceHeadContrast/list',
         method: 'get',
-        params: query
+        params,
     })
 }
 
@@ -218,11 +218,11 @@ export function useGetUserInvoiceHeadList(params) {
 }
 
 //检测项目下拉
-export function useGetTestItemList(query) {
+export function useGetTestItemList(params) {
     return service({
         url: '/equipment/equipmentDetectionItem/listAll',
         method: 'get',
-        params: query
+        params,
     })
 }
 
@@ -620,5 +620,48 @@ export function useGetOrderInvoice(params) {
         url: '/equipment/invoiceInformation/getOrderInvoiceInfo',
         method: 'get',
         params
+    })
+}
+
+//获取邀请好友小程序码
+export function useInviteFriends(params) {
+    return service({
+        method: 'get',
+        url: '/system/wx/inviteFriends',
+        params,
+    });
+}
+
+//下载海报
+export function useDownloadPoster(params) {
+    return service({
+        url: '/system/wx/inviteFriendsPoster',
+        method: 'get',
+        params,
+    })
+}
+
+// 邀请好友首页接口
+export function useGetInviteFriendsInfo() {
+    return service({
+        url: '/coupon/activity/commission/board'
+    })
+}
+
+// 邀请人数列表页
+export function useGetInviteFriendsList(params) {
+    return service({
+        url: '/system/invite/clientList',
+        params,
+        no_debounce: true,
+    })
+}
+
+// 预估收益列表页
+export function useGetEstimateIncomeList(params) {
+    return service({
+        url: '/coupon/activity/commission/orderRelateList',
+        params,
+        no_debounce: true,
     })
 }

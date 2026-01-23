@@ -396,9 +396,9 @@ async function downloadResult(data) {
         loading.value = false
     }
 }
-function copyLink(url) {
+async function copyLink(url) {
     try {
-        navigator.clipboard.writeText(url)
+        await navigator.clipboard.writeText(url)
         ElMessage.success('复制成功！')
     } catch {
         ElMessage.error('写入剪贴板失败！')

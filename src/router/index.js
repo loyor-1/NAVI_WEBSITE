@@ -82,7 +82,6 @@ const router = createRouter({
           },
           component: () => import('@/pages/user/account_manage/identity_authentication.vue'),
         },
-        
         {
           path: 'account_manage/edit_user_info',
           name: 'edit_user_info',//编辑个人信息
@@ -90,6 +89,14 @@ const router = createRouter({
             require_token: true
           },
           component: () => import('@/pages/user/account_manage/edit_user_info.vue'),
+        },
+        {
+          path: 'account_manage/invite_friend',
+          name: 'invite_friend',//邀请好友活动板块
+          meta: {
+            require_token: true
+          },
+          component: () => import('@/pages/user/account_manage/invite_friend.vue'),
         },
         {
           path: 'order_manage/user_order_list',
