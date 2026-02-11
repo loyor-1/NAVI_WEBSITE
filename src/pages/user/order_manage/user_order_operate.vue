@@ -46,6 +46,12 @@ const payment_list = [
 	{ label: '微信', index: 3, value: 4 },
 	{ label: '支付宝', index: 4, value: 3 },
 ]
+//开票状态选择框
+const bill_status_list = [
+    { label: '未开票', value: 1 },
+    { label: '已开票', value: 2 },
+    { label: '无需开票', value: 3 },
+]
 //立即还款接口数据
 const repay_data = ref({
     type: 2,
@@ -404,6 +410,10 @@ async function mailSend() {
                         <div class="time-box" v-show="[1, 3].includes(operate_index)">
                             <el-date-picker v-model="date_list" type="daterange" value-format="YYYY-MM-DD" range-separator="至" start-placeholder="开始时间" end-placeholder="结束时间" @change="changeDate"/>
                         </div>
+                        <!-- 开票状态筛选 -->
+                        <el-select v-show="[3].includes(operate_index)" v-model="params.billStatus" placeholder="选择开票状态">
+                            <el-option v-for="item in bill_status_list" :key="item.value" :label="item.label" :value="item.value"/>
+                        </el-select>
                     </div>
                 </el-scrollbar>
             </div>

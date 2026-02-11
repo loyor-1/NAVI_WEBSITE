@@ -9,7 +9,7 @@ export const menu_list = [
             { index: '1-1', label: '个人中心', path: '/user/account_manage/user_space' },
             { index: '1-2', label: '邀请好友', path: '/user/account_manage/invite_friend' },
             { index: '1-3', label: '积分商城', path: '/user/account_manage/integral_mall' },
-            { index: '1-4', label: '合作入驻' },
+            { index: '1-4', label: '合作入驻', path: '/user/account_manage/cooperative_settlement' },
         ]
     },
     {

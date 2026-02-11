@@ -565,6 +565,48 @@ function toEquipmentDetail(equipment_id) {
         transform: scale(1);
     }
 }
+@keyframes head_item_left{
+    0% {
+        top: 15px;
+        left: 0;
+    }
+    100% {
+        top: 15px;
+        left: 50%;
+        transform: translateX(-50%);
+    }
+}
+@keyframes head_item_right{
+    0% {
+        bottom: 15px;
+        right: 0;
+    }
+    100% {
+        bottom: 15px;
+        right: 50%;
+        transform: translateX(50%);
+    }
+}
+@keyframes card {
+    0% {
+        opacity: 0;
+        transform: scale(0.7);
+    }
+    100% {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+ @keyframes card-hover {
+    0% {
+        transform: translateZ(0);
+        box-shadow: none;
+    }
+    100% {
+        transform: translateZ(5px);
+        box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.8);
+    }
+}
 
 .carousel-box {
     animation: showCarousel 0.5s forwards;
@@ -617,38 +659,6 @@ function toEquipmentDetail(equipment_id) {
     }
 }
 
-@keyframes  head_item_left{
-    0% {
-        top: 15px;
-        left: 0;
-    }
-    100% {
-        top: 15px;
-        left: 50%;
-        transform: translateX(-50%);
-    }
-}
-@keyframes  head_item_right{
-    0% {
-        bottom: 15px;
-        right: 0;
-    }
-    100% {
-        bottom: 15px;
-        right: 50%;
-        transform: translateX(50%);
-    }
-}
-@keyframes card {
-    0% {
-        opacity: 0;
-        transform: scale(0.7);
-    }
-    100% {
-        opacity: 1;
-        transform: scale(1);
-    }
-}
 .hot-box {
     width: 80vw;
     min-width: 1440px;
@@ -672,6 +682,7 @@ function toEquipmentDetail(equipment_id) {
         display: flex;
         flex-wrap: wrap;
         gap: 15px;
+        perspective: 1000px;
         width: 80vw;
         min-width: 1440px;
         min-height: calc((80vw - 90px) / 5 * 1.3);
@@ -684,13 +695,17 @@ function toEquipmentDetail(equipment_id) {
             background-color: #fff;
         }
         .card {
-            animation: card 0.5s linear forwards;
+            overflow: hidden;
+            animation: card 0.5s linear;
+            transition: all 0.3s ease;
             display: flex;
             flex-direction: column;
             align-items: center;
             width: calc((80vw - 90px) / 5);
             min-width: 270px;
-            border-radius: 5%;
+            border: 1px solid #E8E8E8;
+            border-bottom: none;
+            border-radius: 5% 5% 0 0;
             background-color: #fff;
             .img-box {
                 width: calc((80vw - 90px) / 5);
@@ -716,7 +731,6 @@ function toEquipmentDetail(equipment_id) {
                 min-width: 270px;
                 height: calc((80vw - 90px) / 5 / 3);
                 min-height: 110px;
-                border: 1px solid #E8E8E8;
                 border-top: none;
                 .multi-line-ellipsis-1 {
                     width: 80%;
@@ -744,7 +758,8 @@ function toEquipmentDetail(equipment_id) {
             }
         }
         .card:hover {
-            box-shadow: 0 0 5px 5px #94C9FF30;
+            box-shadow: 0 12px 20px rgba(0, 0, 0, 0.2);
+            transform: translateZ(3px);
             .card-info .font-middle {
                 color: #94C9FF;
             }

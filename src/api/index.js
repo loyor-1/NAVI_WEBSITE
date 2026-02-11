@@ -701,3 +701,12 @@ export function useExchangePrize(data) {
         data,
     })
 }
+
+//新增合作商
+export function useSaveProducer(data) {
+    return service({
+        url: '/equipment/producer/save',
+        method: 'post',
+        data,
+    })
+}

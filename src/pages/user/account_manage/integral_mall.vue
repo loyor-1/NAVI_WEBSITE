@@ -424,41 +424,6 @@ async function confirmExchange() {
 </template>
 
 <style lang="scss" scoped>
-.exchange-dialog {
-    .exchange-background {
-        width: 305px;
-    }
-    .dialog-content {
-        position: relative;
-        justify-content: flex-start;
-        width: 305px;
-        height: 330px;
-        padding: 0 15px;
-        .exchange-title {
-            height: 30px;
-            color: #832604;
-        }
-        .exchange-img {
-            width: 110px;
-            height: 90px;
-        }
-        .exchange-desc{
-            margin-top: 10px;
-            color: #882F0E;
-        }
-        .exchange-button-box {
-            position: absolute;
-            column-gap: 15px;
-            bottom: 30px;
-            .exchange-button-style {
-                width: 90px;
-                height: 30px;
-                font-weight: normal;
-            }
-        }
-    }
-}
-
 .head-box {
     justify-content: space-between;
     width: calc(88vw - 30px);
@@ -653,4 +618,38 @@ async function confirmExchange() {
     }
 }
 
+.exchange-dialog {
+    .exchange-background {
+        width: 305px;
+    }
+    .dialog-content {
+        position: relative;
+        justify-content: flex-start;
+        width: 305px;
+        height: 330px;
+        padding: 0 15px;
+        .exchange-title {
+            height: 30px;
+            color: #832604;
+        }
+        .exchange-img {
+            width: 110px;
+            height: 90px;
+        }
+        .exchange-desc{
+            margin-top: 10px;
+            color: #882F0E;
+        }
+        .exchange-button-box {
+            position: absolute;
+            column-gap: 15px;
+            bottom: 30px;
+            .exchange-button-style {
+                width: 90px;
+                height: 30px;
+                font-weight: normal;
+            }
+        }
+    }
+}
 </style>

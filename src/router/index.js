@@ -15,7 +15,7 @@ const router = createRouter({
       component: () => import('@/pages/index.vue'),
       children: [
         {
-          path: '/home_page',
+          path: 'home_page',
           name: 'home_page',
           meta: {
             require_token: false
@@ -23,7 +23,7 @@ const router = createRouter({
           component: () => import('@/pages/home_page.vue'),
         },
         {
-          path: '/equipment_detail',
+          path: 'equipment_detail',
           name: 'equipment_detail',//设备详情
           meta: {
             require_token: false
@@ -31,7 +31,7 @@ const router = createRouter({
           component: () => import('@/pages/order/equipment_detail.vue'),
         },
         {
-          path: '/appoint_order',
+          path: 'appoint_order',
           name: 'appoint_order',//下单页
           meta: {
             require_token: true
@@ -39,7 +39,7 @@ const router = createRouter({
           component: () => import('@/pages/order/appoint_order.vue'),
         },
         {
-          path: '/service_order',
+          path: 'service_order',
           name: 'service_order',//订单附加服务费用页
           meta: {
             require_token: true
@@ -47,13 +47,13 @@ const router = createRouter({
           component: () => import('@/pages/order/service_order.vue'),
         },
         {
-          path: '/pay_order',
+          path: 'pay_order',
           name: 'pay_order',//订单支付页面
           meta: {
             require_token: true
           },
           component: () => import('@/pages/order/pay_order.vue'),
-        }
+        },
       ]
     },
     // 用户板块
@@ -105,6 +105,14 @@ const router = createRouter({
             require_token: true
           },
           component: () => import('@/pages/user/account_manage/integral_mall.vue'),
+        },
+        {
+          path: 'account_manage/cooperative_settlement',
+          name: 'cooperative_settlement',//订单支付页面
+          meta: {
+            require_token: true
+          },
+          component: () => import('@/pages/user/account_manage/cooperative_settlement.vue'),
         },
         {
           path: 'order_manage/user_order_list',

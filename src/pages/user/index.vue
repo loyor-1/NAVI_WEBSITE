@@ -1,7 +1,7 @@
 <script setup>
 import { useRouter } from 'vue-router'
 import { menu_list } from './menu_list'
-import { nextTick, onMounted, onUnmounted, ref } from 'vue'
+import { onMounted, ref } from 'vue'
 import mitt_bus from '@/utils/mitt_bus'
 
 const router = useRouter()
