@@ -5,9 +5,10 @@ import { useGetOrderInfo, useGetDownLoadUrl } from "@/api"
 import { computed, ref, getCurrentInstance } from "vue"
 import { ElMessageBox, ElMessage } from 'element-plus';
 import { timeFormat } from "@/utils/format.js"
+import { getUserInfo } from '@/utils/auth'
 
-// 获取当前组件实例
-const instance = getCurrentInstance();
+const user_info = reactive(getUserInfo())//用户信息
+const instance = getCurrentInstance()// 获取当前组件实例
 
 dayjs.extend(duration)
 const emit = defineEmits(['downloadResult'])
@@ -335,7 +336,7 @@ defineExpose({ getOrderInfo })
 		        		<div class="info-box" v-if="order_info.ifRecycle == 1 && order_info.whiteFlag != 1">
 		        			<div class="info-box-title">样品回收</div>
 		        			<!-- <div class="info-box-content"> ￥{{ order_info.sampleRecovery }} </div> -->
-		        			<div class="info-box-content"> ￥50 </div>
+		        			<div class="info-box-content">{{ user_info.unitId == 298 ? '￥12' : '￥50' }}</div>
 		        		</div>
 		        		<div class="info-box" v-if="order_info.cashCoupon">
 		        			<div class="info-box-title">赠送金</div>
@@ -397,7 +398,7 @@ defineExpose({ getOrderInfo })
 		        		<div class="info-box" v-if="order_info.ifRecycle == 1 && order_info.whiteFlag != 1">
 		        			<div class="info-box-title">样品回收</div>
 		        			<!-- <div class="info-box-content"> ￥{{ order_info.sampleRecovery }} </div> -->
-		        			<div class="info-box-content"> ￥50 </div>
+		        			<div class="info-box-content">{{ user_info.unitId == 298 ? '￥12' : '￥50' }}</div>
 		        		</div>
 		        		<div class="info-box" v-if="order_info.experimentCashCoupon">
 		        			<div class="info-box-title">赠送金</div>

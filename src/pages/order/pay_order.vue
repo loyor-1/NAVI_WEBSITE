@@ -209,8 +209,13 @@ async function initFeeDetail() {
     }
     if(new_order_data.ifRecycle == 1) {
         if(user_info.whiteFlag != 1 || user_info.recoveryFree != 1) {
-            price += 50
-            service_detail[0].detail_list[1].value = '回收(￥50)'
+            if(user_info.unitId == 298) {
+                price += 12
+                service_detail[0].detail_list[1].value = '回收(￥12)'
+            } else {
+                price += 50
+                service_detail[0].detail_list[1].value = '回收(￥50)'
+            }
         } else {
             service_detail[0].detail_list[1].value = '客户优惠(￥0)'
         }
@@ -337,8 +342,13 @@ function getMoney() {
         pay_data.value.expeditedProduction = 0
     }
     if(order_data.value.ifRecycle == 1 && (user_info.whiteFlag != 1 || user_info.recoveryFree != 1)) {
-        notReducibleAmount += 50
-        pay_data.value.sampleRecovery = 50
+        if(user_info.unitId == 298) {
+            notReducibleAmount += 12
+            pay_data.value.sampleRecovery = 12
+        } else {
+            notReducibleAmount += 50
+            pay_data.value.sampleRecovery = 50
+        }
     } else {
         pay_data.value.sampleRecovery = 0
     }

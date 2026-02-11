@@ -99,6 +99,14 @@ const router = createRouter({
           component: () => import('@/pages/user/account_manage/invite_friend.vue'),
         },
         {
+          path: 'account_manage/integral_mall',
+          name: 'integral_mall',//积分商城活动板块
+          meta: {
+            require_token: true
+          },
+          component: () => import('@/pages/user/account_manage/integral_mall.vue'),
+        },
+        {
           path: 'order_manage/user_order_list',
           name: 'user_order_list',//个人订单
           meta: {

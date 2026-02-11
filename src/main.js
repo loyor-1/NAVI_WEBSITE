@@ -13,6 +13,7 @@ import zhCn from 'element-plus/es/locale/lang/zh-cn'
 import download from '@/utils/download.js'
 import { getDictLabel } from "@/api/dict.js"
 import { ElCollapseTransition } from 'element-plus'
+import customDialog from '@/components/custom_dialog.vue'
 
 import 'element-plus/theme-chalk/base.css'
 
@@ -24,6 +25,7 @@ for (const [key, component] of Object.entries(ElementPlusIconsVue)) {
   app.component(key, component)
 }
 app.component(ElCollapseTransition.name, ElCollapseTransition)
+app.component('customDialog', customDialog)
 
 app.use(createPinia())
 app.use(router)

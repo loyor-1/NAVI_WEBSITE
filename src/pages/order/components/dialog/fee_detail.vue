@@ -60,8 +60,13 @@ function init(appoint_data, discount_data) {
         }
         if(appoint_data.ifRecycle == 1) {
             if(user_info.whiteFlag != 1 || user_info.recoveryFree != 1) {
-                price += 50
-                service_detail[0].detail_list[1].value = '回收(￥50)'
+                if(user_info.unitId == 298) {
+                    price += 12
+                    service_detail[0].detail_list[1].value = '回收(￥12)'
+                } else {
+                    price += 50
+                    service_detail[0].detail_list[1].value = '回收(￥50)'
+                }
             } else {
                 service_detail[0].detail_list[1].value = '客户优惠(￥0)'
             }

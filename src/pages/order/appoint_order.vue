@@ -401,7 +401,11 @@ function reduceOrderPrice() {
         service_money += ((global_money + groups_money) * 0.5)
     }
     if(appoint_data.value.ifRecycle == 1 && !(user_info.whiteFlag == 1 && user_info.recoveryFree == 1)) {
-        service_money += 50
+        if(user_info.unitId == 298) {
+            service_money += 12
+        } else {
+            service_money += 50
+        }
     }
     if(appoint_data.value.postPayment == 1)  {
         service_money += 12
@@ -537,14 +541,14 @@ async function submitAppoint() {
     if(appoint_data.value.ifRecycle == 1 && !(appoint_data.value.provinceValue && appoint_data.value.provinceCode && appoint_data.value.recycleProvince)) result_list.push('provinceValue')
     if(appoint_data.value.ifRecycle == 1 && !appoint_data.value.recycleAddress) result_list.push('recycleAddress')
     if(appoint_data.value.ifRecycle == 1 && !appoint_data.value.recycleContact) result_list.push('recycleContact')
-    if(appoint_data.value.ifRecycle == 1 && !(appoint_data.value.recycleContactPhone && validPhone(appoint_data.value.recycleContactPhone))) result_list.push('recycleContactPhone')
+    if(appoint_data.value.ifRecycle == 1 && !(appoint_data.value.recycleContactPhone && validPhone(appoint_data.value.recycleContactPhone).valid)) result_list.push('recycleContactPhone')
     if(appoint_data.value.contactType == 2 && !appoint_data.value.contact) result_list.push('contact')
-    if(appoint_data.value.contactType == 2 && !(appoint_data.value.contactPhone && validPhone(appoint_data.value.contactPhone))) result_list.push('contactPhone')
+    if(appoint_data.value.contactType == 2 && !(appoint_data.value.contactPhone && validPhone(appoint_data.value.contactPhone).valid)) result_list.push('contactPhone')
     if(appoint_data.value.ifTestEquipment == 1 && !appoint_data.value.relevanceOrderCode) result_list.push('relevanceOrderCode')
     if(appoint_data.value.postMethod == 2 && !appoint_data.value.homeSamplingAddress) result_list.push('homeSamplingAddress')
     if(appoint_data.value.postMethod == 2 && !appoint_data.value.detailedAddress) result_list.push('detailedAddress')
     if(appoint_data.value.postMethod == 2 && !appoint_data.value.samplingContact) result_list.push('samplingContact')
-    if(appoint_data.value.postMethod == 2 && !(appoint_data.value.samplingContactPhone && validPhone(appoint_data.value.samplingContactPhone))) result_list.push('samplingContactPhone')
+    if(appoint_data.value.postMethod == 2 && !(appoint_data.value.samplingContactPhone && validPhone(appoint_data.value.samplingContactPhone).valid)) result_list.push('samplingContactPhone')
     if(appoint_data.value.postMethod == 2 && !appoint_data.value.onSiteSamplingDate) result_list.push('onSiteSamplingDate')
     if(appoint_data.value.postMethod == 2 && !appoint_data.value.onSiteSamplingTime) result_list.push('onSiteSamplingTime')
     const translate = {

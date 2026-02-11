@@ -20,10 +20,10 @@ const props = defineProps(['title'])
 
 .desciconLarge {
     width: 5px;
-    height: 18px;
+    height: 25px;
     margin-top: 4px;
     margin-right: 8px;
     float: left;
-    background: #84B7F9;
+    background: #94C9FF;
 }
 </style>

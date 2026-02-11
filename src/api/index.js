@@ -665,3 +665,39 @@ export function useGetEstimateIncomeList(params) {
         no_debounce: true,
     })
 }
+
+// 查询积分商城发放记录列表
+export function useGetIntegralRecord(params) {
+    return service({
+        url: '/coupon/pointsRecord/client/list',
+        method: 'get',
+        params,
+    })
+}
+
+// 查询积分商城我的礼品列表
+export function useGetIntegralPrizeList(params) {
+    return service({
+        url: '/coupon/pointExchange/client/list',
+        method: 'get',
+        params,
+    })
+}
+
+//积分商城列表
+export function useGetIntegralMall(params) {
+    return service({
+        url: '/coupon/pointsMall/list',
+        method: 'get',
+        params,
+    })
+}
+
+// 积分商城兑换商品
+export function useExchangePrize(data) {
+    return service({
+        url: '/coupon/pointExchange/exchange',
+        method: 'post',
+        data,
+    })
+}

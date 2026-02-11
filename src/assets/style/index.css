@@ -127,7 +127,7 @@ html {
 }
 .custom-button:hover {
     color: #5CC300;
-    background-image: linear-gradient(to right, #9fffea, #75ff75);
+    background-image: linear-gradient(to right, #9fffea, #75ff75) !important;
 }
 
 .default-button {
