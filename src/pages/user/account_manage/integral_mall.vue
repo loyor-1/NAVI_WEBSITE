@@ -492,7 +492,7 @@ async function confirmExchange() {
         gap: 15px;
         justify-content: flex-start;
         align-items: flex-start;
-        perspective: 1000px;
+        perspective: 500px;
         perspective-origin: center center;
         width: calc(88vw - 60px);
         min-width: 1208px;
@@ -505,7 +505,7 @@ async function confirmExchange() {
             }
             100% {
                 transform: translateZ(5px);
-                box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.8);
+                box-shadow: -5px 5px 5px rgba(0, 0, 0, 0.4);
             }
         }
         .prize-card {

@@ -48,7 +48,7 @@ const router = createRouter({
         },
         {
           path: 'pay_order',
-          name: 'pay_order',//订单支付页面
+          name: 'pay_order',//合作入驻板块
           meta: {
             require_token: true
           },
@@ -108,11 +108,20 @@ const router = createRouter({
         },
         {
           path: 'account_manage/cooperative_settlement',
-          name: 'cooperative_settlement',//订单支付页面
+          name: 'cooperative_settlement',//合作入驻板块
           meta: {
             require_token: true
           },
           component: () => import('@/pages/user/account_manage/cooperative_settlement.vue'),
+        },
+        
+        {
+          path: 'account_manage/patent_services',
+          name: 'patent_services',//专利服务板块
+          meta: {
+            require_token: true
+          },
+          component: () => import('@/pages/user/account_manage/patent_services.vue'),
         },
         {
           path: 'order_manage/user_order_list',

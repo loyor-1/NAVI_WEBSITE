@@ -682,7 +682,7 @@ function toEquipmentDetail(equipment_id) {
         display: flex;
         flex-wrap: wrap;
         gap: 15px;
-        perspective: 1000px;
+        perspective: 500px;
         width: 80vw;
         min-width: 1440px;
         min-height: calc((80vw - 90px) / 5 * 1.3);
@@ -758,7 +758,7 @@ function toEquipmentDetail(equipment_id) {
             }
         }
         .card:hover {
-            box-shadow: 0 12px 20px rgba(0, 0, 0, 0.2);
+            box-shadow: -5px 5px 5px rgba(0, 0, 0, 0.2);
             transform: translateZ(3px);
             .card-info .font-middle {
                 color: #94C9FF;

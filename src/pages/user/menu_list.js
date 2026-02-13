@@ -10,6 +10,7 @@ export const menu_list = [
             { index: '1-2', label: '邀请好友', path: '/user/account_manage/invite_friend' },
             { index: '1-3', label: '积分商城', path: '/user/account_manage/integral_mall' },
             { index: '1-4', label: '合作入驻', path: '/user/account_manage/cooperative_settlement' },
+            { index: '1-5', label: '专利服务', path: '/user/account_manage/patent_services' },
         ]
     },
     {

@@ -422,7 +422,7 @@ async function mailSend() {
         <div class="list">
             <div class="desc flex-center">{{ operate_list[operate_index].desc }}</div>
             <div class="invoice-box" v-loading="loading" v-if="order_list.length">
-                <el-table 
+                <el-table
                   class="invoice-table"
                   v-if="!apply_invoice_switch"
                   ref="ref_table" 
