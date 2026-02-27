@@ -110,7 +110,7 @@ getEquipmentList()
 <template>
     <div class="flex-center page-main">
         <el-scrollbar>
-            <div class="flex-center-col service-list">
+            <div class="flex-center-col service-list" v-loading="loading" v-if="equipment_list.length">
                 <div class="flex-center-col equipment-card" v-for="item in equipment_list" :key="item.id">
                     <el-image class="card-img" :src="item.equipment_pic">
                         <template #error>
@@ -133,6 +133,9 @@ getEquipmentList()
                     </div>
                     <div class="custom-button button-style" @click.stop="router.push(`/appoint_order?equipment_id=${item.id}`)">立即预约</div>
                 </div>
+            </div>
+            <div class="flex-center-col service-list" v-loading="loading" v-else>
+                <el-empty description="暂未上架" />
             </div>
         </el-scrollbar>
         

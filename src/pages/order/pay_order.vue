@@ -23,7 +23,7 @@ const coupon_dialog_loading = ref(false)
 const pay_loading = ref(false)
 const cash_coupon_disabled = ref(true)//赠送金余额
 const user_info = getUserInfo()//用户信息
-const order_data = ref({})
+const order_data = ref(null)
 const equipment_info = ref({})
 const fee_detail = ref([])
 const pay_type = ref(undefined)//支付类型
@@ -61,7 +61,7 @@ const pay_data = ref({
 async function initPageDate() {
     try {
         loading.value = true
-        await getEquipentInfo()
+        await getEquipmentInfo()
         await getOrderInfo()
         await getMyAssets()
         await getTeamInfo()
@@ -80,10 +80,10 @@ async function initPageDate() {
 initPageDate()
 
 //获取设备详情
-async function getEquipentInfo() {
+async function getEquipmentInfo() {
     try {
         const res = await useGetEquipmentInfo(route.query.equipment_id)
-        res.data.quipment_pic = import.meta.env.VITE_FILE_API + res.data.fileList[0].url
+        res.data.equipment_pic = import.meta.env.VITE_FILE_API + res.data.fileList[0].url
         res.data.QRCode_pic = import.meta.env.VITE_FILE_API + res.data.qrCodeFileList[0].url
         equipment_info.value = res.data
     }
@@ -94,18 +94,27 @@ async function getEquipentInfo() {
 
 //获取订单详情
 async function getOrderInfo() {
-    if(!route.query.order_id) return
-    const res = await useGetOrderInfo(route.query.order_id)
-    const data = {
-        ...res.data,
-        globalFieldValues: res.data.equipmentSubscribe.globalFieldValues,
-        groups: res.data.equipmentSubscribe.groups,
+    if(route.query.order_id) {
+        localStorage.removeItem('order_data')
+        const res = await useGetOrderInfo(route.query.order_id)
+        const data = {
+            ...res.data,
+            globalFieldValues: res.data.equipmentSubscribe.globalFieldValues,
+            groups: res.data.equipmentSubscribe.groups,
+        }
+        order_data.value = data
+        pay_data.value = {
+            ...pay_data.value,
+            ...data,
+        }
+    } else {
+        order_data.value = JSON.parse(localStorage.getItem('order_data'))
+        pay_data.value = {
+            ...pay_data.value,
+            ...JSON.parse(localStorage.getItem('order_data')),
+        }
     }
-    order_data.value = data
-    pay_data.value = {
-        ...pay_data.value,
-        ...data,
-    }
+    
 }
 
 //获取个人资产
@@ -273,17 +282,6 @@ function initFeeDiscountDetail() {
     price = Number(pay_data.value.discountMoney) + Number(pay_data.value.couponMoney) + Number(pay_data.value.cashCoupon)
     discount_detail.price = price ? `-￥${price.toFixed(2)}` : ''
     fee_detail.value[fee_detail.value.length - 1] = discount_detail
-}
-
-async function setOrderData(data) {
-    loading.value = true
-    order_data.value = data
-    pay_data.value = {
-        ...pay_data.value,
-        ...data,
-    }
-    await initFeeDetail()
-    loading.value = false
 }
 
 // 更改支付类型
@@ -584,20 +582,12 @@ async function toPage(index, type, prestored_type) {
     await router.push('/user')
     mitt_bus.emit('changeUserActiveIndex', data)
 }
-
-onMounted(() => {
-    mitt_bus.on('payOrder', setOrderData)
-})
-
-onUnmounted(() => {
-    mitt_bus.off('payOrder')
-})
 </script>
 
 <template>
     <div class="euipment-box flex-center">
         <div class="img-box flex-center">
-            <el-image class="euipment-img" :src="equipment_info.quipment_pic">
+            <el-image class="euipment-img" :src="equipment_info.equipment_pic">
                 <template #error>
                     <img class="fail-pic" src="@/assets/img/fail_pic.png" />
                 </template>

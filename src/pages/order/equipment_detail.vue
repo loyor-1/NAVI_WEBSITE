@@ -9,10 +9,10 @@ const router = useRouter()
 const equipment_info = ref({})//设备详情
 
 //获取设备详情
-async function getEquipentInfo() {
+async function getEquipmentInfo() {
     try {
         const res = await useGetEquipmentInfo(route.query.equipment_id)
-        res.data.quipment_pic = import.meta.env.VITE_FILE_API + res.data.fileList[0].url
+        res.data.equipment_pic = import.meta.env.VITE_FILE_API + res.data.fileList[0].url
         res.data.QRCode_pic = import.meta.env.VITE_FILE_API + res.data.qrCodeFileList[0].url
         equipment_info.value = res.data
     }
@@ -20,14 +20,14 @@ async function getEquipentInfo() {
         console.log(err)
     }
 }
-getEquipentInfo()
+getEquipmentInfo()
 
 </script>
 
 <template>
     <div class="euipment-box flex-center">
         <div class="img-box flex-center">
-            <el-image class="euipment-img" :src="equipment_info.quipment_pic">
+            <el-image class="euipment-img" :src="equipment_info.equipment_pic">
                 <template #error>
                     <img class="fail-pic" src="@/assets/img/fail_pic.png" />
                 </template>

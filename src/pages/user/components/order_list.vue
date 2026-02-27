@@ -32,7 +32,7 @@ const result_file_list = ref([])//实验结果下载链接 列表
 
 
 //订单列表接口参数
-const order_code = ref('')//临时存储订单号
+const prepaid_payment = ref(999)//临时支付方式
 const params = ref({
     pageNum: 1,
     pageSize: 10,
@@ -48,7 +48,7 @@ const total_cost = ref({
 })
 //支付方式筛选条件
 const payment_list = reactive([
-    { label: "全部", value: '' },
+    { label: "全部", value: 999 },
     { label: "个人预存", value: 1 },
     { label: "团队预存", value: 2 },
     { label: "支付宝", value: 3 },
@@ -83,17 +83,6 @@ const package_rules = ref({
         { required: true, trigger: "blur", message: "请输入包裹运单号" }
     ]
 })
-
-watch(
-    () => params.value,
-    () => {
-        getOrderList()
-    },
-    { 
-        deep: true,
-        immediate: true,
-    }
-)
 
 //订单按钮的显示与隐藏
 function cancel_order(item) {
@@ -148,7 +137,6 @@ async function getOrderList() {
                 ...cache_store.order_list_params,
             }
             status_value.value = Number(cache_store.status_value)
-            console.log(new_params, status_value.value)
             cache_store.changeOrderListParams()//使用后清除
         }
         const res = await useGetOrderList(new_params)
@@ -170,46 +158,44 @@ async function getOrderList() {
     }
 }
 
-//订单号搜索
-function inputOrderCode() {
-    params.value.orderCode = order_code.value
+//支付方式筛选
+function changePrepaidPayment(e) {
+    params.value.prepaidPayment = e == 999 ? '' : e
+    getOrderList()
 }
 
 //订单状态筛选
 function changeStatus(value) {
     status_value.value = value
-    params.value.orderCode = order_code.value
-    const { pageNum, pageSize, prepaidPayment, orderCode } = params.value
-    const new_params = {
-        pageNum,
-        pageSize,
+    const { prepaidPayment, orderCode } = params.value
+    params.value = {
+        pageNum: 1,
+        pageSize: 10,
         prepaidPayment,
         orderCode,
     }
     if(value > 0) {
-        new_params.status = value
-    } else if(value == 0) {
-        new_params.status = ''
+        params.value.status = value
     } else {
         switch(value) {
             case -1:
-                new_params.customWaitStatus = true
+                params.value.customWaitStatus = true
                 break
             case -2:
-                new_params.customHasStatus = true
+                params.value.customHasStatus = true
                 break
             case -3:
-                new_params.status = 7
-				new_params.customBackStatus = true
+                params.value.status = 7
+				params.value.customBackStatus = true
                 break
             case -4:
-                new_params.status = 7
-				new_params.noAfterSalesStatus = '1'
-				new_params.noRecycleStatus = '2'
+                params.value.status = 7
+				params.value.noAfterSalesStatus = '1'
+				params.value.noRecycleStatus = '2'
                 break
         }
     }
-    params.value = new_params
+    getOrderList()
 }
 
 //复制订单号
@@ -318,7 +304,7 @@ function priceIssue(data) {
             }
             await useAfterSale(price_issue_data)
             await getOrderList()
-            ElMessage.success('取消订单成功！')
+            ElMessage.success('提交价格疑异成功！')
         }
         catch(err) {
             console.log(err)
@@ -332,6 +318,7 @@ function againOrder(data) {
     router.push({
         path: '/appoint_order',
         query: {
+            type: 'again',
             order_id: data.orderId,
             equipment_id: data.subEquipmentId
         }
@@ -358,7 +345,7 @@ function openEvaluation(data) {
     evaluation_dom.value.init(data)
 }
 
-// 关闭配件弹框
+// 关闭评价弹框
 function closeEvaluation() {
     getOrderList()
     downloadResult()
@@ -422,14 +409,14 @@ function openApplyServiceDialog(data) {
         <div class="page-main flex-center">
             <div class="utils-box">
                 <div class="search-box flex-center">
-                    <el-input v-model="order_code" placeholder="请输入订单号">
+                    <el-input v-model="params.orderCode" placeholder="请输入订单号">
                         <template #append>
-                            <el-button @click="inputOrderCode">
+                            <el-button @click="getOrderList">
                                 <el-icon><Search /></el-icon>
                             </el-button>
                         </template>
                     </el-input>
-                    <el-select v-model="params.prepaidPayment" placeholder="选择支付方式">
+                    <el-select v-model="prepaid_payment" placeholder="选择支付方式" @change="changePrepaidPayment">
                         <el-option v-for="item in payment_list" :key="item.value" :label="item.label" :value="item.value"/>
                     </el-select>
                 </div>

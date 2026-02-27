@@ -1,6 +1,6 @@
 <script setup>
 import { useRoute, useRouter } from 'vue-router'
-import { useGetEquipmentInfo, useGetFieIdList, useAddOrder, useAgainOrder } from '@/api'
+import { useGetEquipmentInfo, useGetFieIdList, useAddOrder, useAgainOrder, useGetDraftInfo } from '@/api'
 import { nextTick, reactive, ref, watch } from 'vue'
 import { initFieIdList, changeRelevance, reduceTotalMoney, validateField } from '@/utils/order'
 import { ElMessage, ElMessageBox } from 'element-plus'
@@ -109,12 +109,15 @@ watch(
     }
 )
 
-//获取设备详情
-async function getEquipentInfo() {
+//获取设备详情---在onMounted内执行
+async function getEquipmentInfo() {
     try {
         loading.value = true
-        const res = await useGetEquipmentInfo(route.query.equipment_id)
-        res.data.quipment_pic = import.meta.env.VITE_FILE_API + res.data.fileList[0].url
+        const equipment_id = route.query.equipment_id
+        const res = await useGetEquipmentInfo(equipment_id)
+        console.log("===== useGetEquipmentInfo 调用完成，返回值 res：", res);
+        
+        res.data.equipment_pic = import.meta.env.VITE_FILE_API + res.data.fileList[0].url
         res.data.QRCode_pic = import.meta.env.VITE_FILE_API + res.data.qrCodeFileList[0].url
         equipment_info.value = res.data
     }
@@ -122,7 +125,7 @@ async function getEquipentInfo() {
         console.log(err)
     }
 }
-getEquipentInfo()
+getEquipmentInfo()
 
 // 获取设备字段信息
 async function getFieIdList() {
@@ -141,8 +144,10 @@ async function getFieIdList() {
         if(res_groups.data && res_groups.data.length) {
             show_groups_box.value = true
             groups_fieId_list.value = initFieIdList(res_groups.data)
-            if(route.query.order_id) {
-                againOrder(route.query.order_id)
+            if(route.query.type == 'again') {
+               await againOrder(route.query.order_id)
+            } else if(route.query.type == 'drafts') {
+               await draftsOrder(route.query.draft_id)
             } else {
                 addGroup()
             }
@@ -159,9 +164,18 @@ getFieIdList()
 // 再来一单
 async function againOrder(order_id) {
     const res = await useAgainOrder(order_id)
-    const again_globalFieldValues = res.data.globalFieldValues
-    const again_groups = res.data.groups
+    mapFieldValues(res.data.globalFieldValues, res.data.groups)
+}
 
+// 继续编辑草稿
+async function draftsOrder(draft_id) {
+    const res = await useGetDraftInfo(draft_id)
+    const data = JSON.parse(res.data.draftsJson)
+    mapFieldValues(data.globalFieldValues, data.groups)
+}
+
+// 映射订单字段
+function mapFieldValues(again_globalFieldValues, again_groups) {
     appoint_data.value.globalFieldValues = appoint_data.value.globalFieldValues.map(item => {
         const data = again_globalFieldValues.find(i => i.fieIdId == item.fieIdId)
         if(data) {
@@ -181,6 +195,7 @@ async function againOrder(order_id) {
                     break
                 case 8:
                     result.fieIdValue = ''
+                    break
                 case 9:
                     result.fieldValueRange = new_data.fieldValueRange
                     break
@@ -218,6 +233,7 @@ async function againOrder(order_id) {
                         break
                     case 8:
                         result.fieIdValue = ''
+                        break
                     case 9:
                         result.fieldValueRange = new_data.fieldValueRange
                         break
@@ -598,13 +614,13 @@ async function submitAppoint() {
         if(bargain_status.value) {
             appoint_success.value.showAppointSuccess()
         } else {
+            localStorage.setItem('order_data', JSON.stringify(order_data))
             await router.push({
                 path: '/pay_order',
                 query: {
                     equipment_id: order_data.equipmentId
                 }
             })
-            mitt_bus.emit('payOrder', order_data)
         }
     }
     catch(err) {
@@ -612,13 +628,12 @@ async function submitAppoint() {
         submit_loading.value = false
     }
 }
-
 </script>
 
 <template>
     <div class="euipment-box flex-center">
         <div class="img-box flex-center">
-            <el-image class="euipment-img" :src="equipment_info.quipment_pic">
+            <el-image class="euipment-img" :src="equipment_info.equipment_pic">
                 <template #error>
                     <img class="fail-pic" src="@/assets/img/fail_pic.png" />
                 </template>

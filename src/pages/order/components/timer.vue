@@ -12,8 +12,8 @@ const value_data = ref({
 watch(
     () => props.base_data,
     (newValue) => {
-        value_data.value.duration = newValue.duration
-        value_data.value.fieIdValue = newValue.fieIdValue
+        value_data.value.duration = Number(newValue.duration)
+        value_data.value.fieIdValue = Number(newValue.fieIdValue)
     },
     {
         immediate: true,

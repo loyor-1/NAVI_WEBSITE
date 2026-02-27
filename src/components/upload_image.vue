@@ -44,9 +44,6 @@ function handleUploadError(err) {
 
 // 上传成功回调
 function handleUploadSuccess(res, file, fileList) {
-    console.log('res', res)
-    console.log('file', file)
-    console.log('file_list.value', file_list.value)
     file_list.value.push({ 
         name: res.data.name, 
         url: import.meta.env.VITE_FILE_API + res.data.url,
@@ -58,8 +55,6 @@ function handleUploadSuccess(res, file, fileList) {
         item.url = item.url.replace(reg, '')
         return item
     })
-    console.log('result_list', result_list.value)
-    
     emits('updateValue', result_list.value)
 }
 

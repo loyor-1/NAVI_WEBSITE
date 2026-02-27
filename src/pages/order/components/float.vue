@@ -12,9 +12,9 @@ watch(
     () => props.base_data,
     (newValue) => {
         if(newValue.fieIdValue != undefined && newValue.fieIdValue != null) {
-            value_data.value.fieIdValue = newValue.fieIdValue
+            value_data.value.fieIdValue = Number(newValue.fieIdValue)
         } else if(newValue.defaultValue) {
-            value_data.value.fieIdValue = newValue.defaultValue
+            value_data.value.fieIdValue = Number(newValue.defaultValue)
         } else {
             value_data.value.fieIdValue = null
         }

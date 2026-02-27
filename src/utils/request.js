@@ -53,7 +53,7 @@ service.interceptors.response.use(
       removeToken()
       removeUserInfo()
       return Promise.reject(response.data)
-    } else if (code == 400 || code == 410 || code == 411 || code == 412) {
+    } else if (code === 400 || code === 410 || code === 411 || code === 412) {
       return Promise.reject(msg)
     } else if (code === 500) {
       ElMessage.error(msg || 'Error')

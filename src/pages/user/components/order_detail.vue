@@ -7,7 +7,7 @@ import { ElMessageBox, ElMessage } from 'element-plus';
 import { timeFormat } from "@/utils/format.js"
 import { getUserInfo } from '@/utils/auth'
 
-const user_info = reactive(getUserInfo())//用户信息
+const user_info = getUserInfo()//用户信息
 const instance = getCurrentInstance()// 获取当前组件实例
 
 dayjs.extend(duration)

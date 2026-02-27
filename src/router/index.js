@@ -140,6 +140,14 @@ const router = createRouter({
           component: () => import('@/pages/user/order_manage/user_order_operate.vue'),
         },
         {
+          path: 'order_manage/order_drafts',
+          name: 'order_drafts',//草稿箱
+          meta: {
+            require_token: true
+          },
+          component: () => import('@/pages/user/order_manage/order_drafts.vue'),
+        },
+        {
           path: 'invoice_manage/title_manage',
           name: 'title_manage',//抬头管理
           meta: {

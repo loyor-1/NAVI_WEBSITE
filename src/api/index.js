@@ -143,6 +143,7 @@ export function useGetOrderList(params) {
         url: '/equipment/order/memberOrderList',
         method: 'get',
         params,
+        no_debounce: true,
     })
 }
 
@@ -709,4 +710,29 @@ export function useSaveProducer(data) {
         method: 'post',
         data,
     })
+}
+
+//草稿箱列表
+export function useGetDraftsList(params) {
+    return service({
+        url: '/equipment/subscribeDrafts/list',
+        method: 'get',
+        params
+    })
+}
+
+//删除草稿
+export function useDeleteDrafts(id) {
+    return service({
+        url: `/equipment/subscribeDrafts/${id}`,
+        method: 'delete',
+    })
+}
+
+//获取草稿箱详情---用于继续编辑草稿
+export function useGetDraftInfo(draftId) {
+    return service({
+        method: 'get',
+        url: `equipment/subscribeDrafts/${draftId}`,
+    });
 }
