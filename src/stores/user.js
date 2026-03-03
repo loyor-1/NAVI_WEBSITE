@@ -1,6 +1,6 @@
 import { defineStore } from 'pinia'
 import { useLogin, useLogout, useGetUserInfoByToken, useQRCodeLogin, useGetDicts } from '@/api'
-import { setToken, removeToken, setUserInfo, getUserInfo, removeUserInfo } from '@/utils/auth'
+import { setToken, removeToken, setUserInfo, getUserInfo, removeUserInfo, getTeamInfo, removeTeamInfo } from '@/utils/auth'
 import { ElMessage } from 'element-plus'
 import { useRouter } from 'vue-router'
 
@@ -18,6 +18,7 @@ export const useUserStore = defineStore('user', () => {
       const res_user_info = await useGetUserInfoByToken()
       res_user_info.user.avatar_path = res_user_info.user.avatar ? import.meta.env.VITE_FILE_API + res_user_info.user.avatar : ''
       setUserInfo(JSON.stringify(res_user_info.user))
+      await getTeamInfo()
       ElMessage.success('登录成功！')
       return true
     }
@@ -37,6 +38,7 @@ export const useUserStore = defineStore('user', () => {
       const res_user_info = await useGetUserInfoByToken()
       res_user_info.user.avatar_path = res_user_info.user.avatar ? import.meta.env.VITE_FILE_API + res_user_info.user.avatar : ''
       setUserInfo(JSON.stringify(res_user_info.user))
+      await getTeamInfo()
       ElMessage.success('登录成功！')
       return true
     }
@@ -52,6 +54,7 @@ export const useUserStore = defineStore('user', () => {
       await useLogout()
       removeToken()
       removeUserInfo()
+      removeTeamInfo()
       await router.push('/home_page')
       window.location.reload()
       ElMessage.success('退出登录成功！')

@@ -148,6 +148,15 @@ const router = createRouter({
           component: () => import('@/pages/user/order_manage/order_drafts.vue'),
         },
         {
+          path: 'team_manage/team_space',
+          name: 'team_space',//我的团队
+          meta: {
+            require_token: true,
+            keep_alive: true,
+          },
+          component: () => import('@/pages/user/team_manage/team_space.vue'),
+        },
+        {
           path: 'invoice_manage/title_manage',
           name: 'title_manage',//抬头管理
           meta: {

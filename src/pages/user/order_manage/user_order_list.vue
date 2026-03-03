@@ -7,8 +7,9 @@ import { ref, reactive, watch } from 'vue'
 import { useGetOrderList, useUploadPackage, useCancelOrder, useAfterSale, useGetOrderInvoice, useGetOrderInfo, useGetDownLoadUrl } from '@/api'
 import { moneyKey, orderStatus } from '@/utils/order'
 import { ElMessageBox, ElMessage } from 'element-plus'
-import { useRouter } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 
+const route = useRoute()
 const router = useRouter()
 
 const upload_image = ref(null)
@@ -81,6 +82,26 @@ const package_rules = ref({
         { required: true, trigger: "blur", message: "请输入包裹运单号" }
     ]
 })
+
+watch(
+    () => route,
+    (to, from) => {
+        switch(to.query.type) {
+            case 'searchOrder':
+                const values = JSON.parse(to.query.values)
+                console.log('values', values)
+                for(let key in values) {
+                    params.value[key] = values[key]
+                }
+                getOrderList()
+                break
+        }
+    },
+    {
+        deep: true,
+        immediate: true,
+    }
+)
 
 //订单按钮的显示与隐藏
 function cancel_order(item) {

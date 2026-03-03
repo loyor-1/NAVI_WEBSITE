@@ -1,9 +1,9 @@
 <script setup>
-import { ref, watch, reactive } from 'vue';
-import { useUserStore } from '@/stores/user';
-import { useRoute, useRouter } from 'vue-router';
+import { ref, watch, reactive } from 'vue'
+import { useUserStore } from '@/stores/user'
+import { useRoute, useRouter } from 'vue-router'
 import { useGetLoginQRCode, useGetLoginStatus } from '@/api'
-import { validPhone } from '@/utils/validate';
+import { validPhone } from '@/utils/validate'
 
 function validPhoneRule(rule, value, callback) {
     const {valid, message} = validPhone(value)
@@ -110,7 +110,7 @@ async function getLoginQRCode() {
                     }
                     break
             }
-        }, 2000);
+        }, 2000)
     }
     catch {
         resetQRCodeData()

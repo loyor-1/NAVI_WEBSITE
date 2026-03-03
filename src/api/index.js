@@ -100,6 +100,7 @@ export function useGetTeamInfo(team_id) {
     return service({
         method: 'get',
         url: '/system/team/' + team_id,
+        no_debounce: true,
     });
 }
 
@@ -734,5 +735,113 @@ export function useGetDraftInfo(draftId) {
     return service({
         method: 'get',
         url: `equipment/subscribeDrafts/${draftId}`,
+    });
+}
+
+//团队订单列表--- 待审核 / 已审核
+export function useGetCheckTeamList(params) {
+    return service({
+        method: 'get',
+        url: '/equipment/order/checkTeamList',
+        params,
+        no_debounce: true,
+    });
+}
+
+//订单审核
+export function useOrderCheck(data) {
+    return service({
+        url: '/equipment/order/orderCheck',
+        method: 'put',
+        data
+    })
+}
+
+//团队成员列表
+export function useGetTeamMemberList(params) {
+    return service({
+        method: 'get',
+        url: '/system/team/joinTeamList',
+        params,
+    });
+}
+
+//团员支付审核 设置
+export function useControlTeamAuditFlag(data) {
+    return service({
+        url: '/system/client/controlTeamAuditFlag',
+        method: 'post',
+        data,
+    })
+}
+
+//转让团长
+export function useTransferTeam(data) {
+    return service({
+        method: 'put',
+        url: '/system/team/transferTeam',
+        data,
+    });
+}
+
+//设置管理员
+export function useSetAdministrator(data) {
+    return service({
+        method: 'put',
+        url: '/system/team/setAdministrator',
+        data,
+    });
+}
+
+//移出团队
+export function useRemoveTeam(data) {
+    return service({
+        method: 'put',
+        url: '/system/team/removeJoinTeam',
+        data,
+    });
+}
+
+//入团申请列表
+export function useGetApplyJoinTeamList(params) {
+    return service({
+        method: 'get',
+        url: '/system/team/joinTeamCheckList',
+        params,
+    });
+}
+
+//入团申请审核
+export function useCheckJoinTeam(data) {
+    return service({
+        method: 'put',
+        url: '/system/team/checkJoinTeam',
+        data,
+    });
+}
+
+//解散团队
+export function useDissolveTeam() {
+    return service({
+        method: 'post',
+        url: '/system/team/dissolveTeam'
+    });
+}
+
+//创建团队
+export function useCreatTeam(data) {
+    return service({
+        method: 'post',
+        url: '/system/team',
+        data,
+    });
+}
+
+//编辑团队
+export function useEditTeam(data) {
+    return service({
+        method: 'put',
+        url: '/system/team',
+        data,
     });
 }

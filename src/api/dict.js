@@ -1,4 +1,10 @@
 const dict = {
+    // 用户身份
+    character_role: [
+        { label: "团长", value: 1 },
+        { label: "管理员", value: 2 },
+        { label: "团员", value: 3 },
+    ],
 	// 订单管理-订单状态 待支付/待分配/待确认/待实验/实验中/待结算/已完成
     order_status: [
         { label: "待支付", value: 1 },

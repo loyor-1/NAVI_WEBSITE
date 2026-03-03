@@ -20,17 +20,23 @@ function toPage(i) {
 }
 
 function toPageByIndex(data) {
+    // data: {
+    //     index: '1-1',  子页面的索引，见menu_list.js
+    //     type: 'searchOrder', 自定义的操作标识，用于同一子页面处理不同跳转业务
+    //     ... ,  其余属性为自行添加自行获取
+    // }
     const menu = menu_list.find(item => item.index == data.index[0])
     const page_data = menu.child.find(item => item.index == data.index)
-    if(page_data && page_data.path) {
+    if(page_data) {
         active_index.value = page_data.index
         localStorage.setItem('active_index', page_data.index)
         router.push({
             path: page_data.path,
             query: {
-                ...data
+                ...data,
             }
         })
+        
     } else {
         router.push('/404')
     }
@@ -63,7 +69,12 @@ onMounted(() => {
         </div>
         <el-scrollbar>
             <div class="child-page">
-                <router-view/>
+                <router-view v-slot="{ Component, route }">
+                    <keep-alive>
+                        <component :is="Component" v-if="route.meta.keep_alive"/>
+                    </keep-alive>
+                    <component :is="Component" v-if="!route.meta.keep_alive"/>
+                </router-view>
             </div>
         </el-scrollbar>
     </div>  

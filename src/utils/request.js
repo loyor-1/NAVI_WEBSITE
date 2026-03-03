@@ -1,7 +1,7 @@
 import axios from 'axios';
 import errorCode from './errorCode'
 import { debounce } from 'lodash';
-import { getToken, removeToken, removeUserInfo } from '@/utils/auth'; // 假设有获取/删除Token的工具函数
+import { getToken, removeToken, removeUserInfo, removeTeamInfo } from '@/utils/auth'; // 假设有获取/删除Token的工具函数
 import { ElMessage } from 'element-plus'; // UI提示库（可选）
 
 // 存储正在debounce的请求
@@ -48,10 +48,11 @@ service.interceptors.response.use(
   response=> {
     // 未设置状态码则默认成功状态
     const code = response.data.code || 200;
-    const msg = errorCode[code] || response.data.msg || errorCode['default']
+    const msg = response.data.msg || errorCode[code] || errorCode['default']
     if (code === 401) {
       removeToken()
-      removeUserInfo()
+      removeUserInfo, removeTeamInfo()
+      removeTeamInfo()
       return Promise.reject(response.data)
     } else if (code === 400 || code === 410 || code === 411 || code === 412) {
       return Promise.reject(msg)

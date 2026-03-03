@@ -6,11 +6,11 @@ export const menu_list = [
         label: '账号管理',
         icon: UserFilled,
         child: [
-            { index: '1-1', label: '个人中心', path: '/user/account_manage/user_space' },
-            { index: '1-2', label: '邀请好友', path: '/user/account_manage/invite_friend' },
-            { index: '1-3', label: '积分商城', path: '/user/account_manage/integral_mall' },
-            { index: '1-4', label: '合作入驻', path: '/user/account_manage/cooperative_settlement' },
-            { index: '1-5', label: '专利服务', path: '/user/account_manage/patent_services' },
+            { index: '1-1', label: '个人中心', path: '/user/account_manage/user_space', name: 'user_space' },
+            { index: '1-2', label: '邀请好友', path: '/user/account_manage/invite_friend', name: 'invite_friend' },
+            { index: '1-3', label: '积分商城', path: '/user/account_manage/integral_mall', name: 'integral_mall' },
+            { index: '1-4', label: '合作入驻', path: '/user/account_manage/cooperative_settlement', name: 'cooperative_settlement' },
+            { index: '1-5', label: '专利服务', path: '/user/account_manage/patent_services', name: 'patent_services' },
         ]
     },
     {
@@ -18,9 +18,9 @@ export const menu_list = [
         label: '订单管理',
         icon: Document,
         child: [
-            { index: '2-1', label: '我的订单', path: '/user/order_manage/user_order_list' },
-            { index: '2-2', label: '订单操作', path: '/user/order_manage/user_order_operate' },
-            { index: '2-3', label: '草稿箱', path: '/user/order_manage/order_drafts' },
+            { index: '2-1', label: '我的订单', path: '/user/order_manage/user_order_list', name: 'user_order_list' },
+            { index: '2-2', label: '订单操作', path: '/user/order_manage/user_order_operate', name: 'user_order_operate' },
+            { index: '2-3', label: '草稿箱', path: '/user/order_manage/order_drafts', name: 'order_drafts' },
         ]
     },
     {
@@ -28,7 +28,7 @@ export const menu_list = [
         label: '团队管理',
         icon: Document,
         child: [
-            { index: '3-1', label: '我的团队' },
+            { index: '3-1', label: '我的团队', path: '/user/team_manage/team_space', name: 'team_space' },
             { index: '3-2', label: '团队订单' },
         ]
     },
