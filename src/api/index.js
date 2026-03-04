@@ -845,3 +845,12 @@ export function useEditTeam(data) {
         data,
     });
 }
+
+//团队订单
+export function useGetTeamOrderList(params) {
+    return service({
+        url: '/equipment/order/teamOrderList',
+        method: 'get',
+        params
+    })
+}

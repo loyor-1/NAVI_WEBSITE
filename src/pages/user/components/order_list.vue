@@ -157,6 +157,7 @@ async function getOrderList() {
         loading.value = false
     }
 }
+getOrderList()
 
 //支付方式筛选
 function changePrepaidPayment(e) {
@@ -218,7 +219,6 @@ function emitChangeShowPage(order_id) {
         order_id,
     }
     // 前往订单详情前，存储订单列表筛选条件，以便返回时，展示用户点击详情时的订单列表
-    console.log('开始', params.value, status_value.value)
     cache_store.changeOrderListParams({
         params: params.value,
         status_value: status_value.value,

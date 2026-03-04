@@ -1,94 +1,45 @@
 <script setup>
-import uploadImage from '@/components/upload_image.vue'
-import confirmResult from '@/pages/user/components/confirm_result.vue'
-import evaluation from "@/pages/user/components/evaluation.vue"
-import afterSale from '@/pages/user/components/after_sale.vue'
-import orderDetail from '@/pages/user/components/order_detail.vue'
-import { ref, reactive, watch, nextTick } from 'vue'
-import { useGetOrderList, useUploadPackage, useCancelOrder, useAfterSale, useGetOrderInvoice, useGetOrderInfo, useGetDownLoadUrl } from '@/api'
+import { ref, watch } from 'vue'
+import { useGetTeamOrderList, useGetOrderInvoice, useGetOrderInfo, useGetDownLoadUrl, useOrderCheck } from '@/api'
+import { ElMessage, ElMessageBox } from 'element-plus'
 import { moneyKey, orderStatus } from '@/utils/order'
-import { ElMessageBox, ElMessage } from 'element-plus'
-import { useRoute, useRouter } from 'vue-router'
-
-defineOptions({
-    name: 'user_order_list'
-})
+import { useRoute } from 'vue-router'
+import { getTeamInfo } from '@/utils/auth'
 
 const route = useRoute()
-const router = useRouter()
-
-const upload_image = ref(null)
-const order_detail_dom = ref(null)
-const package_form_dom = ref(null)
-const confirm_result_dom = ref(null)
-const evaluation_dom = ref(null)
-const after_sale_dom = ref(null)
+const team_info = getTeamInfo()
 
 const loading = ref(false)
-const package_dialog = ref(false)
-const package_loading = ref(false)
 const result_dialog = ref(false)
-const show_order_detail = ref(false)
-const order_detail_info = ref(null)
+const date_list = ref([])//临时存储下单时间筛选
+const order_list = ref([])//订单列表
+const total_cost = ref(0)
 const total = ref(0)
 const status_value = ref(0)
-const order_list = ref([])//订单列表
-const result_file_list = ref([])//实验结果下载链接 列表
+const result_file_list = ref([])//实验结果列表
 
-//订单列表接口参数
-const prepaid_payment = ref(999)//临时存储支付方式
-const date_list = ref([])//临时存储下单时间筛选
-const params = ref({
-    pageNum: 1,
-    pageSize: 10,
-    orderCode: '',
-    equipmentName: '',
-    orderDateBegin: '',
-    orderDateEnd: '',
-    status: '',
-    prepaidPayment: '',//支付方式
-})
-//累计检测金额
-const total_cost = ref({
-    client: 0,
-    team: 0,
-    total: 0,
-})
-//支付方式筛选条件
-const payment_list = reactive([
-    { label: "全部", value: 999 },
-    { label: "个人预存", value: 1 },
-    { label: "团队预存", value: 2 },
-    { label: "支付宝", value: 3 },
-    { label: "微信", value: 4 },
-    { label: "个人信用", value: 5 },
-    { label: "团队信用", value: 6 },
-])
 //订单状态筛选列表
-const status_list = reactive([
+const status_list = [
     { label: '全部订单', value: 0 },
-	{ label: '待支付', value: 1 },
 	{ label: '待审核', value: 10 },
-	{ label: '待寄样/取样', value: -1},
-	{ label: '已寄样/取样', value: -2 },
+	{ label: '待寄样/取样', value: -1 },
+	{ label: '已寄样/取样', value: -2},
 	{ label: '待实验', value: 4 },
 	{ label: '实验中', value: 5 },
 	{ label: '待核对', value: 12 },
 	{ label: '已取消', value: 8 },
 	{ label: '售后/回运', value: -3 },
-	{ label: '已完成',  value: -4 },
-	{ label: '申请开票', value: 9},
-])
-//上传包裹接口参数
-const package_data = ref({
-    orderId: undefined,
-    packageTransportDocument: '',
-    packageTransportList: []
-})
-const package_rules = ref({
-    packageTransportDocument: [
-        { required: true, trigger: "blur", message: "请输入包裹运单号" }
-    ]
+	{ label: '已完成', value: -4 },
+	{ label: '申请开票',  value: 9 },
+]
+//订单列表接口参数
+const params = ref({
+    teamId: undefined,
+    orderCode: '',
+    equipmentName: '',
+    clientName: '',
+    orderDateBegin: '',
+    orderDateEnd: '',
 })
 
 watch(
@@ -97,7 +48,6 @@ watch(
         switch(to.query.type) {
             case 'searchOrder':
                 const values = JSON.parse(to.query.values)
-                console.log('values', values)
                 for(let key in values) {
                     params.value[key] = values[key]
                 }
@@ -111,45 +61,18 @@ watch(
     }
 )
 
-//订单按钮的显示与隐藏
-function cancel_order(item) {
-	const arr = ['待议价', '待支付', '待审核', '待寄样', '待取样']
+function operate_button(item) {
+    const arr = ['待审核']
 	return arr.includes(orderStatus(item))
 }
-function pay_order(item) {
-	const arr = ['待支付']
-	return arr.includes(orderStatus(item)) && item.bargainStatus != 1
-}
-function upload_pack(item) {
-	const arr = ['待寄样']
-	return arr.includes(orderStatus(item))
-}
-function price_objection(item) {
-	const arr = ['待核对']
-	return arr.includes(orderStatus(item))
-}
-function confirm_result(item) {
-	const arr = ['待核对']
-	return arr.includes(orderStatus(item))
-}
-function download_result(item) {
-	const arr = ['已完成', '回运']
-	return arr.includes(orderStatus(item))
-}
-function again_order(item) {
-	const arr = ['已完成']
-	return arr.includes(orderStatus(item))
-}
-function apply_service(item) {
-	const arr = ['回运', '已完成']
-	return arr.includes(orderStatus(item))
-}
+
 function show_invoice(item) {
 	const arr = ['已完成']
 	return arr.includes(orderStatus(item)) && item.billStatus == 2 && item.prepaidPayment != 1 && item.prepaidPayment != 2
 }
-function connect_kefu(item) {
-	const arr = ['售后', '回运']
+
+function download_result(item) {
+	const arr = ['已完成', '回运']
 	return arr.includes(orderStatus(item))
 }
 
@@ -157,17 +80,12 @@ function connect_kefu(item) {
 async function getOrderList() {
     loading.value = true
     try {
-        show_order_detail.value = false
-        const res = await useGetOrderList(params.value)
+        const res = await useGetTeamOrderList(params.value)
         res.data.data.list.forEach(item => {
             item.equipment_pic = (item.fileList && item.fileList.length) ? import.meta.env.VITE_FILE_API + item.fileList[0].url : ''
         })
         order_list.value = res.data.data.list
-        total_cost.value = {
-            client: (+res.data.data.clientStat).toFixed(2),
-			team: (+res.data.data.teamStat).toFixed(2),
-			total: (+res.data.data.clientStat + +res.data.data.teamStat).toFixed(2),
-        }
+        total_cost.value = res.data.data.teamStat
         total.value = res.data.data.total
         loading.value = false
     }
@@ -175,13 +93,6 @@ async function getOrderList() {
         console.log(err)
         loading.value = false
     }
-}
-getOrderList()
-
-//支付方式筛选
-function changePrepaidPayment(e) {
-    params.value.prepaidPayment = e == 999 ? '' : e
-    getOrderList()
 }
 
 //下单日期筛选
@@ -194,18 +105,21 @@ function changeDate(e) {
 //订单状态筛选
 async function changeStatus(value) {
     status_value.value = value
-    const { orderCode, equipmentName, orderDateBegin, orderDateEnd, prepaidPayment } = params.value
+    const { orderCode, equipmentName, clientName, orderDateBegin, orderDateEnd } = params.value
     params.value = {
+        teamId: team_info.teamId,
         pageNum: 1,
         pageSize: 10,
         orderCode,
         equipmentName,
+        clientName,
         orderDateBegin,
         orderDateEnd,
-        prepaidPayment,
     }
     if(value > 0) {
         params.value.status = value
+    } else if(value == 0) {
+        params.value.noStatuss = value
     } else {
         switch(value) {
             case -1:
@@ -227,21 +141,7 @@ async function changeStatus(value) {
     }
     getOrderList()
 }
-
-//打开订单详情
-function showOrderDetail(data) {
-    show_order_detail.value = true
-    order_detail_info.value = data
-    nextTick(() => {
-        order_detail_dom.value.getOrderInfo(data.orderId)
-    })
-}
-
-//返回订单列表
-function goback() {
-    show_order_detail.value = false
-    order_detail_info.value = null
-}
+changeStatus(0)
 
 //复制订单号
 function copyOrderCode(orderCode) {
@@ -255,101 +155,21 @@ function copyOrderCode(orderCode) {
     }
 }
 
-// 前往支付订单
-function toPayOrder(data) {
-    router.push({
-        path: '/pay_order',
-        query: {
-            equipment_id: data.subEquipmentId,
-            order_id: data.orderId,
-        }
-    })
-}
-
-//打开上传包裹信息弹框
-function uploadPackage(data) {
-    package_data.value.orderId = data.orderId
-    package_dialog.value = true
-}
-
-//关闭上传包裹信息弹框
-function closePackageDialog() {
-    package_form_dom.value.resetFields()
-    upload_image.value.cleanList()
-}
-
-//上传包裹照片
-function updatePackageTransport(list) {
-    package_data.value.packageTransportList = list
-}
-
-// 确认上传包裹
-function submitPackage() {
-    package_form_dom.value.validate(async valid => {
-        if(valid) {
-            try {
-                package_loading.value = true
-                await useUploadPackage(package_data.value)
-                package_dialog.value = false
-                package_loading.value = false
-                ElMessage.success('包裹信息上传成功！')
-                await getOrderList()
-            }
-            catch(err) {
-                console.log(err)
-                package_loading.value = false
-            }
-        }
-    })
-}
-
-//取消订单
-function cancelOrder(data) {
-    ElMessageBox.confirm('是否确认取消该订单？', '温馨提示', { type: 'warning' }).then(async () => {
+// 团队订单审核
+function checkOrder(order_id, value) {
+    const value_text = value == 2 ? '是否通过该成员的订单申请？' : '是否拒绝该成员的订单申请？'
+    ElMessageBox.confirm(value_text, '温馨提示', {type: 'warning'}).then(async () => {
         try {
-            loading.value = true
-            const cancel_data = {
-                orderId: data.orderId
+            const data = {
+                orderId: order_id,
+				checkStatus: value,
             }
-            await useCancelOrder(cancel_data)
+            await useOrderCheck(data)
+            ElMessage.success('操作成功！')
             await getOrderList()
-            ElMessage.success('取消订单成功！')
         }
         catch(err) {
             console.log(err)
-            loading.value = false
-        }
-    })
-}
-
-//价格疑异
-function priceIssue(data) {
-    ElMessageBox.confirm('是否确认提交价格疑异？', '温馨提示', { type: 'warning' }).then(async () => {
-        try {
-            loading.value = true
-            const price_issue_data = {
-                orderId: data.orderId,
-                afterSalesDesc: '价格疑异',
-            }
-            await useAfterSale(price_issue_data)
-            await getOrderList()
-            ElMessage.success('提交价格疑异成功！')
-        }
-        catch(err) {
-            console.log(err)
-            loading.value = false
-        }
-    })
-}
-
-//再来一单
-function againOrder(data) {
-    router.push({
-        path: '/appoint_order',
-        query: {
-            type: 'again',
-            order_id: data.orderId,
-            equipment_id: data.subEquipmentId
         }
     })
 }
@@ -362,22 +182,6 @@ async function previewInvoice(data) {
     const res = await useGetOrderInvoice(params)
     const url = import.meta.env.VITE_FILE_API + res.data.invoiceFileList[0].url
     window.open(url, '_blank')
-}
-
-// 确认结果
-function confirmOrderResult(data) {
-    confirm_result_dom.value.init(data)
-}
-
-//打开评价弹框
-function openEvaluation(data) {
-    evaluation_dom.value.init(data)
-}
-
-// 关闭评价弹框
-function closeEvaluation() {
-    getOrderList()
-    downloadResult()
 }
 
 // 打开下载实验结果弹框
@@ -412,6 +216,7 @@ async function downloadResult(data) {
         loading.value = false
     }
 }
+
 async function copyLink(url) {
     try {
         await navigator.clipboard.writeText(url)
@@ -419,15 +224,6 @@ async function copyLink(url) {
     } catch {
         ElMessage.error('写入剪贴板失败！')
     }
-}
-
-// 申请售后
-function openApplyServiceDialog(data) {
-    const after_sale_data = {
-        orderId: data.orderId,
-        afterSalesDesc: '',
-    }
-    after_sale_dom.value.init(after_sale_data)
 }
 </script>
 
@@ -453,10 +249,14 @@ function openApplyServiceDialog(data) {
                             </el-button>
                         </template>
                     </el-input>
-                    <!-- 支付方式筛选 -->
-                    <el-select v-model="prepaid_payment" placeholder="选择支付方式" @change="changePrepaidPayment">
-                        <el-option v-for="item in payment_list" :key="item.value" :label="item.label" :value="item.value"/>
-                    </el-select>
+                    <!-- 申请人 -->
+                    <el-input v-model="params.clientName" placeholder="请输入申请人">
+                        <template #append>
+                            <el-button @click="getOrderList">
+                                <el-icon><Search /></el-icon>
+                            </el-button>
+                        </template>
+                    </el-input>
                     <!-- 下单时间筛选 -->
                     <div class="time-box">
                         <el-date-picker v-model="date_list" type="daterange" value-format="YYYY-MM-DD" range-separator="至" start-placeholder="开始时间" end-placeholder="结束时间" @change="changeDate"/>
@@ -469,8 +269,8 @@ function openApplyServiceDialog(data) {
                 </div>
             </div>
             <el-scrollbar>
-                <div class="order-box flex-center" v-loading="loading" v-if="order_list.length && !show_order_detail">
-                    <div class="order-card" v-for="item in order_list" :key="item.orderId" @click="showOrderDetail(item)">
+                <div class="order-box flex-center" v-loading="loading" v-if="order_list.length">
+                    <div class="order-card" v-for="item in order_list" :key="item.orderId">
                         <div class="card-head flex-center">
                             <div class="order-code flex-center" @click.stop="copyOrderCode(item.orderCode)">
                                 <span>{{ item.orderCode }}</span>
@@ -487,6 +287,7 @@ function openApplyServiceDialog(data) {
                                 </el-image>
                             </div>
                             <div class="order-info">
+                                <div>申请人：{{ item.clientName }}</div>
                                 <div>检测项目：{{ item.equipmentName }}</div>
                                 <div>
                                     <span>订单金额：</span>
@@ -506,45 +307,22 @@ function openApplyServiceDialog(data) {
                             </div>
                         </div>
                         <div class="button-box flex-center">
-                            <div class="custom-button" v-if="pay_order(item)" @click.stop="toPayOrder(item)">立即支付</div>
-                            <div class="default-button" v-if="upload_pack(item)" @click.stop="uploadPackage(item)">上传包裹信息</div>
-                            <div class="default-button" v-if="cancel_order(item)" @click.stop="cancelOrder(item)">取消订单</div>
-                            <div class="default-button" v-if="price_objection(item)" @click.stop="priceIssue(item)">价格疑异</div>
-                            <div class="custom-button" v-if="again_order(item)" @click.stop="againOrder(item)">再来一单</div>
-                            <div class="default-button" v-if="show_invoice(item)" @click.stop="previewInvoice(item)">查看发票</div>
-                            <!-- 弹出确认结果弹框 -->
-                            <div class="custom-button" v-if="confirm_result(item)" @click.stop="confirmOrderResult(item)">
-                                <span class="font-mini">下载实验数据</span>
-                                <img class="new-icon" src="@/assets/svg/new.svg" alt="">
-                            </div>
-                            <!-- 直接下载结果 -->
-                            <div class="custom-button" v-if="download_result(item)" @click.stop="downloadResult(item)">
-                                <span class="font-mini">下载实验数据</span>
-                                <img class="new-icon" src="@/assets/svg/new.svg" alt="">
-                            </div>
-                            <div class="default-button" v-if="apply_service(item)" @click.stop="openApplyServiceDialog(item)">申请售后</div>
+                            <div class="custom-button button-style" v-if="operate_button(item)" @click="checkOrder(item.orderId, 2)">通过</div>
+                            <div class="delete-button button-style" v-if="operate_button(item)" @click="checkOrder(item.orderId, 3)">拒绝</div>
+                            <div class="default-button button-style" v-if="show_invoice(item)" @click.stop="previewInvoice(item)">查看发票</div>
+                            <div class="default-button button-style" v-if="download_result(item)" @click.stop="downloadResult(item)"><span class="font-mini">下载实验数据</span></div>
                         </div>
                     </div>
                 </div>
-                <div class="order-box order-box-null flex-center font-middle font-5D5D5D" v-loading="loading" v-else-if="!order_list.length && !show_order_detail">
+                <div class="order-box order-box-null flex-center font-middle font-5D5D5D" v-loading="loading" v-else>
                     暂无订单信息...
-                </div>
-                <div class="order-box flex-center" v-else-if="show_order_detail">
-                    <div class="order-box-title flex-center" v-if="show_order_detail">
-                        <div class="custom-button goback-button" @click="goback">返回</div>
-                        <div class="font-middle font-600">订单详情 — {{ order_detail_info.equipmentName }}</div>
-                    </div>
-                    <order-detail ref="order_detail_dom" height="100vh - 180px"></order-detail>
                 </div>
             </el-scrollbar>
         </div>
-        <div class="pagination-box" v-show="!show_order_detail">
+        <div class="pagination-box">
             <div class="flex-center">
-                <el-tooltip effect="dark" :content="`个人累计检测金额： ￥${ total_cost.client } / 团队累计检测金额： ￥${ total_cost.team } `" placement="top">
-                    <el-icon><WarningFilled /></el-icon>
-                </el-tooltip>
                 <span style="margin-left: 5px">累计检测金额： </span>
-                <span class="font-FF4A2B">￥{{ total_cost.total }} </span>
+                <span class="font-FF4A2B">￥{{ total_cost }} </span>
             </div>
             <el-pagination
               v-model:current-page="params.pageNum"
@@ -556,28 +334,6 @@ function openApplyServiceDialog(data) {
             />
         </div>
     
-        <!-- 上传包裹信息 -->
-        <el-dialog
-          v-model="package_dialog"
-          title="上传包裹信息"
-          width="700px"
-          :close-on-click-modal="false"
-          :close-on-press-escape="false"
-          @close="closePackageDialog"
-        >
-            <el-form ref="package_form_dom" :model="package_data" :rules="package_rules" label-width="120px">
-                <el-form-item label="包裹运单号" prop="packageTransportDocument">
-                    <el-input v-model="package_data.packageTransportDocument" placeholder="请输入包裹运单号"></el-input>
-                </el-form-item>
-                <el-form-item label="包裹照片" prop="packageTransportList">
-                    <uploadImage ref="upload_image" :limit="3" @updateValue="updatePackageTransport"></uploadImage>
-                </el-form-item>
-            </el-form>
-            <template #footer>
-                <el-button :loading="package_loading" type="primary" plain @click="package_dialog = false">取消</el-button>
-                <el-button :loading="package_loading" type="primary" @click="submitPackage">提交</el-button>
-            </template>
-        </el-dialog>
         <!-- 复制实验结果链接弹框 -->
         <el-dialog title="提示" v-model="result_dialog" width="700px">
             <div class="downloadfile-title">存在多个实验结果的订单，下载实验数据时，需手动<span style="color: #FF4A2B; font-weight: 600;">点击</span>复制相应数据链接，前往浏览器粘贴打开以下载！</div>
@@ -586,12 +342,6 @@ function openApplyServiceDialog(data) {
                 <el-button @click="result_dialog = false">关  闭</el-button>
             </template>
         </el-dialog>
-        <!-- 确认结果弹框 -->
-        <confirmResult ref="confirm_result_dom" @openEvaluation="openEvaluation"></confirmResult>
-        <!-- 确认评价 -->
-        <evaluation ref="evaluation_dom" @close="closeEvaluation"></evaluation>
-        <!-- 提交售后弹框 -->
-        <afterSale ref="after_sale_dom" @refresh="getOrderList"></afterSale>
     </div>
 </template>
 
@@ -706,22 +456,9 @@ function openApplyServiceDialog(data) {
             min-height: 50px;
             padding: 5px 10px;
             background-color: #FFFFFF;
-            .custom-button {
-                position: relative;
+            .button-style {
                 height: 40px;
                 padding: 0 15px;
-                font-size: clamp(10px, 0.6vw, 24px);
-                .new-icon {
-                    position: absolute;
-                    top: -35%;
-                    right: 0;
-                    width: 25%;
-                }
-            }
-            .default-button {
-                height: 40px;
-                padding: 0 15px;
-                font-size: clamp(10px, 0.6vw, 24px);
             }
         }
     }

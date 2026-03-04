@@ -111,9 +111,9 @@ async function toPage(index, type) {
 
     <router-view v-slot="{ Component, route }">
       <keep-alive>
-        <component :is="Component" v-if="route.meta.keep_alive"/>
+        <component :is="Component" v-if="route.meta.keep_alive" :key="route.meta.name"/>
       </keep-alive>
-      <component :is="Component" v-if="!route.meta.keep_alive"/>
+      <component :is="Component" v-if="!route.meta.keep_alive" :key="route.meta.name"/>
     </router-view>
 
     <div class="page-footer">

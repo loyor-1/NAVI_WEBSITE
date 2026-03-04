@@ -127,7 +127,7 @@ const router = createRouter({
           path: 'order_manage/user_order_list',
           name: 'user_order_list',//个人订单
           meta: {
-            require_token: true
+            require_token: true,
           },
           component: () => import('@/pages/user/order_manage/user_order_list.vue'),
         },
@@ -155,6 +155,14 @@ const router = createRouter({
             keep_alive: true,
           },
           component: () => import('@/pages/user/team_manage/team_space.vue'),
+        },
+        {
+          path: 'team_manage/team_order_list',
+          name: 'team_order_list',//团队订单
+          meta: {
+            require_token: true,
+          },
+          component: () => import('@/pages/user/team_manage/team_order_list.vue'),
         },
         {
           path: 'invoice_manage/title_manage',

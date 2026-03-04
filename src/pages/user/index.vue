@@ -56,12 +56,10 @@ onMounted(() => {
                     <el-menu :default-active="active_index" background-color="transparent" active-text-color="#94C9FF">
                         <el-sub-menu :index="item.index" v-for="item in menu_list" :key="item.index">
                             <template #title>
-                                <el-icon>
-                                    <component :is="item.icon" />
-                                </el-icon>
+                                <img class="menu-icon" :src="item.icon" alt="">
                                 <span>{{ item.label }}</span>
                             </template>
-                            <el-menu-item :index="i.index" v-for="i in item.child" :key="i.index" @click="toPage(i)">{{ i.label }}</el-menu-item>
+                            <el-menu-item :index="i.index" v-for="i in item.child.filter(x => x.show)" :key="i.index" @click="toPage(i)">{{ i.label }}</el-menu-item>
                         </el-sub-menu>
                     </el-menu>
                 </el-scrollbar>
@@ -71,9 +69,9 @@ onMounted(() => {
             <div class="child-page">
                 <router-view v-slot="{ Component, route }">
                     <keep-alive>
-                        <component :is="Component" v-if="route.meta.keep_alive"/>
+                        <component :is="Component" v-if="route.meta.keep_alive" :key="route.meta.name"/>
                     </keep-alive>
-                    <component :is="Component" v-if="!route.meta.keep_alive"/>
+                    <component :is="Component" v-if="!route.meta.keep_alive" :key="route.meta.name"/>
                 </router-view>
             </div>
         </el-scrollbar>
@@ -120,6 +118,11 @@ onMounted(() => {
         min-width: 172px;
         height: calc(100vh - 5vw);
         max-height: calc(100vh - 72px);
+        .menu-icon {
+            width: 15px;
+            height: 15px;
+            margin-right: 5px;
+        }
     }
 }
 .child-page {

@@ -13,6 +13,13 @@ const instance = getCurrentInstance()// 获取当前组件实例
 dayjs.extend(duration)
 const emit = defineEmits(['downloadResult'])
 
+const props = defineProps({
+    height: {
+        type: String,
+        default: '100vh - 290px'
+    }
+})
+
 const imgurl = import.meta.env.VITE_FILE_API
 const order_info_loading = ref(false)
 const export_experiment_loading = ref(false)
@@ -238,9 +245,9 @@ defineExpose({ getOrderInfo })
 
 <template>
     <!-- 订单详情 -->
-    <el-card class="page-main" v-loading="order_info_loading" shadow="never">
+    <el-card class="container" :style="{height: `calc(${height})`}" v-loading="order_info_loading" shadow="never">
         <el-scrollbar>
-            <div class="page-content">
+            <div :style="{height: `calc(${height} - 50px)`}">
                 <el-card class="info-card">
                     <div class="tips" v-if="order_status == '待支付'">订单即将关闭，请及时支付</div>
 		            <div class="tips" v-if="order_status == '待审核'">您的团队已开启订单审核设置，请联系团长或管理员审核订单</div>
@@ -472,14 +479,10 @@ defineExpose({ getOrderInfo })
 </template>
 
 <style lang="scss" scoped>
-.page-main {
+.container {
     position: relative;
-    width: calc((88vw - 30px) * 0.78);
+    width: 100%;
     min-width: 965px;
-    height: calc(100vh - 290px);
-    .page-content {
-        height: calc(100vh - 340px);
-    }
     .info-card {
         margin-bottom: 20px;
     }
