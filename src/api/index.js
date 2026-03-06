@@ -854,3 +854,21 @@ export function useGetTeamOrderList(params) {
         params
     })
 }
+
+//【帮ta还款】团队订单列表
+export function useGetHelpRepaymentList(params) {
+    return service({
+        url: '/equipment/order/helpTeamMemberRepayment',
+        method: 'get',
+        params
+    })
+}
+
+//团队订单操作---【帮ta还款】
+export function useHelpRepayment(data) {
+    return service({
+        url: '/system/team/financialCenter/helpTeamMemberRepayment',
+        method: 'post',
+        data
+    })
+}

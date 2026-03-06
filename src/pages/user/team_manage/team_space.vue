@@ -399,19 +399,32 @@ async function refreshTeamInfo() {
                             <div class="font-94C9FF font-600 font-middle title-ret">团队成员</div>
                             <div class="carousel-item-main">
                                 <el-table v-loading="team_member_list_loading" :data="team_member_list" :header-cell-style="{ background: '#94C9FF50' }" :height="`calc(100vh - 380px)`">
-                                    <el-table-column prop="clientName" align="center" label="姓名"></el-table-column>
-                                    <el-table-column prop="realNameStatus" align="center" label="是否实名">
+                                    <el-table-column prop="clientName" align="center" label="姓名" min-width="100"></el-table-column>
+                                    <el-table-column prop="applyDate" align="center" label="入团时间" min-width="120"></el-table-column>
+                                    <el-table-column prop="realNameStatus" align="center" label="是否实名" min-width="100">
                                         <template #default="scope">{{ scope.row.realNameStatus == 0 ? '否' : '是' }}</template>
                                     </el-table-column>
-                                    <el-table-column prop="phoneNumber" align="center" label="联系电话"></el-table-column>
-                                    <el-table-column prop="roleName" align="center" label="角色">
+                                    <el-table-column prop="phoneNumber" align="center" label="联系电话" min-width="120"></el-table-column>
+                                    <el-table-column prop="roleName" align="center" label="角色" min-width="80">
                                         <template #default="scope">{{ getDictLabel('character_role', scope.row.characterRole) }}</template>
                                     </el-table-column>
-                                    <el-table-column prop="teamCompleteOrderNumber" align="center" label="完成订单"></el-table-column>
-                                    <el-table-column prop="teamOrderTotalCost" align="center" label="订单金额" v-if="user_info.characterRole !== 3"></el-table-column>
-                                    <el-table-column prop="teamDebtTotalCost" align="center" label="团队欠款金额" v-if="user_info.characterRole !== 3"></el-table-column>
-                                    <el-table-column prop="toBePaidDebt" align="center" label="个人欠款金额" v-if="user_info.characterRole !== 3"></el-table-column>
-                                    <el-table-column v-if="team_info.paymentAudit == 1 && user_info.characterRole != 3" label="免审核额度" width="180" align="center">
+                                    <el-table-column prop="teamCompleteOrderNumber" align="center" label="完成订单" min-width="100"></el-table-column>
+                                    <el-table-column v-if="user_info.characterRole !== 3" align="center" label="订单金额" min-width="120">
+                                        <template #default="scope">
+                                            <span class="font-FF4A2B">￥{{ scope.row.teamOrderTotalCost }}</span>
+                                        </template>
+                                    </el-table-column>
+                                    <el-table-column v-if="user_info.characterRole !== 3" align="center" label="团队欠款金额" min-width="120">
+                                        <template #default="scope">
+                                            <span class="font-5CC300">￥{{ scope.row.teamDebtTotalCost }}</span>
+                                        </template>
+                                    </el-table-column>
+                                    <el-table-column v-if="user_info.characterRole !== 3" align="center" label="个人欠款金额" min-width="120">
+                                        <template #default="scope">
+                                            <span class="font-5CC300">￥{{ scope.row.toBePaidDebt }}</span>
+                                        </template>
+                                    </el-table-column>
+                                    <el-table-column v-if="team_info.paymentAudit == 1 && user_info.characterRole != 3" label="免审核额度" align="center" min-width="180">
                                         <template #default="scope">
                                             <div v-if="scope.row.edit">
                                                 <input type="number" style="width: 70px; text-align: center;" v-model="scope.row.teamAuditFlag_new">
@@ -423,7 +436,7 @@ async function refreshTeamInfo() {
                                             </div>
                                         </template>
                                     </el-table-column>
-                                    <el-table-column label="操作" width="180" align="center">
+                                    <el-table-column label="操作" align="center" min-width="180">
                                         <template #default="scope">
                                             <div class="flex-center-col">
                                                 <div><el-button v-if="team_info.clientCharacterRole == 1 && scope.row.characterRole != 1" type="text" size="small" @click="transferTeam(scope.row)">转让团长</el-button></div>
