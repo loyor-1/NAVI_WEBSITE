@@ -1,11 +1,12 @@
 <script setup>
-import dayjs from "dayjs";
-import { computed, nextTick, ref, watch } from "vue";
-import { getUserInfo } from '@/utils/auth';
-import { useRouter } from "vue-router";
-import { ElMessageBox, ElMessage } from 'element-plus';
+import dayjs from "dayjs"
+import mitt_bus from "@/utils/mitt_bus"
+import { computed, ref, watch } from "vue"
+import { getUserInfo } from '@/utils/auth'
+import { useRouter } from "vue-router"
+import { ElMessageBox, ElMessage } from 'element-plus'
 import { validEnterpriseTax, validInvoiceTitle } from '@/utils/validate.js'
-import { useGetInvoiceHeadList, useGetUserInvoiceHeadList, useGetTestItemList, useApplyInvoice } from "@/api";
+import { useGetInvoiceHeadList, useGetUserInvoiceHeadList, useGetTestItemList, useApplyInvoice } from "@/api"
 
 const router = useRouter()
 const emit = defineEmits(['emitChangeShowPage'])
@@ -511,8 +512,12 @@ function emitChangeShowPage() {
 }
 
 //前往我的发票
-function toMyInvoice () {
-    router.push({path: "/"})
+async function toMyInvoice () {
+    const data = {
+        index: '4-2',
+    }
+    router.push('/user')
+    mitt_bus.emit('changeUserActiveIndex', data)
 }
 
 // 开票示例预览
@@ -525,7 +530,7 @@ defineExpose({ initHandle, initPrestoredType })
 </script>
 
 <template>
-    <div style="width: 100%; height: 100%;" v-loading="loading">
+    <div style="overflow: hidden; width: 100%; height: 100%;" v-loading="loading">
         <!-- 申请预存/开票 -->
         <div class="page-main">
             <el-scrollbar>
@@ -746,24 +751,23 @@ defineExpose({ initHandle, initPrestoredType })
         
     
         <!-- 申请成功弹框 -->
-        <div class="success-dialog" v-show="apply_success_dialog">
-            <div class="dialog-box">
-                <div class="dialog-box-content flex-center-col">
-                    <div class="font-large font-600 font-5CC300">申请成功</div>
-                    <div class="content-text flex-center-col">
-                        <h3>正常开票大约需要<span class="font-FF5000">10～15分钟</span>，如果有疑问请联系客服</h3>
-                        <h3>您也可在<span class="font-FF5000">我的发票</span>中查看开票进度</h3>
-                    </div>
-                    <div class="content-button-box flex-center">
-                        <div class="content-button default-button" @click="emitChangeShowPage">返回</div>
-                        <div class="content-button custom-button" @click="toMyInvoice()">查看我的发票</div>
-                    </div>
+        <custom-dialog class="success-dialog" v-model="apply_success_dialog" :show_close="false" width="400px" background_color="transparent">
+            <template #background>
+                <img class="success-background" src="@/assets/img/navi_dialog.png" />
+            </template>
+            <div class="dialog-box-content flex-center-col">
+                <div class="font-large font-600 font-5CC300">申请成功</div>
+                <div class="content-text flex-center-col">
+                    <h3>正常开票大约需要<span class="font-FF5000">10～15分钟</span></h3>
+                    <h3>如果有疑问请联系客服</h3>
+                    <h3>您也可在<span class="font-FF5000">我的发票</span>中查看开票进度</h3>
                 </div>
-                <div class="close-button flex-center" @click="emitChangeShowPage">
-                    <el-icon class="close-icon"><CircleCloseFilled /></el-icon>
+                <div class="content-button-box flex-center">
+                    <div class="content-button default-button" @click="emitChangeShowPage">返回</div>
+                    <div class="content-button custom-button" @click="toMyInvoice">查看我的发票</div>
                 </div>
             </div>
-        </div>
+        </custom-dialog>
     </div>
 </template>
 
@@ -895,66 +899,29 @@ tr:last-child:hover {
     height: 50px;
 }
 
-@keyframes showSuccessDialog {
-    0% {
-        opacity: 0.1;
-        transform: scale(0.5);
-    }
-    100% {
-        opacity: 1;
-        transform: scale(1);
-    }
-}
 .success-dialog {
-    z-index: 1;
-    animation: showSuccessDialog 0.2s linear forwards;
-    position: fixed;
-    top: 8%;
-    left: 50%;
-    transform: translateX(-50%);
-    width: 600px;
-    height: 800px;
-    background: url('@/assets/img/navi_dialog.png') no-repeat;
-    background-position: top; /* 图片居中 */
-    background-size: contain;
-    .dialog-box {
-        position: relative;
-        width: 600px;
-        height: 800px;
-        .dialog-box-content {
-            position: absolute;
-            top: 25%;
-            left: 50%;
-            transform: translateX(-50%);
-            justify-content: space-between;
-            width: 500px;
-            height: 420px;
-            padding: 20px 0;
-            .content-text {
-                row-gap: 20px;
-            }
-            .content-button-box {
-                width: 400px;
-                justify-content: space-between;
-                .content-button {
-                    width: 150px;
-                    height: 50px;
-                }
-            }
+    position: relative;
+    .success-background {
+        width: 400px;
+        height: 450px;
+    }
+    .dialog-box-content {
+        position: absolute;
+        top: 150px;
+        width: 335px;
+        .content-text {
+            row-gap: 15px;
+            margin-top: 15px;
         }
-        .close-button {
-            position: absolute;
-            bottom: 20px;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 100px;
-            height: 100px;
-            .close-icon {
-                transform: scale(5);
-                color: #5D5D5D;
+        .content-button-box {
+            justify-content: space-around;
+            width: 100%;
+            margin-top: 30px;
+            .content-button {
+                width: 120px;
+                height: 40px;
             }
         }
     }
 }
- 
 </style>

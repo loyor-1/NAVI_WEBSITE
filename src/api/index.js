@@ -738,6 +738,15 @@ export function useGetDraftInfo(draftId) {
     });
 }
 
+//搜索团队列表
+export function useGetTeamList(params) {
+    return service({
+        method: 'get',
+        url: '/system/team/list',
+        params,
+    });
+}
+
 //团队订单列表--- 待审核 / 已审核
 export function useGetCheckTeamList(params) {
     return service({
@@ -870,5 +879,41 @@ export function useHelpRepayment(data) {
         url: '/system/team/financialCenter/helpTeamMemberRepayment',
         method: 'post',
         data
+    })
+}
+
+//团队财务中心---资金使用记录
+export function useGetFinanceLog(params) {
+    return service({
+        url: '/equipment/financialCenterLog/logList',
+        method: 'get',
+        params,
+    })
+}
+
+//个人预存转团队
+export function useTransferPrepayment(data) {
+    return service({
+        url: '/system/client/convertToTeamPrestore',
+        method: 'post',
+        data,
+    })
+}
+
+//个人预存转团队---验证码
+export function useSendTransferCode(params) {
+    return service({
+        url: '/system/client/sendPrestoreVerifyCode',
+        method: 'get',
+        params,
+    })
+}
+
+//团队预存划拨
+export function useTransferTeamPrepayment(data) {
+    return service({
+        url: '/equipment/prestoreTransfer/transfer',
+        method: 'post',
+        data,
     })
 }

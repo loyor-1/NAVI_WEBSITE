@@ -61,7 +61,6 @@ async function getInvoiceList() {
         loading.value = false
     }
 }
-getInvoiceList()
 
 //刷新页面
 function refresh(msg, time) {
@@ -201,8 +200,8 @@ function changeShowPage(row, index) {
                 <div class="custom-button" @click="downloadFile">下载测试报告模板</div>
             </div>
         </div>
-        <div class="invoice-box" v-loading="loading" v-if="invoice_list.length">
-            <el-table class="invoice-table" v-if="show_page_index < 0" :data="invoice_list" height="calc(100vh - 182px)" border :header-cell-style="{backgroundColor: '#94C9FF30', height: '60px'}">
+        <div class="invoice-box">
+            <el-table class="invoice-table" v-loading="loading" v-if="show_page_index < 0" :data="invoice_list" height="calc(100vh - 182px)" border :header-cell-style="{backgroundColor: '#94C9FF30', height: '60px'}">
                 <el-table-column prop="applyCode" label="申请编号" width="140" align="center"></el-table-column>
                 <el-table-column prop="invoiceTitle" label="发票抬头" align="center" show-overflow-tooltip></el-table-column>
                 <el-table-column label="发票类型" width="120" align="center">
@@ -259,7 +258,6 @@ function changeShowPage(row, index) {
                 </div>
             </div>
         </div>
-        <div class="invoice-box invoice-box-null flex-center font-middle font-5D5D5D" v-loading="loading" v-else>暂无发票信息...</div>
     </div>
     <div class="pagination-box">
         <el-pagination
@@ -358,11 +356,6 @@ function changeShowPage(row, index) {
             border-radius: 0 0 10px 10px;
         }
     }
-}
-.invoice-box-null {
-    justify-content: center;
-    align-content: center;
-    height: calc(100vh - 152px);
 }
 
 .pagination-box {

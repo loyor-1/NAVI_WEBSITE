@@ -1,11 +1,13 @@
 <script setup>
 import applyPrepayment from '../components/apply_prepayment.vue'
 import { getTeamInfo } from '@/utils/auth'
-import { computed, getCurrentInstance, nextTick, ref } from 'vue'
+import { computed, getCurrentInstance, nextTick, ref, watch } from 'vue'
 import { useGetHelpRepaymentList, useGetTeamOrderList, useGetEquipmentList, useOrderRepayment, useHelpRepayment, useExportInvoiceResult } from '@/api'
 import { ElMessage, ElMessageBox } from 'element-plus'
+import { useRoute } from 'vue-router'
 
 const instance = getCurrentInstance()
+const route = useRoute()
 
 const team_info = getTeamInfo()
 const table_dom = ref(null)
@@ -104,6 +106,29 @@ const reduce_data = computed(() => {
     return string
 })
 
+watch(
+    () => route.query,
+    (newValue) => {
+        switch(newValue.type) {
+            case '立即还款':
+                changeOperate(0)
+                break
+            case '帮ta还款':
+                changeOperate(1)
+                break
+            case '去开票':
+                changeOperate(2)
+                break
+            default:
+                changeOperate(0)
+        }
+    },
+    {
+        immediate: true,
+        deep: true,
+    }
+)
+
 //更改订单操作tab
 async function changeOperate(index) {
     if(loading.value) return
@@ -157,7 +182,6 @@ async function changeOperate(index) {
 	}
     getOrderList()
 }
-changeOperate(operate_index.value)//初始显示【立即还款】列表
 
 async function getOrderList() {
     try {

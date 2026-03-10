@@ -46,7 +46,7 @@ function closeDialog() {
                 <slot name="background"></slot>
             </div>
             <el-icon class="close-icon" v-show="show_close" @click="closeDialog"><Close /></el-icon>
-            <div class="content">
+            <div class="content flex-center-col">
                 <slot></slot>
             </div>
         </div>

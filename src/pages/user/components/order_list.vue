@@ -3,7 +3,7 @@ import uploadImage from '@/components/upload_image.vue'
 import confirmResult from './confirm_result.vue'
 import evaluation from "./evaluation.vue"
 import afterSale from './after_sale.vue'
-import { ref, reactive, watch } from 'vue'
+import { ref, reactive } from 'vue'
 import { useGetOrderList, useUploadPackage, useCancelOrder, useAfterSale, useGetOrderInvoice, useGetOrderInfo, useGetDownLoadUrl } from '@/api'
 import { moneyKey, orderStatus } from '@/utils/order'
 import { ElMessage, ElMessageBox } from 'element-plus'

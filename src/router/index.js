@@ -157,6 +157,14 @@ const router = createRouter({
           component: () => import('@/pages/user/team_manage/team_space.vue'),
         },
         {
+          path: 'team_manage/team_financial_center',
+          name: 'team_financial_center',//团队财务中心
+          meta: {
+            require_token: true,
+          },
+          component: () => import('@/pages/user/team_manage/team_financial_center.vue'),
+        },
+        {
           path: 'team_manage/team_order_list',
           name: 'team_order_list',//团队订单
           meta: {

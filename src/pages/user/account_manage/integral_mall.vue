@@ -380,7 +380,7 @@ async function confirmExchange() {
     </el-dialog>
 
     <!-- 礼品详情弹框 -->
-    <customDialog key="prize-info" class="exchange-dialog" v-model="prize_detail_dialog" width="305px" background_color="transparent">
+    <custom-dialog key="prize-info" class="exchange-dialog" v-model="prize_detail_dialog" width="305px" background_color="transparent">
         <template #background>
             <img class="exchange-background" src="https://pstatic.navi-sci.cn/integral/integral-pop.png" />
         </template>
@@ -400,10 +400,10 @@ async function confirmExchange() {
                 <div class="default-button exchange-button-style" @click="prize_detail_dialog = false">取消</div>
             </div>
         </div>
-    </customDialog>
+    </custom-dialog>
     
     <!-- 确认兑换礼品弹框 -->
-    <customDialog key="exchange-prize" class="exchange-dialog" v-model="exchange_dialog" width="305px" background_color="transparent">
+    <custom-dialog key="exchange-prize" class="exchange-dialog" v-model="exchange_dialog" width="305px" background_color="transparent">
         <template #background>
             <img class="exchange-background" src="https://pstatic.navi-sci.cn/integral/integral-pop.png" />
         </template>
@@ -420,7 +420,7 @@ async function confirmExchange() {
                 <div class="custom-button exchange-button-style" @click="confirmExchange">确认</div>
             </div>
         </div>
-    </customDialog>
+    </custom-dialog>
 </template>
 
 <style lang="scss" scoped>

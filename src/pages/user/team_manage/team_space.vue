@@ -35,7 +35,7 @@ const join_team_list_total = ref(0)
 
 const check_team_list_params = ref({
     pageNum: 1,
-    pageSize: 10,
+    pageSize: 15,
     teamId: undefined,
     queryType: 15,
 })
@@ -516,7 +516,7 @@ async function refreshTeamInfo() {
                                     <el-pagination 
                                       v-model:current-page="check_team_list_params.pageNum" 
                                       v-model:page-size="check_team_list_params.pageSize" 
-                                      :page-sizes="[10, 20, 30, 50]" 
+                                      :page-sizes="[15, 30, 50]" 
                                       :background="true" 
                                       :total="check_team_list_total"
                                       layout="total, sizes, prev, pager, next"

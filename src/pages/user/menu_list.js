@@ -35,8 +35,9 @@ export const menu_list = [
         icon: team,
         child: [
             { index: '3-1', label: '我的团队', path: '/user/team_manage/team_space', name: 'team_space', show: true },
-            { index: '3-2', label: '团队订单', path: '/user/team_manage/team_order_list', name: 'team_order_list', show: user_info.teamId && user_info.characterRole != 3 },
-            { index: '3-3', label: '订单操作', path: '/user/team_manage/team_order_operate', name: 'team_order_operate', show: user_info.teamId && user_info.characterRole != 3 },
+            { index: '3-2', label: '财务中心', path: '/user/team_manage/team_financial_center', name: 'team_financial_center', show: user_info.teamId && user_info.characterRole != 3 },
+            { index: '3-3', label: '团队订单', path: '/user/team_manage/team_order_list', name: 'team_order_list', show: user_info.teamId && user_info.characterRole != 3 },
+            { index: '3-4', label: '订单操作', path: '/user/team_manage/team_order_operate', name: 'team_order_operate', show: user_info.teamId && user_info.characterRole != 3 },
         ]
     },
     {
