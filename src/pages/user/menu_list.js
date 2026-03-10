@@ -38,6 +38,7 @@ export const menu_list = [
             { index: '3-2', label: '财务中心', path: '/user/team_manage/team_financial_center', name: 'team_financial_center', show: user_info.teamId && user_info.characterRole != 3 },
             { index: '3-3', label: '团队订单', path: '/user/team_manage/team_order_list', name: 'team_order_list', show: user_info.teamId && user_info.characterRole != 3 },
             { index: '3-4', label: '订单操作', path: '/user/team_manage/team_order_operate', name: 'team_order_operate', show: user_info.teamId && user_info.characterRole != 3 },
+            { index: '3-5', label: '团队发票', path: '/user/team_manage/team_invoice', name: 'team_invoice', show: user_info.teamId && user_info.characterRole != 3 },
         ]
     },
     {
