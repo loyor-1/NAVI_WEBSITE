@@ -7,8 +7,8 @@ export const useTabStore = defineStore('tab', () => {
     
     //可以随意向后添加页面，不需做其他处理
     const tab_list_all = ref([
-        { label: '首页', index: 0, active: true, page: '/home_page'},
-        { label: '云现场', index: 1, active: false},
+        { label: '首页', index: 0, active: true, path: '/home_page'},
+        { label: '云现场', index: 1, active: false, path: '/cloud_scene'},
         { label: '材料检测', index: 2, active: false},
         { label: '高端测试', index: 3, active: false},
         { label: '生物检测', index: 4, active: false},
@@ -21,9 +21,24 @@ export const useTabStore = defineStore('tab', () => {
         { label: '论文润色', index: 11, active: false},
         { label: '数据分析', index: 12, active: false},
         { label: '关于我们', index: 13, active: false},
+        { label: '关于我们', index: 14, active: false},
+        { label: '关于我们', index: 15, active: false},
+        { label: '关于我们ef', index: 16, active: false},
+        { label: '关于我们11', index: 17, active: false},
+        { label: '关于我们22', index: 18, active: false},
     ])
 
-    const tab_list = ref(tab_list_all.value.slice(0, 14))
+    const tab_list = ref([])
+
+    function initTabList() {
+        const list = localStorage.getItem('tab_list')
+        tab_list.value = list ? JSON.parse(list) : JSON.parse(JSON.stringify(tab_list_all.value.slice(0, 14)))
+    }
+    initTabList()
+
+    function saveTabList() {
+        localStorage.setItem('tab_list', JSON.stringify(tab_list.value))
+    }
 
     //tabbar翻页
     function changeMenuList(num) {
@@ -38,7 +53,8 @@ export const useTabStore = defineStore('tab', () => {
             const index_start = tab_list_all.value.findIndex(item => item.index == tab_list.value[0].index) + num
             const index_end = tab_list_all.value.findIndex(item => item.index == tab_list.value[tab_list.value.length - 1].index) + 1 + num
             if(index_start < 0 || index_end > tab_list_all.value.length - 1) return
-            tab_list.value = tab_list_all.value.slice(index_start, index_end)
+            tab_list.value = JSON.parse(JSON.stringify(tab_list_all.value.slice(index_start, index_end)))
+            saveTabList()
             if(active_tab_index < tab_list.value[0].index) clickTabbar(tab_list.value[0])
             if(active_tab_index > tab_list.value[tab_list.value.length - 1].index) clickTabbar(tab_list.value[tab_list.value.length - 1])
         }
@@ -49,7 +65,11 @@ export const useTabStore = defineStore('tab', () => {
         tab_list_all.value.forEach(item => {
             item.active = item.index == data.index
         })
-        router.push(data.page || '/')
+        tab_list.value.forEach(item => {
+            item.active = item.index == data.index
+        })
+        saveTabList()
+        router.push(data.path || '/')
     }
 
     return { tab_list, changeMenuList, clickTabbar }

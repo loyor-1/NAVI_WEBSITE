@@ -273,7 +273,7 @@ async function operateButton() {
             ElMessageBox.confirm(`是否确认为选中订单还款，金额${reduce_data.value}元`, '温馨提示').then(async () => {
                 try {
                     const data = {
-                        orderIds: select_list.value,
+                        orderIds: select_list.value.map(i => i.orderId),
                     }
                     await useHelpRepayment(data)
                     ElMessage.success('帮ta还款成功！')

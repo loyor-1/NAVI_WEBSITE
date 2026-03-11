@@ -8,6 +8,7 @@ import chinaMap from '@/utils/china_map.json';
 
 const router = useRouter()
 
+const loading = ref(false)
 const carousel_list = ref([])//轮播图列表
 const carousel = ref()//轮播图实例
 const hot_list = ref([])//热门设备列表
@@ -213,11 +214,13 @@ function toPage(data) {
 // 获取热门设备列表
 async function getHotList() {
     try {
+        loading.value = true
         const res = await useGetHotList()
         res.rows.forEach(item => {
             item.equipment_pic = (item.fileList && item.fileList.length) ? import.meta.env.VITE_FILE_API + item.fileList[0].url : ''
         })
         hot_list.value = res.rows
+        loading.value = false
     }
     catch(err) {
         console.log(err)
@@ -417,15 +420,7 @@ function toEquipmentDetail(equipment_id) {
             <div class="head-item-left font-large">热门设备</div>
             <div class="head-item-right font-5D5D5D">自营设备品类丰富，高效快捷</div>
         </div>
-        <div class="box-main" v-if="!hot_list.length">
-            <div class="card-default" v-for="item in 10" :key="item" v-loading="true">
-                <div class="img-box flex-center">
-                    <div class="card-img"></div>
-                </div>
-            </div>
-            <div class="card-info"></div>
-        </div>
-        <div class="box-main" v-else>
+        <div class="box-main" v-loading="loading">
             <div class="card" v-for="item in hot_list" :key="item.id" @click="toEquipmentDetail(item.id)">
                 <div class="img-box flex-center">
                     <el-image class="card-img" :src="item.equipment_pic">
@@ -567,10 +562,12 @@ function toEquipmentDetail(equipment_id) {
 }
 @keyframes head_item_left{
     0% {
+        opacity: 0;
         top: 15px;
         left: 0;
     }
     100% {
+        opacity: 1;
         top: 15px;
         left: 50%;
         transform: translateX(-50%);
@@ -578,10 +575,12 @@ function toEquipmentDetail(equipment_id) {
 }
 @keyframes head_item_right{
     0% {
+        opacity: 0;
         bottom: 15px;
         right: 0;
     }
     100% {
+        opacity: 1;
         bottom: 15px;
         right: 50%;
         transform: translateX(50%);
@@ -670,11 +669,11 @@ function toEquipmentDetail(equipment_id) {
         height: 120px;
         background-image: linear-gradient(to right, #9FFFD7, #BAFF75);
         .head-item-left {
-            animation: head_item_left 0.5s forwards;
+            animation: head_item_left 1s forwards;
             position: absolute;
         }
         .head-item-right {
-            animation: head_item_right 0.5s forwards;
+            animation: head_item_right 1s forwards;
             position: absolute;
         }
     }
@@ -688,12 +687,6 @@ function toEquipmentDetail(equipment_id) {
         min-height: calc((80vw - 90px) / 5 * 1.3);
         padding: 15px;
         background-color: #FFFFFF;
-        .card-default {
-            width: calc((80vw - 90px) / 5);
-            min-width: 270px;
-            border-radius: 5%;
-            background-color: #fff;
-        }
         .card {
             overflow: hidden;
             animation: card 0.5s linear;

@@ -48,11 +48,19 @@ const router = createRouter({
         },
         {
           path: 'pay_order',
-          name: 'pay_order',//合作入驻板块
+          name: 'pay_order',//订单支付
           meta: {
             require_token: true
           },
           component: () => import('@/pages/order/pay_order.vue'),
+        },
+        {
+          path: 'cloud_scene',
+          name: 'cloud_scene',//tab---云现场
+          meta: {
+            require_token: true
+          },
+          component: () => import('@/pages/tab/cloud_scene.vue'),
         },
       ]
     },
