@@ -1,26 +1,37 @@
 <script setup>
-import { useRoute, useRouter } from 'vue-router';
+import { useRoute, useRouter } from 'vue-router'
 import { useGetEquipmentInfo } from '@/api'
-import { ref } from 'vue';
+import { ref, watch } from 'vue'
+import { getUserInfo } from '@/utils/auth'
 
 const route = useRoute()
 const router = useRouter()
+const user_info = getUserInfo()
 
 const equipment_info = ref({})//设备详情
+
+watch(
+    () => route,
+    () => {
+        getEquipmentInfo()
+    },
+    {
+        deep: true,
+        immediate: true,
+    }
+)
 
 //获取设备详情
 async function getEquipmentInfo() {
     try {
         const res = await useGetEquipmentInfo(route.query.equipment_id)
         res.data.equipment_pic = import.meta.env.VITE_FILE_API + res.data.fileList[0].url
-        res.data.QRCode_pic = import.meta.env.VITE_FILE_API + res.data.qrCodeFileList[0].url
         equipment_info.value = res.data
     }
     catch(err) {
         console.log(err)
     }
 }
-getEquipmentInfo()
 
 </script>
 
@@ -55,11 +66,11 @@ getEquipmentInfo()
         </div>
         <div style="flex: 1;"></div>
         <div class="tips flex-center">
-            <el-image class="tips-pic" :src="equipment_info.QRCode_pic">
+            <el-image class="tips-pic" :src="user_info.user_kefu_QRCode">
                 <template #error>
-                    <img class="fail-pic" src="@/assets/img/fail_pic.png" alt="">
+                    <img class="tips-pic" src="@/assets/img/kefuCode.jpg" />
                 </template>
-             </el-image>
+            </el-image>
             <div class="multi-line-ellipsis-1">{{ equipment_info.technicalAdvisorTextPrompts }}</div>
         </div>
         <div class="tips flex-center">

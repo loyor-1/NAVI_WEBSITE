@@ -17,8 +17,10 @@ export const useUserStore = defineStore('user', () => {
       // 存储用户信息
       const res_user_info = await useGetUserInfoByToken()
       res_user_info.user.avatar_path = res_user_info.user.avatar ? import.meta.env.VITE_FILE_API + res_user_info.user.avatar : ''
-      setUserInfo(JSON.stringify(res_user_info.user))
       await getTeamInfo()
+      const res_dict = await useGetDicts('customer_service_qrcode')//获取区域客服二维码
+      localStorage.setItem('kefu_list', JSON.stringify(res_dict.data))
+      setUserInfo(JSON.stringify(res_user_info.user))
       ElMessage.success('登录成功！')
       return true
     }
@@ -64,15 +66,5 @@ export const useUserStore = defineStore('user', () => {
     }
   }
 
-  //设置客服二维码
-  async function setKefuQRCode() {
-    const res_user_info = await getUserInfo()
-    const res_dict = await useGetDicts('customer_service_qrcode')//获取区域客服二维码
-    const data = res_dict.data.find(item => item.dictLabel == res_user_info.unitId)
-    if(data) {
-      localStorage.setItem('kefu_QR_code', data.dictValue)
-    }
-  }
-
-  return { login, logout, QRCode_login, setKefuQRCode }
+  return { login, logout, QRCode_login }
 })

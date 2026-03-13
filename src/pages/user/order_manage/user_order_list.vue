@@ -9,6 +9,7 @@ import { useGetOrderList, useUploadPackage, useCancelOrder, useAfterSale, useGet
 import { moneyKey, orderStatus } from '@/utils/order'
 import { ElMessageBox, ElMessage } from 'element-plus'
 import { useRoute, useRouter } from 'vue-router'
+import { getUserInfo } from '@/utils/auth'
 
 defineOptions({
     name: 'user_order_list'
@@ -16,6 +17,7 @@ defineOptions({
 
 const route = useRoute()
 const router = useRouter()
+const user_info = getUserInfo()
 
 const upload_image = ref(null)
 const order_detail_dom = ref(null)
@@ -523,6 +525,16 @@ function openApplyServiceDialog(data) {
                                 <img class="new-icon" src="@/assets/svg/new.svg" alt="">
                             </div>
                             <div class="default-button" v-if="apply_service(item)" @click.stop="openApplyServiceDialog(item)">申请售后</div>
+                            <el-popover v-if="connect_kefu(item)" placement="right" width="200" trigger="hover">
+                                <el-image style="width: 100%" :src="user_info.user_kefu_QRCode">
+                                    <template #error>
+                                        <img style="width: 100%" src="@/assets/img/kefuCode.jpg" />
+                                    </template>
+                                </el-image>
+                                <template #reference>
+                                    <div class="default-button">联系客服</div>
+                                </template>
+                            </el-popover>
                         </div>
                     </div>
                 </div>

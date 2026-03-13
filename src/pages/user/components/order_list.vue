@@ -9,11 +9,12 @@ import { moneyKey, orderStatus } from '@/utils/order'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { useRouter } from 'vue-router'
 import { useCacheStore } from '@/stores/cache'
+import { getUserInfo } from '@/utils/auth'
 
 const emit = defineEmits(['emitChangeShowPage'])
 const router = useRouter()
 const cache_store = useCacheStore()
-const kefu_QR_code = localStorage.getItem('kefu_QR_code')
+const user_info = getUserInfo()
 
 const upload_image = ref(null)
 const package_form = ref(null)
@@ -482,7 +483,11 @@ function openApplyServiceDialog(data) {
                             </div>
                             <div class="default-button" v-if="apply_service(item)" @click.stop="openApplyServiceDialog(item)">申请售后</div>
                             <el-popover v-if="connect_kefu(item)" placement="right" width="200" trigger="hover">
-                                <img style="width: 100%" :src="kefu_QR_code" alt="">
+                                <el-image style="width: 100%" :src="user_info.user_kefu_QRCode">
+                                    <template #error>
+                                        <img style="width: 100%" src="@/assets/img/kefuCode.jpg" />
+                                    </template>
+                                </el-image>
                                 <template #reference>
                                     <div class="default-button">联系客服</div>
                                 </template>

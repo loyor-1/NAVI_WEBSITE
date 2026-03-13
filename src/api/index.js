@@ -363,7 +363,17 @@ export function useGetEquipmentList(params) {
         method: 'get',
         url: '/equipment/equipmentInfo/list',
         params,
+        no_debounce: true,
     });
+}
+
+//仪器采购---列表
+export function useGetEquipmentMall(params) {
+    return service({
+        url: 'equipment/equipmentmall',
+        method: 'get',
+        params,
+    })
 }
 
 //实验结果发送邮箱

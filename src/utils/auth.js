@@ -13,7 +13,13 @@ export function removeToken() {
 }
 
 export function setUserInfo(user_info) {
-  localStorage.setItem('user_info', user_info)
+  const list = JSON.parse(localStorage.getItem('kefu_list'))
+  const parse_user_info = JSON.parse(user_info)
+  const data = list.find(item => item.dictLabel == parse_user_info.unitId)
+  if(data) {
+    parse_user_info.user_kefu_QRCode = data.dictValue
+  }
+  localStorage.setItem('user_info', JSON.stringify(parse_user_info))
 }
 
 export function setTeamInfo(team_info) {

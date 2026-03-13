@@ -110,9 +110,12 @@ function toEquipmentDetail(equipment_id) {
     <div class="page-main">
         <img class="box-1" src="@/assets/img/yunxianchang.jpg" alt="">
         <div class="equipment-box">
-            <div class="flex-center font-large box-head">热门设备</div>
+            <div class="flex-center font-large box-head">云现场项目</div>
             <div class="box-main" v-loading="loading">
-                <div class="card" v-for="item in equipment_list" :key="item.id" @click="toEquipmentDetail(item.id)">
+                <div style="width: 100%; height: 100%;" v-if="!equipment_list.length">
+                    <el-empty description="暂无数据" />
+                </div>
+                <div class="card" v-else v-for="item in equipment_list" :key="item.id" @click="toEquipmentDetail(item.id)">
                     <div class="flex-center img-box">
                         <el-image class="card-img" :src="item.equipment_pic">
                             <template #error>
@@ -140,14 +143,15 @@ function toEquipmentDetail(equipment_id) {
                     <div class="custom-button" @click.stop="router.push(`/appoint_order?equipment_id=${item.id}`)">立即预约</div>
                 </div>
             </div>
-            <div class="pagination-box flex-center" v-if="!apply_invoice_switch">
+            <div class="pagination-box flex-center">
                 <el-pagination
                   v-model:current-page="params.pageNum"
                   v-model:page-size="params.pageSize"
-                  :page-sizes="[20, 30, 40, 50]"
+                  :page-sizes="[10, 20, 30, 50]"
                   :background="true"
                   layout="total, sizes, prev, pager, next"
                   :total="total"
+                  @change="getEquipmentList"
                 />
             </div>
         </div>

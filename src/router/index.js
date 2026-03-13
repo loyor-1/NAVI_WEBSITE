@@ -31,6 +31,14 @@ const router = createRouter({
           component: () => import('@/pages/order/equipment_detail.vue'),
         },
         {
+          path: 'equipment_mall_detail',
+          name: 'equipment_mall_detail',//仪器采购---设备详情
+          meta: {
+            require_token: false
+          },
+          component: () => import('@/pages/order/equipment_mall_detail.vue'),
+        },
+        {
           path: 'appoint_order',
           name: 'appoint_order',//下单页
           meta: {
@@ -61,6 +69,102 @@ const router = createRouter({
             require_token: true
           },
           component: () => import('@/pages/tab/cloud_scene.vue'),
+        },
+        {
+          path: 'material_test',
+          name: 'material_test',//tab---材料检测
+          meta: {
+            require_token: true
+          },
+          component: () => import('@/pages/tab/material_test.vue'),
+        },
+        {
+          path: 'high_test',
+          name: 'high_test',//tab---高端测试
+          meta: {
+            require_token: true
+          },
+          component: () => import('@/pages/tab/high_test.vue'),
+        },
+        {
+          path: 'bio_detection',
+          name: 'bio_detection',//tab---生物检测
+          meta: {
+            require_token: true
+          },
+          component: () => import('@/pages/tab/bio_detection.vue'),
+        },
+        {
+          path: 'equipment_mall',
+          name: 'equipment_mall',//tab---仪器采购
+          meta: {
+            require_token: true
+          },
+          component: () => import('@/pages/tab/equipment_mall.vue'),
+        },
+        {
+          path: 'material_processing',
+          name: 'material_processing',//tab---材料加工
+          meta: {
+            require_token: true
+          },
+          component: () => import('@/pages/tab/material_processing.vue'),
+        },
+        {
+          path: 'life_sciences',
+          name: 'life_sciences',//tab---试剂耗材
+          meta: {
+            require_token: true
+          },
+          component: () => import('@/pages/tab/life_sciences.vue'),
+        },
+        {
+          path: 'environment_detection',
+          name: 'environment_detection',//tab---环境检测
+          meta: {
+            require_token: true
+          },
+          component: () => import('@/pages/tab/environment_detection.vue'),
+        },
+        {
+          path: 'analog_computation',
+          name: 'analog_computation',//tab---模拟计算
+          meta: {
+            require_token: true
+          },
+          component: () => import('@/pages/tab/analog_computation.vue'),
+        },
+        {
+          path: 'scientific_draw',
+          name: 'scientific_draw',//tab---科研绘图
+          meta: {
+            require_token: true
+          },
+          component: () => import('@/pages/tab/scientific_draw.vue'),
+        },
+        {
+          path: 'thesis_services',
+          name: 'thesis_services',//tab---论文润色
+          meta: {
+            require_token: true
+          },
+          component: () => import('@/pages/tab/thesis_services.vue'),
+        },
+        {
+          path: 'data_analysis',
+          name: 'data_analysis',//tab---数据分析
+          meta: {
+            require_token: true
+          },
+          component: () => import('@/pages/tab/data_analysis.vue'),
+        },
+        {
+          path: 'about_us',
+          name: 'about_us',//tab---关于我们
+          meta: {
+            require_token: true
+          },
+          component: () => import('@/pages/tab/about_us.vue'),
         },
       ]
     },
