@@ -57,7 +57,7 @@ onMounted(() => {
 //初始化页面
 async function initPage() {
     if(user_info.value.teamId) {
-        team_info.value = getTeamInfo()
+        await refreshTeamInfo()
         check_team_list_params.value.teamId = team_info.value.teamId
         team_member_list_params.value.teamId = team_info.value.teamId
         join_team_list_params.value.teamId = team_info.value.teamId

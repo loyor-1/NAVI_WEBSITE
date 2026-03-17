@@ -1,22 +1,26 @@
 <script setup>
 import dayjs from 'dayjs'
 import relativeTime from 'dayjs/plugin/relativeTime'// 引入相对时间插件（用于更友好的描述，如“1天前”）
-import { ElMessageBox, ElMessage } from 'element-plus'
-import { reactive, ref, nextTick, watch } from 'vue'
-import { getUserInfo } from '@/utils/auth'
-import { useGetCoupon, useGetMyAssets, useGetDownLoadUrl, useGetApplyCertLog } from '@/api'
+import mitt_bus from '@/utils/mitt_bus'
 import orderList from '../components/order_list.vue'
 import orderDetail from '../components/order_detail.vue'
 import applyPrepayment from '../components/apply_prepayment.vue'
 import prepaymentLog from '../components/prepayment_log.vue'
-import mitt_bus from '@/utils/mitt_bus'
+import coupon from '../components/coupon.vue'
+import { ElMessageBox, ElMessage } from 'element-plus'
+import { reactive, ref, nextTick, watch } from 'vue'
+import { getUserInfo } from '@/utils/auth'
+import { useGetCoupon, useGetMyAssets, useGetDownLoadUrl, useGetApplyCertLog } from '@/api'
 import { useRoute, useRouter } from 'vue-router'
 import { useUserStore } from '@/stores/user'
+import { useTabStore } from '@/stores/tab'
 
 dayjs.extend(relativeTime);
 const route = useRoute()
 const router = useRouter()
 const user_store = useUserStore()
+const tab_store = useTabStore()
+const coupon_dom = ref(null)
 
 const coupon_loading = ref(true)
 const assets_loading = ref(true)
@@ -41,16 +45,16 @@ const user_coupon_data = ref({
     usable: [],//可用优惠券
     used: [],//已使用优惠券
     invalid: [],//失效优惠券
-    money: '',//可用优惠券总金额
-    number: '',//可用折扣卷张数
+    money: 0,//可用优惠券总金额
+    number: 0,//可用折扣卷张数
 })
 // 团队优惠券
 const team_coupon_data = ref({
     usable: [],//可用优惠券
     used: [],//已使用优惠券
     invalid: [],//失效优惠券
-    money: '',//可用优惠券总金额
-    number: '',//可用折扣卷张数
+    money: 0,//可用优惠券总金额
+    number: 0,//可用折扣卷张数
 })
 
 watch(
@@ -294,6 +298,14 @@ function gopage(index, type) {
     mitt_bus.emit('changeUserActiveIndex', data)
 }
 
+function openCoupon(type) {
+    coupon_dom.value.open(type)
+}
+
+function useCoupon() {
+    tab_store.clickTabbar(2)
+}
+
 </script>
 
 <template>
@@ -327,60 +339,36 @@ function gopage(index, type) {
             </div>
         </div>
         <div class="coupon-box">
-            <div class="box-head flex-center">
-                <div class="coupon flex-center" v-loading="coupon_loading">
-                    <div>个人优惠券</div>
-                    <div class="coupon-data flex-center">
-                        <div v-if="user_coupon_data.money">
-                            <span class="font-FF4A2B font-600">{{ user_coupon_data.money }}</span>
-                            <span>元优惠券</span>
-                        </div>
-                        <div v-else>无满减券</div>
-                        <div v-if="user_coupon_data.number">
-                            <span class="font-FF4A2B font-600">{{ user_coupon_data.number }}</span>
-                            <span>张折扣券</span>
-                        </div>
-                        <div v-else>无折扣券</div>
-                    </div>
+            <div class="flex-center box-head">
+                <div class="coupon" @click="openCoupon(2)">
+                    <span>优惠券</span>
+                    <span class="font-FF4A2B font-600 data-text" v-if="user_coupon_data.money + team_coupon_data.money">{{ user_coupon_data.money + team_coupon_data.money }}</span>
+                    <span class="font-5D5D5D font-600 data-text" v-else>0</span>
+                    <span>元</span>
                 </div>
-                <div class="coupon flex-center" v-loading="coupon_loading" v-if="user_info.teamId">
-                    <div>团队优惠券</div>
-                    <div class="coupon-data flex-center">
-                        <div v-if="team_coupon_data.money">
-                            <span class="font-FF4A2B font-600">{{ team_coupon_data.money }}</span>
-                            <span>元优惠券</span>
-                        </div>
-                        <div v-else>无满减券</div>
-                        <div v-if="team_coupon_data.number">
-                            <span class="font-FF4A2B font-600">{{ team_coupon_data.number }}</span>
-                            <span>张折扣券</span>
-                        </div>
-                        <div v-else>无折扣券</div>
-                    </div>
+                <div class="coupon" @click="openCoupon(2)">
+                    <span>折扣券</span>
+                    <span class="font-FF4A2B font-600 data-text" v-if="user_coupon_data.number + team_coupon_data.number">{{ user_coupon_data.number + team_coupon_data.number }}</span>
+                    <span class="font-5D5D5D font-600 data-text" v-else>0</span>
+                    <span>张</span>
                 </div>
-                <div class="coupon flex-center" v-else>
-                    <div>团队优惠券</div>
-                    <div class="no-team flex-center">
-                        <img style="width: 1rem; margin: 0 5px; " src="@/assets/svg/sad.svg" alt="">
-                        <span class="font-5D5D5D">您未入团,加入团队，享团队福利</span>
-                    </div>
-                </div>
+                <div class="default-button coupon-button" @click="openCoupon(1)">领券中心</div>
             </div>
             <div class="scroll-box" v-if="carousel_list.length" v-loading="coupon_loading">
                 <el-carousel indicator-position="none" arrow="never" height="60px">
                     <el-carousel-item v-for="item in carousel_list" :key="item.couponId">
                         <div class="red-packet-info">
                             <div class="flex-center">
-                                <img class="red-packet" src="@/assets/svg/red_packet.svg" alt="">
+                                <img class="red-packet" src="@/assets/svg/coupon.svg" alt="">
                                 <div>
                                     <div>
                                         <span class="font-FF4A2B font-600">{{ item.deductionAmount }}元</span>
-                                        <span>红包待使用</span>
+                                        <span>优惠券待使用</span>
                                     </div>
                                     <div class="font-FF5000">{{ item.countdown }}</div>
                                 </div>
                             </div>
-                            <div class="custom-button">去使用</div>
+                            <div class="custom-button use-button" @click="useCoupon">去使用</div>
                         </div>
                     </el-carousel-item>
                 </el-carousel>
@@ -458,6 +446,8 @@ function gopage(index, type) {
             <el-button @click="download_file_list_dialog = false">关  闭</el-button>
         </div>
     </el-dialog>
+    <!-- 优惠券弹框 -->
+    <coupon ref="coupon_dom"></coupon>
 </template>
 
 
@@ -542,25 +532,19 @@ function gopage(index, type) {
         border-radius: 10px;
         background-color: #FFFFFF;
         .box-head {
-            column-gap: 20px;
+            justify-content: space-between;
             .coupon {
-                flex: 1;
-                flex-direction: column;
-                row-gap: 10px;
-                height: 70px;
-                border-radius: 10px;
-                background-color: #94C9FF30;
-                .coupon-data {
-                    column-gap: 30px;
+                cursor: pointer;
+                &:hover {
+                    color: #94C9FF;
                 }
-                .no-team:hover {
-                    cursor: pointer;
-                    text-decoration: underline;
-                    text-decoration-color: #5CC300;
-                    span {
-                        color: #5CC300;
-                    }
+                .data-text {
+                    margin: 0 5px;
                 }
+            }
+            .coupon-button {
+                width: 120px;
+                height: 35px;
             }
         }
         .scroll-box {
@@ -577,10 +561,10 @@ function gopage(index, type) {
                 height: 60px;
                 padding: 0 10px;
                 .red-packet {
-                    height: 50px;
+                    height: 45px;
                     margin-right: 10px;
                 }
-                .custom-button {
+                .use-button {
                     width: 90px;
                     height: 35px;
                 }

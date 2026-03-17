@@ -63,6 +63,14 @@ const router = createRouter({
           component: () => import('@/pages/order/pay_order.vue'),
         },
         {
+          path: 'search_page',
+          name: 'search_page',//搜索设备
+          meta: {
+            require_token: false,
+          },
+          component: () => import('@/pages/tab/search_page.vue'),
+        },
+        {
           path: 'cloud_scene',
           name: 'cloud_scene',//tab---云现场
           meta: {

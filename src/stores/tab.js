@@ -4,7 +4,7 @@ import { useRouter } from 'vue-router'
 
 export const useTabStore = defineStore('tab', () => {
     const router = useRouter()
-    
+
     //可以随意向后添加页面，不需做其他处理----不得少于14条index必须严格排序
     const tab_list_all = ref([
         { label: '首页', index: 0, hot: false, active: true, path: '/home_page'},
@@ -29,11 +29,11 @@ export const useTabStore = defineStore('tab', () => {
     function initTabList() {
         const list = JSON.parse(localStorage.getItem('tab_list'))
         if(list) {
-            const index = list.find(i => i.active).index
-            toTabbar(index)
+            tab_list.value = list
         } else {
-            toTabbar(0)
+            tab_list.value = JSON.parse(JSON.stringify(tab_list_all.value.slice(0, 14)))
         }
+        saveTabList()
     }
     initTabList()
 

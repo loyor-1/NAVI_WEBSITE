@@ -121,15 +121,6 @@ export function useGetHotList(params) {
     });
 }
 
-//个人/团队优惠券列表
-export function useGetCoupon(params) {
-    return service({
-        method: 'get',
-        url: '/coupon/couponClient/list',
-        params,
-    });
-}
-
 //我的资产相关金额
 export function useGetMyAssets(id) {
     return service({
@@ -926,4 +917,33 @@ export function useTransferTeamPrepayment(data) {
         method: 'post',
         data,
     })
+}
+
+//活动领券列表
+export function useGetActivityCouponList(params) {
+    return service({
+        method: 'get',
+        url: '/coupon/couponClient/activityList',
+        params,
+        no_debounce: true,
+    });
+}
+
+//个人/团队优惠券列表
+export function useGetCoupon(params) {
+    return service({
+        method: 'get',
+        url: '/coupon/couponClient/list',
+        params,
+        no_debounce: true,
+    });
+}
+
+//领取优惠券
+export function useClaimCoupon(data) {
+    return service({
+        method: 'post',
+        url: '/coupon/couponClient/drawCoupon',
+        data,
+    });
 }

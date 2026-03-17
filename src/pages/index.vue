@@ -1,90 +1,32 @@
 <script setup>
 import { ref, watch } from 'vue'
-import { useRouter } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import { getUserInfo } from '@/utils/auth'
 import { ElMessageBox } from 'element-plus'
 import { useUserStore } from '@/stores/user'
 import { useTabStore } from '@/stores/tab'
-import { useGetEquipmentList } from '@/api'
 import mitt_bus from '@/utils/mitt_bus'
 
+const route = useRoute()
 const router = useRouter()
 const user_store = useUserStore()
 const tab_store = useTabStore()
 
-const loading = ref(false)
-const show_list = ref(false)
+const search_value = ref('')
 const menu_switch = ref('')
 const user_info = ref(getUserInfo())
 const menu_timer = ref(null)
-const search_timer = ref(null)
-const search_key = ref('')
-const equipment_list = ref([])
-const total = ref(0)
 
 watch(
-  () => search_key.value,
+  () => route.query,
   (newValue) => {
-    if(!newValue) {
-      equipment_list.value = []
-      show_list.value = false
-    }
+    search_value.value = newValue.key_value
   },
   {
+    deep: true,
     immediate: true,
   }
 )
-
-function getEquipmentList(e) {
-  const input_value = e?.target?.value?.trim() || ''
-  search_key.value = input_value
-  if (!input_value) {
-    equipment_list.value = []
-    show_list.value = false
-    loading.value = false 
-    if (search_timer.value) {
-      clearTimeout(search_timer.value)
-      search_timer.value = null
-    }
-    return
-  }
-  loading.value = true
-  show_list.value = true
-  if (search_timer.value) {
-    clearTimeout(search_timer.value)
-    search_timer.value = null
-  }
-  search_timer.value = setTimeout(async () => {
-    try {
-      const params = {
-        pageNum: 1,
-        pageSize: 20,
-        isGrounding: 1,
-        status: 1,
-        equipmentName: input_value,
-      }
-      const res = await useGetEquipmentList(params)
-      res.rows.forEach(item => {
-          item.equipment_pic = (item.fileList && item.fileList.length) ? import.meta.env.VITE_FILE_API + item.fileList[0].url : ''
-      })
-      equipment_list.value = res.rows
-      total.value = res.total
-    } catch (err) {
-      equipment_list.value = []
-      total.value = 0
-    } finally {
-      loading.value = false
-    }
-    search_timer.value = null
-  }, 500)
-}
-
-// 前往设备详情
-async function toEquipmentDetail(data) {
-  await router.push(`/equipment_detail?equipment_id=${data.id}`)
-  search_key.value = data.equipmentName
-  show_list.value = false
-}
 
 // 用户面板
 function changeMenuSwitch(value) {
@@ -125,6 +67,17 @@ async function toPage(index, type) {
   mitt_bus.emit('changeUserActiveIndex', data)
 }
 
+// 前往搜索页
+async function toSearch() {
+  if(!search_value.value) return
+  await router.push({
+    path: '/search_page',
+    query: {
+      key_value: search_value.value,
+    }
+  })
+}
+
 </script>
 
 <template>
@@ -133,20 +86,10 @@ async function toPage(index, type) {
       <div class="top-box">
         <img class="logo" src="@/assets/logo/logo.png" alt="">
         <img class="brand-logo" src="@/assets/logo/brand_logo.png" alt="">
-        <div class="flex-center search-box" @mouseleave="show_list = false">
-          <div class="search-input-box">
-            <input class="search-input" :value="search_key" type="text" @input="getEquipmentList($event)" @mouseenter="show_list = Boolean(equipment_list.length)" @focus="show_list = Boolean(equipment_list.length)">
-          </div>
+        <div class="search-box">
+          <input class="search-input" v-model="search_value" type="text" @keyup.enter="toSearch">
           <div class="search-slider"></div>
-          <div class="search-button flex-center">搜索</div>
-          <div class="search-list" v-loading="loading" v-show="show_list">
-            <div v-if="equipment_list.length">
-              <div class="multi-line-ellipsis-1 font-5D5D5D list-item" v-for="item in equipment_list" :key="item.id" @click="toEquipmentDetail(item)">{{ item.equipmentClassification }} | {{ item.equipmentName }}</div>
-            </div>
-            <div v-else>
-              <div class="multi-line-ellipsis-1 font-5D5D5D flex-center">暂无数据</div>
-            </div>
-          </div>
+          <div class="search-button flex-center" @click="toSearch">搜索</div>
         </div>
         <div class="slider"></div>
         <div class="phone-box">
@@ -268,7 +211,6 @@ async function toPage(index, type) {
       border-left: 1px solid #94C9FF50;
     }
     .search-box {
-      z-index: 9;
       position: relative;
       width: 50%;
       display: flex;
@@ -277,20 +219,17 @@ async function toPage(index, type) {
       padding: 5px;
       border-radius: 5px;
       background-image: linear-gradient(to right, #9FFFD7, #BAFF75);
-      .search-input-box {
-        width: 85%;
+      .search-input {
+        width: 90%;
         height: 40px;
-        .search-input {
-          width: 100%;
-          height: 100%;
-          padding: 5px 5px 5px 10px;
-          border: none;
-          outline: none;
-          border-radius: 5px 0 0 5px;
-        }
+        padding: 5px 5px 5px 10px;
+        border: none;
+        outline: none;
+        border-radius: 5px 0 0 5px;
       }
       .search-button {
         cursor: pointer;
+        user-select: none;
         width: 15%;
         min-width: 50px;
         height: 40px;
@@ -301,26 +240,6 @@ async function toPage(index, type) {
       .search-button:hover {
         background-color: #5CC30001;
         border: 2px solid #5CC30030;
-      }
-      .search-list {
-        position: absolute;
-        top: 80%;
-        left: 4px;
-        width: calc(85% - 8px);
-        min-height: 50px;
-        max-height: 300px;
-        padding-top: 5px;
-        border: 1px solid #cccccc;
-        border-top: none;
-        background-color: #FFFFFF;
-        .list-item {
-          cursor: default;
-          padding: 3px 3px 3px 10px;
-        }
-        .list-item:hover {
-          color: #111111;
-          background-color: #94C9FF90;
-        }
       }
     }
     .phone-box {

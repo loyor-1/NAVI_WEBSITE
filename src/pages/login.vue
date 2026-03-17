@@ -19,6 +19,8 @@ const router = useRouter()
 const route = useRoute()
 
 const form = ref(null)//表单对象
+const privacy_check = ref(false)
+const privacy_timer = ref(null)
 const login_type = ref(2)
 const login_loading = ref(false)
 const QRCode_timer = ref(null)//二维码扫码登录状态检查计时器
@@ -134,6 +136,15 @@ function resetData() {
 }
 
 function login() {
+    if(!privacy_check.value) {
+        if(!privacy_timer.value) {
+            privacy_timer.value = setTimeout(() => {
+                clearTimeout(privacy_timer.value)
+                privacy_timer.value = null
+            }, 300)
+        }
+        return
+    }
     form.value.validate(async valid => {
         if(valid) {
             login_loading.value = true
@@ -215,6 +226,22 @@ function login() {
                     </div>
                 </div>
             </el-form>
+            <div class="desc" v-if="login_type == 1">
+                <span class="font-mini font-5D5D5D">扫码代表您同意</span>
+                <span class="font-mini font-light">《纳微创新用户注册协议》</span>
+                <span class="font-mini font-5D5D5D">与</span>
+                <span class="font-mini font-light">《纳微创新用户隐私协议》</span>
+            </div>
+            <div class="desc" :class="[privacy_timer ? 'desc-null' : '']" v-else>
+                <el-checkbox v-model="privacy_check">
+                    <div class="flex-center">
+                        <span class="font-mini font-5D5D5D">登录或注册代表您同意</span>
+                        <span class="font-mini font-light">《纳微创新用户注册协议》</span>
+                        <span class="font-mini font-5D5D5D">与</span>
+                        <span class="font-mini font-light">《纳微创新用户隐私协议》</span>
+                    </div>
+                </el-checkbox>
+            </div>
             <el-button type="primary" class="login-button" :loading="login_loading" @click="login">登录/注册</el-button>
             <span class="tips" @click="router.push('/home_page')">前往首页</span>
         </div>
@@ -224,6 +251,14 @@ function login() {
 <style lang="scss" scoped>
 :deep(.el-form-item) {
     margin-bottom: 0;
+}
+@keyframes desc-null {
+    0% { transform: translateX(0) }
+    20% { transform: translateX(-10px) }
+    40% { transform: translateX(10px) }
+    60% { transform: translateX(-10px) }
+    80% { transform: translateX(10px) }
+    100% { transform: translateX(0) }
 }
 
 .page-main {
@@ -237,7 +272,7 @@ function login() {
         flex-direction: column;
         width: 30vw;
         min-width: 500px;
-        padding: 0 0 50px;
+        padding: 0 0 40px;
         background-color: #FFFFFF90;
         border-radius: 10px;
         .box-head {
@@ -305,6 +340,12 @@ function login() {
                     background-color: #11111190;
                 }
             }
+        }
+        .desc {
+            margin-bottom: 15px;
+        }
+        .desc-null {
+            animation: desc-null 0.3s linear forwards;
         }
         .login-button {
             width: 80%;
