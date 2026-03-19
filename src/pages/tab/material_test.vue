@@ -43,6 +43,7 @@ async function getEquipmentList() {
     }
     catch(err) {
         console.log(err)
+        loading.value = false
     }
 }
 getEquipmentList()
