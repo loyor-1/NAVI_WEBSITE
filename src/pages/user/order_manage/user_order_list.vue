@@ -99,7 +99,6 @@ watch(
         switch(to.query.type) {
             case 'searchOrder':
                 const values = JSON.parse(to.query.values)
-                console.log('values', values)
                 for(let key in values) {
                     params.value[key] = values[key]
                 }

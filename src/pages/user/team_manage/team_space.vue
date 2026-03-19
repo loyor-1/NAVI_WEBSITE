@@ -101,7 +101,7 @@ async function toOrderList(row) {
         orderCode: row.orderCode,
     })
     const data = {
-        index: '3-2',
+        index: '3-3',
         type: 'searchOrder',
         values,
     }

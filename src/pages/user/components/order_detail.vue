@@ -582,6 +582,7 @@ defineExpose({ getOrderInfo })
             row-gap: 10px;
             justify-content: center;
             align-items: center;
+            width: calc(100% - 200px);
             padding: 15px;
         }
     }

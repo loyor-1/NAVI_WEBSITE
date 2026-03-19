@@ -51,7 +51,7 @@ watch(
                 for(let key in values) {
                     params.value[key] = values[key]
                 }
-                getOrderList()
+                changeStatus(0)
                 break
         }
     },
@@ -141,7 +141,6 @@ async function changeStatus(value) {
     }
     getOrderList()
 }
-changeStatus(0)
 
 //复制订单号
 function copyOrderCode(orderCode) {
