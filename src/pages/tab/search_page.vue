@@ -55,7 +55,10 @@ function toAppointOrder(equipment_id) {
 
 <template>
     <div class="flex-center-col page-main">
-        <div class="flex-center card" v-for="item in equipment_list" :key="item.id">
+        <div style="width: 100%; height: 100%;" v-if="!equipment_list.length">
+            <el-empty description="暂无数据" />
+        </div>
+        <div class="flex-center card" v-else v-for="item in equipment_list" :key="item.id">
             <div class="flex-center equipment-pic" @click="toEquipmentDetail(item.id)">
                 <img :src="item.equipment_pic" alt="">
             </div>

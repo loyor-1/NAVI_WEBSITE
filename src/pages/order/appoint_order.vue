@@ -6,6 +6,7 @@ import { initFieIdList, changeRelevance, reduceTotalMoney, validateField } from 
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { getUserInfo } from '@/utils/auth'
 import { validPhone } from '@/utils/validate'
+import customDialog from '@/components/custom_dialog.vue'
 import serviceOrder from './service_order.vue'
 import radio from './components/radio.vue'
 import checkbox from './components/checkbox.vue'
@@ -33,6 +34,7 @@ const ref_fee_detail = ref(null)
 const ref_service_order = ref(null)
 const appoint_success = ref(null)
 const loading = ref(true)
+const instructions_dialog = ref(false)
 const price_pop = ref(true)
 const show_groups_box = ref(true)
 const show_instructions = ref(true)
@@ -115,11 +117,10 @@ async function getEquipmentInfo() {
         loading.value = true
         const equipment_id = route.query.equipment_id
         const res = await useGetEquipmentInfo(equipment_id)
-        console.log("===== useGetEquipmentInfo 调用完成，返回值 res：", res);
-        
         res.data.equipment_pic = import.meta.env.VITE_FILE_API + res.data.fileList[0].url
         res.data.QRCode_pic = import.meta.env.VITE_FILE_API + res.data.qrCodeFileList[0].url
         equipment_info.value = res.data
+        instructions_dialog.value = true
     }
     catch(err) {
         console.log(err)
@@ -899,6 +900,17 @@ async function submitAppoint() {
 
     <!-- 费用明细弹框 -->
     <feeDetail ref="ref_fee_detail"></feeDetail>
+    <!-- 预约须知 -->
+    <custom-dialog class="instructions-dialog" v-model="instructions_dialog" width="650px">
+        <template #background>
+            <img class="instructions-background" src="@/assets/img/noticeBg.png" />
+        </template>
+        <div class="instructions-main">
+            <div class="flex-center font-FFFFFF font-middle instructions-title">预约须知</div>
+            <div class="instructions-conetnt" v-html="equipment_info.testingInstructions"></div>
+            <div class="custom-button confirm-button" @click="instructions_dialog = false">立即预约</div>
+        </div>
+    </custom-dialog>
     <!-- 批量导入样品编号 -->
     <el-dialog
       class="upload-code-dialog"
@@ -1162,6 +1174,32 @@ async function submitAppoint() {
         }
     }
 }
+
+.instructions-dialog {
+    .instructions-background {
+        width: 100%;
+    }
+    .instructions-main {
+        width: 100%;
+        height: 600px;
+        .instructions-title {
+            width: 100%;
+            height: 12%;
+        }
+        .instructions-conetnt {
+            overflow: auto;
+            width: 100%;
+            height: calc(88% - 70px);
+            padding: 15px;
+        }
+        .confirm-button {
+            width: 140px;
+            height: 40px;
+            margin: 15px auto;
+        }
+    }
+}
+
 
 .upload-code-tips {
     margin-bottom: 10px;
