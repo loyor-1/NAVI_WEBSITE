@@ -20,6 +20,7 @@ export default defineConfig(({ mode }) => {
     server: {
       port: 8088,
       open: true,
+      host: true,
       proxy: {
         // API 服务代理
         [env.VITE_BASE_API]: {

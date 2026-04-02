@@ -285,7 +285,7 @@ function deleteGroup(group_index) {
 //复制样品组
 function copyGroup(data) {
     const new_data = JSON.parse(JSON.stringify(data))
-    const {show_groups, specimenNum, specimenNum_validate, specimen_code_list, specimenCode, specimen_code_validate, specimenIngredient, specimenIngredient_validate, fieIdList} = new_data
+    const { show_groups, specimenNum, specimenNum_validate, specimen_code_list, specimenCode, specimen_code_validate, specimenIngredient, specimenIngredient_validate, fieIdList } = new_data
     const obj = {
         show_groups,
         sampleName: sample_name_list[appoint_data.value.groups.length],
