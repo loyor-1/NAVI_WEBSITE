@@ -672,7 +672,7 @@ async function submitAppoint() {
             <div class="multi-line-ellipsis-1 font-mini">{{ equipment_info.technicalAdvisorTextPrompts }}</div>
         </div>
     </div>
-    <!-- 下单第一步 -->
+    <!-- 下单第一步 预约表单填写 -->
     <div v-show="order_steps == 1">
         <div class="profile">
             <div class="profile-head flex-center">
@@ -828,13 +828,8 @@ async function submitAppoint() {
         </div>
     </div>
 
-    <!-- 下单第二步 -->
+    <!-- 下单第二步 预约服务信息 -->
     <serviceOrder v-show="order_steps == 2" ref="ref_service_order" :original_price="appoint_data.originalPrice" :user_info="user_info" :no_validate_list="no_validate_list" @updateServiceOrder="updateServiceOrder"></serviceOrder>
-
-    <!-- 下单第三步 -->
-    <div v-show="order_steps == 3">
-
-    </div>
 
     <!-- 其他实验信息 -->
     <div class="profile" v-intersection="price_pop_options">
